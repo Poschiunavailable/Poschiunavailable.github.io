@@ -157,6 +157,25 @@ p {
     font-family: 'Roboto', sans-serif;
     font-size: 1rem;
     margin-bottom: 2rem;
+    color: #d1d1d1;
+}
+
+.highlight {
+    color: rgb(255, 255, 255);
+    font-weight: bold;
+}
+
+.overlay {
+    position: fixed;
+    bottom: 20px;
+    right: 20px;
+    width: 300px;
+    height: 400px;
+    background-color: rgba(25, 16, 39, 0.425);
+    color: #F5F3F5;
+    z-index: 9999;
+    padding: 20px;
+    box-sizing: border-box;
 }
 
 .cta-button {

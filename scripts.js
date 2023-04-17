@@ -1,7 +1,6 @@
 function randomColor() {
     const colors = [
-        '#FFFFFF', '#EEEEEE', '#DDDDDD', '#CCCCCC', '#BBBBBB',
-        '#F2D1E7', '#A9DCF3', '#A1D8A8', '#FFE28A', '#F2C7A1',
+        '#FFFFFF', '#' + Math.floor(Math.random() * 16777215).toString(16)
     ];
     return colors[Math.floor(Math.random() * colors.length)];
 }
@@ -48,6 +47,13 @@ function handleScroll() {
     lastScrollPos = currentScrollPos;
     updateBackground();
 }
+
+function getStats() {
+    return window.devicePixelRatio;
+}
+
+const statsElement = document.getElementById('stats');
+  statsElement.textContent = getStats();
 
 function updateBackground() {
     animateLayer(layer1, 0.4);
