@@ -10,8 +10,9 @@
 }
 
 body {
-    background-image: linear-gradient(rgb(156, 94, 56), rgba(0, 0, 0, 1));
+    background-image: linear-gradient(rgb(52, 14, 70), rgba(0, 0, 0, 1));
     font-family: 'Roboto', sans-serif;
+    color: #f5f3f51c;
 }
 
 
@@ -92,21 +93,11 @@ canvas {
     height: 100%;
 }
 
-.star-layer {
+#canvas-container canvas {
     position: fixed;
     top: 0;
     left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
     z-index: -1;
-}
-
-.star {
-    position: absolute;
-    background-color: currentColor;
-    width: 2px;
-    height: 2px;
 }
 
 .hero {
