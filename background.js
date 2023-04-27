@@ -75,9 +75,9 @@ document.addEventListener('DOMContentLoaded', function () {
     // Render the scene
     let clock = new THREE.Clock();
     let elapsedTime = 0;
-    const swaySpeedX = 1;
-    const swaySpeedY = 0.8;
-    const swayDistance = 0.1;
+    const swaySpeedX = 0.48;
+    const swaySpeedY = 0.67;
+    const swayDistance = 1;
 
     //#region Mouse Movement
 
@@ -95,11 +95,78 @@ document.addEventListener('DOMContentLoaded', function () {
         targetRotationY = ((event.clientY / window.innerHeight) * 2 - 1) * rotationSpeedY;
     });
 
-    window.addEventListener('deviceorientation', function (event) {
+    let betaRotation = 0;
+    let gammaRotation = 0;
+
+    function handleDeviceOrientation(event) {
         // Update target rotation based on gyroscope data
-        targetRotationY = event.beta / 90 * rotationSpeedY; // beta value controls rotation around x-axis
-        targetRotationX = event.gamma / 90 * rotationSpeedX; // gamma value controls rotation around y-axis
-    });
+        betaRotation += event.rotationRate.beta;
+        gammaRotation += event.rotationRate.alpha;
+        targetRotationY = gammaRotation / 360 * rotationSpeedY; // beta value controls rotation around x-axis
+        targetRotationX = betaRotation / 360 * rotationSpeedX; // gamma value controls rotation around y-axis
+    }
+
+    function handleGyroscope(event) {
+        // Update target rotation based on gyroscope data
+        betaRotation += event.y;
+        gammaRotation += event.x;
+        targetRotationY = gammaRotation / 360 * rotationSpeedY;
+        targetRotationX = betaRotation / 360 * rotationSpeedX;
+    }
+
+    async function trySetupMotionInput() {
+        if (trySetupDeviceMotion()) {
+            console.log('Detecting motion input via device motion');
+        }
+        else if (trySetupDeviceOrientation()) {
+            console.log('Detecting motion input via device orientation');
+        }
+        else if (await trySetupGyro()) {
+            console.log('Detecting motion input via device gyroscope');
+        }
+    }
+
+    function trySetupDeviceOrientation() {
+        try {
+            window.addEventListener("deviceorientation", handleDeviceOrientation, true);
+            return true;
+        } catch (error) {
+            console.error('Error requesting gyroscope permission:', error);
+        }
+        return false;
+    }
+
+    function trySetupDeviceMotion() {
+        try {
+            window.addEventListener("devicemotion", handleDeviceOrientation, true);
+            return true;
+        } catch (error) {
+            console.error('Error requesting gyroscope permission:', error);
+        }
+        return false;
+    }
+
+    async function trySetupGyro() {
+        try {
+            const permissionStatus = await navigator.permissions.query({ name: 'gyroscope' });
+
+            if (permissionStatus.state === 'granted' || permissionStatus.state === 'prompt') {
+                let gyroscope = new Gyroscope({ frequency: 30 });
+                console.log('Gyroscope allowed, listening for gyro');
+                gyroscope.addEventListener('reading', handleGyroscope);
+                gyroscope.start();
+                return true;
+            }
+            console.log('tried to get permission for gyro, result was ', permissionStatus);
+
+        } catch (error) {
+            console.error('Error requesting gyroscope permission:', error);
+        }
+
+        return false;
+    }
+
+    trySetupMotionInput();
 
     function render() {
         requestAnimationFrame(render);
@@ -158,12 +225,6 @@ document.addEventListener('DOMContentLoaded', function () {
         camera.aspect = window.innerWidth / window.innerHeight;
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
-
-        // Update composer size
-        composer.setSize(window.innerWidth, window.innerHeight);
-
-        // Update bloom pass
-        bloomPass.resolution.set(window.innerWidth, window.innerHeight);
     }
 
 
