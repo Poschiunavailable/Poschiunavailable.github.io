@@ -70,8 +70,6 @@ document.addEventListener('DOMContentLoaded', function () {
     // Add the mesh to the scene
     scene.add(mesh);
 
-    const statsElement = document.getElementById('stats');
-
     // Render the scene
     let clock = new THREE.Clock();
     let elapsedTime = 0;
@@ -188,8 +186,6 @@ document.addEventListener('DOMContentLoaded', function () {
         camera.rotation.x += (targetRotationY - camera.rotation.x) * 5 * deltaTime;
         camera.rotation.y += (targetRotationX - camera.rotation.y) * 5 * deltaTime;
 
-        statsElement.textContent = " " + camera.position.z + " " + camera.position.x + " " + camera.position.y;
-
         // Call updateCameraPosition to handle scroll updates as well
         updateCameraPosition();
 
@@ -226,9 +222,6 @@ document.addEventListener('DOMContentLoaded', function () {
         camera.updateProjectionMatrix();
         renderer.setSize(window.innerWidth, window.innerHeight);
     }
-
-
-
 
     window.addEventListener('scroll', updateCameraPosition);
     window.addEventListener('resize', onWindowResize);

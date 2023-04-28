@@ -170,19 +170,6 @@ p {
     font-weight: bold;
 }
 
-.overlay {
-    position: fixed;
-    bottom: 20px;
-    right: 20px;
-    width: 300px;
-    height: 400px;
-    background-color: rgba(25, 16, 39, 0.425);
-    color: #F5F3F5;
-    z-index: 9999;
-    padding: 20px;
-    box-sizing: border-box;
-}
-
 .cta-button {
     font-family: 'Roboto', sans-serif;
     font-size: 1rem;
@@ -369,18 +356,15 @@ h2 {
 
 
 .portfolio-item {
-    background-image: linear-gradient(#31ff3459, rgba(72, 80, 112, 0.233));
+    background-image: linear-gradient(rgba(49, 255, 52, 0.4), rgba(72, 80, 112, 0.233));
     border-radius: 10px;
     padding: 20px;
     text-align: center;
     color: #d1d1d1;
-    transition: transform 0.15s ease-out;
-    transform-style: preserve-3d;
-    perspective: 1000px;
+    transition: transform 0.3s ease-out;
 }
 
 .portfolio-item:hover {
-    transform: translateZ(50px) scale(1.5);
     z-index: 1;
 }
 
@@ -394,6 +378,13 @@ h2 {
 .portfolio-item h3 {
     font-size: 1.8rem;
     margin-bottom: 1rem;
+    color: #F5F3F5;
+}
+
+.portfolio-item clickForMore {
+    font-size: 1.2rem;
+    margin-bottom: 1rem;
+    text-align: end;
     color: #F5F3F5;
 }
 

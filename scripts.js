@@ -84,6 +84,12 @@ function handleTypingTargets() {
     typingEffects.forEach((effect) => effect());
 }
 
+function lerp(start, end, amt) {
+    return (1 - amt) * start + amt * end
+}
+
+const rotationStrength = 50;
+
 function handlePortfolioItems() {
     // Get all the elements with the class "portfolio-item"
     const portfolioItems = document.querySelectorAll(".portfolio-item");
@@ -99,13 +105,20 @@ function handlePortfolioItems() {
                 const relX = e.clientX - (rect.left + rect.width / 2);
                 const relY = (rect.top + rect.height / 2) - e.clientY;
 
-                const rotateY = relX / rect.width * 20;
-                const rotateX = relY / rect.height * 20;
+                let rotateY = 0;
+                let rotateX = 0;
 
-                // Only rotate the element when not hovering, to avoid conflicting transforms
-                if (!item.matches(":hover")) {
-                    item.style.transform = `rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
-                }
+                rotateX = relY / rect.height * rotationStrength;
+                rotateY = relX / rect.width * rotationStrength;
+
+                item.style.transform = `perspective(1000px) scale(1.5) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
+
+                let rotateXDelta = (rotateX + rotationStrength / 2) / rotationStrength;
+
+                console.log("rot x: " + rotateXDelta);
+                let bgImage = `linear-gradient(rgba(49, 255, 52,${lerp(0.4, 1, rotateXDelta).toFixed(3)}), rgb(72, 80, 112,${lerp(0.4, 1, rotateXDelta).toFixed(3)}));`;
+                console.log(bgImage);
+                item.style.backgroundImage = bgImage;
             });
 
             item.addEventListener("mouseleave", () => {
