@@ -338,6 +338,7 @@ h2 {
 #portfolio {
     padding: 100px 0;
     perspective: 1000px;
+    overflow: hidden;
 }
 
 #portfolio h2 {
@@ -353,15 +354,13 @@ h2 {
     gap: 30px;
 }
 
-
-
 .portfolio-item {
-    background-image: linear-gradient(rgba(49, 255, 52, 0.4), rgba(72, 80, 112, 0.233));
+    background-image: linear-gradient(rgba(49, 255, 52, 0.4), rgba(100, 111, 154, 0.233));
     border-radius: 10px;
     padding: 20px;
     text-align: center;
     color: #d1d1d1;
-    transition: transform 0.3s ease-out;
+    transition: transform 0.3s ease-out, background-image 0.3s ease-out;
 }
 
 .portfolio-item:hover {
@@ -381,11 +380,62 @@ h2 {
     color: #F5F3F5;
 }
 
-.portfolio-item clickForMore {
-    font-size: 1.2rem;
-    margin-bottom: 1rem;
-    text-align: end;
-    color: #F5F3F5;
+.portfolio-detail {
+    display: none;
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    overflow-y: scroll;
+    z-index: 1000;
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 50px;
+}
+
+.detail-content {
+    background-color: #313131;
+    border-radius: 10px;
+    padding: 20px;
+}
+
+.video-section,
+.custom-text,
+.summary {
+    margin-bottom: 20px;
+}
+
+@keyframes pulse {
+    0% {
+        transform: translateX(-50%) scale(1);
+    }
+
+    50% {
+        transform: translateX(-50%) scale(1.1);
+    }
+
+    100% {
+        transform: translateX(-50%) scale(1);
+    }
+}
+
+.click-indicator {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    opacity: 0;
+    background-color: rgba(255, 255, 255, 0.8);
+    color: #302B27;
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: opacity 0.3s;
+    font-size: 0.9rem;
+    animation: pulse 1.2s infinite;
+}
+
+.portfolio-item:hover .click-indicator {
+    opacity: 1;
 }
 
 /* Responsive */
