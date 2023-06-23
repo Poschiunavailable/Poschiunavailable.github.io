@@ -356,7 +356,7 @@ h2 {
 .portfolio-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
-    gap: 30px;
+    grid-gap: 30px;
 }
 
 .portfolio-item {
@@ -388,26 +388,191 @@ h2 {
 .portfolio-detail {
     display: none;
     position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: hidden;
+    background-color: rgba(0, 0, 0, 0);
+}
+
+.detail-content {
+    background-color: #333;
+    background-image: linear-gradient(#66148073, #1111119a);
+    color: #fff;
+    margin: 5vh auto;
+    padding: 20px;
+    border: 1px solid #888;
+    width: 80%;
+    height: 90vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+}
+
+.close-button {
+    position: absolute;
+    top: 10px;
+    right: 10px;
+    background: none;
+    border: none;
+    color: #fff;
+    font-size: 1.5em;
+    cursor: pointer;
+}
+
+/* Responsive layout for mobile */
+@media (max-width: 600px) {
+    .detail-content {
+        flex-direction: column;
+        /* Stack vertically */
+    }
+}
+
+.video-section,
+.text-section {
+    flex-basis: 50%;
+}
+
+.video-section {
+    padding: 10px;
+    position: relative;
+    width: 100%;
+    flex-basis: 50%;
+    height: auto;
+}
+
+.video-js {
+    position: relative;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    overflow-y: scroll;
-    z-index: 1000;
-    background-color: rgba(0, 0, 0, 0.8);
-    padding: 50px;
 }
 
-.detail-content {
-    background-color: #313131;
+.vjs-big-play-button {
+    top: 50% !important;
+    left: 50% !important;
+    transform: translate(-50%, -50%) !important;
+}
+
+.video-wrapper {
+    width: 100%;
+    margin-top: auto;
+    height: auto;
+    position: relative;
+}
+
+.text-section {
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: 20px;
+    padding: 20px;
+    max-height: 80vh;
+    overflow-y: auto;
+}
+
+@media only screen and (max-width: 600px) {
+    .video-section {
+        padding-top: 75%;
+        /* Aspect ratio for mobile screens */
+    }
+}
+
+.text-section {
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: 20px;
+    padding: 20px;
+    max-height: 80vh;
+    /* adjust this value as needed */
+    overflow-y: auto;
+}
+
+/* This will affect the scrollbar within .text-section */
+.text-section::-webkit-scrollbar {
+    top: 20px;
+    width: 12px;
     border-radius: 10px;
+    /* width of the entire scrollbar */
+}
+
+.text-section::-webkit-scrollbar-track {
+    background: #f1f1f1;
+    border-radius: 10px;
+    /* color of the tracking area */
+}
+
+.text-section::-webkit-scrollbar-thumb {
+    background: #888;
+    /* color of the scroll thumb */
+    border-radius: 10px;
+    /* roundness of the scroll thumb */
+}
+
+.text-section::-webkit-scrollbar-thumb:hover {
+    background: #555;
+    /* color of the scroll thumb when hovering */
+}
+
+.summary {
+    color: #F5F3F5;
+}
+
+.custom-text {
+    color: #d1d1d1;
+}
+
+@media screen and (max-width: 768px) {
+    .portfolio-detail {
+        width: 100%;
+        height: 100%;
+        max-height: none;
+    }
+
+    .detail-content {
+        grid-template-columns: 1fr;
+    }
+}
+
+.text-section {
+    display: grid;
+    grid-template-rows: auto auto;
+    gap: 20px;
     padding: 20px;
 }
 
-.video-section,
-.custom-text,
 .summary {
+    font-family: 'Lora', serif;
+    font-size: 1.8rem;
+    color: #F5F3F5;
+    background: rgba(87, 108, 168, 0.2);
+    border-radius: 10px;
+    padding: 20px;
     margin-bottom: 20px;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    transition: background 0.3s ease-out;
+}
+
+.summary:hover {
+    background: rgba(87, 108, 168, 0.4);
+}
+
+.custom-text {
+    font-family: 'Roboto', sans-serif;
+    font-size: 1.2rem;
+    color: #d1d1d1;
+    background: rgba(0, 0, 0, 0.4);
+    border-radius: 5px;
+    padding: 15px;
+    line-height: 1.6;
+    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
+    transition: background 0.3s ease-out;
+}
+
+.custom-text:hover {
+    background: rgba(0, 0, 0, 0.6);
 }
 
 @keyframes pulse {

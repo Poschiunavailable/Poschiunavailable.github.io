@@ -26,6 +26,21 @@ function startTypingEffect(element) {
     type();
 }
 
+function closeDetail() {
+    document.querySelectorAll('.portfolio-detail').forEach(function (detail) {
+        detail.style.display = 'none';
+    });
+}
+
+
+document.querySelectorAll('.portfolio-item').forEach(function (item) {
+    item.addEventListener('click', function () {
+        var id = this.id.replace('item', 'detail');  // convert 'itemX' to 'detailX'
+        var detail = document.getElementById(id);
+        // show the detail panel here
+    });
+});
+
 let currentlyPlayingEffectElement;
 
 function createTypingEffect(element) {
@@ -99,6 +114,31 @@ function lerpColor(source, target, alpha) {
     return result;
 }
 
+function handleVideoPlayers() {
+    document.querySelectorAll('.video-js').forEach(function (videoElement) {
+        videojs(videoElement.id);
+    });
+}
+
+function handlePortfolioDetails() {
+    document.querySelectorAll('.portfolio-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+            let id = this.id.replace('item-', 'detail-');
+            let detail = document.getElementById(id);
+            // Show the detail panel
+            detail.style.display = 'block';
+        });
+    });
+
+    // Close the detail panel when the overlay is clicked
+    document.querySelectorAll('.portfolio-detail').forEach(function (detailElement) {
+        detailElement.addEventListener('click', function (event) {
+            if (event.target == this) {
+                closeDetail();
+            }
+        });
+    });
+}
 
 function handlePortfolioItems() {
     const portfolioItems = document.querySelectorAll(".portfolio-item");
@@ -225,15 +265,6 @@ function handlePortfolioItems() {
             item.querySelector("div").style.transform = "translateX(-50%) scale(1)";
 
         });
-        item.addEventListener("click", () => {
-            const portfolioDetail = document.getElementById("portfolio-detail");
-            portfolioDetail.style.display = "block";
-        });
-
-        const portfolioDetail = document.getElementById("portfolio-detail");
-        portfolioDetail.addEventListener("click", () => {
-            portfolioDetail.style.display = "none";
-        });
     });
 }
 
@@ -259,5 +290,9 @@ window.addEventListener("DOMContentLoaded", function () {
     handleTypingTargets();
 
     handlePortfolioItems();
+
+    handlePortfolioDetails();
+
+    handleVideoPlayers();
 });
 

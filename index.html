@@ -6,6 +6,8 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patrick Temborius</title>
     <link rel="stylesheet" href="styles.css">
+    <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet" />
+    <script src="https://vjs.zencdn.net/7.15.4/video.min.js"></script>
 
     <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
 
@@ -35,8 +37,8 @@
         </nav>
     </header>
     <section id="hero" class="hero">
-        <video class="hero-video" autoplay muted loop>
-            <source src="resources/PortfolioVideo.mp4" type="video/mp4">
+        <video class="hero-video" autoplay muted loop playsinline>
+            <source src="resources/PortfolioVideoLowerRes.mp4" type="video/mp4">
             Your browser does not support HTML5 video.
         </video>
         <div class="hero-content">
@@ -90,24 +92,24 @@
                 <h2 class="typing-text typing-target">Portfolio</h2>
             </div>
             <div class="portfolio-grid animate">
-                <div class="portfolio-item animate">
+                <div class="portfolio-item animate" id="item-EverslaughtInvasion">
                     <img src="resources/everslaught_invasion_splashart.webp" alt="Everslaught Invasion Splashart">
                     <h3>Everslaught Invasion</h3>
-                    <p>A Virtual Reality Zombie Horde Mode Game Released on the Quest 2 Headset, developed in the Unity
+                    <p>A Virtual Reality Zombie Horde Mode Game Released on the Quest 2 Headset, developed in the
+                        Unity
                         Engine.</p>
                     <div class="click-indicator">Click to show more</div>
-
                 </div>
-                <div class="portfolio-item animate">
+                <div class="portfolio-item animate" id="item-RoughJustice">
                     <img src="resources/rough_justice_splashart.webp" alt="Rough Justice '84 Splashart">
                     <h3>Rough Justice '84</h3>
-                    <p>An Agency management simulator with contracts and many mini-games released on steam, developed in
+                    <p>An Agency management simulator with contracts and many mini-games released on steam,
+                        developed in
                         the
                         Unreal Engine 4.</p>
                     <div class="click-indicator">Click to show more</div>
-
                 </div>
-                <div class="portfolio-item animate">
+                <div class="portfolio-item animate" id="item-ColdComfort">
                     <img src="resources/cold_comfort_splashart.webp" alt="Cold Comfort Splashart">
                     <h3>Cold Comfort</h3>
                     <p>An Asymmetric multiplayer zombie game prototype done in the Unreal Engine 4.</p>
@@ -115,62 +117,119 @@
 
                 </div>
             </div>
-            <div class="portfolio-detail" id="portfolio-detail">
-                <div class="detail-content">
-                    <div class="video-section">
-                        <!-- Add your video here -->
-                    </div>
-                    <div class="custom-text">
-                        <!-- Add your custom text here -->
-                    </div>
-                    <div class="summary">
-                        <!-- Add your summary here -->
-                    </div>
+    </section>
+    <div class="portfolio-detail" id="detail-EverslaughtInvasion">
+        <div class="detail-content">
+            <button class="close-button" onclick="closeDetail()">X</button>
+            <div class="video-section">
+                <div class="video-wrapper">
+                    <video-js id="video-EverslaughtInvasion" class="video-js" controls preload="none"
+                        poster="resources/everslaught_invasion_splashart.webp">
+                        <source src="resources/PortfolioVideoLowerRes.mp4" type="video/mp4">
+                    </video-js>
+                </div>
+            </div>
+            <div class="text-section">
+                <div class="summary">
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                </div>
+                <div class="custom-text">
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
                 </div>
             </div>
         </div>
-    </section>
+    </div>
+    <div class="portfolio-detail" id="detail-RoughJustice">
+        <div class="detail-content">
+            <button class="close-button" onclick="closeDetail()">X</button>
+            <div class="video-section">
+                <video id="video-RoughJustice" class="video-js" controls preload="none"
+                    poster="resources/everslaught_invasion_splashart.webp">
+                    <source src="resources/PortfolioVideoLowerRes.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <div class="text-section">
+                <div class="summary">
+                    Rough Justice
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                </div>
+                <div class="custom-text">
+                    Rough Justice
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                    Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut
+                    labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores
+                    et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet.
+                </div>
+            </div>
+        </div>
+    </div>
+    <div class="portfolio-detail" id="detail-ColdComfort">
+        <div class="detail-content">
+            <button class="close-button" onclick="closeDetail()">X</button>
+            <div class="video-section">
+                <video id="video-ColdComfort" class="video-js" controls preload="none"
+                    poster="resources/everslaught_invasion_splashart.webp">
+                    <source src="resources/PortfolioVideoLowerRes.mp4" type="video/mp4">
+                    Your browser does not support the video tag.
+                </video>
+            </div>
+            <div class="text-section">
+                <div class="summary">
+                    <!-- Add your summary here -->
+                </div>
+                <div class="custom-text">
+                    <!-- Add your custom text here -->
+                </div>
+            </div>
+        </div>
+    </div>
     <section id="cv">
-        Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et
-        dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet
-        clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet,
-        consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed
-        diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea
-        takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed
-        diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et
-        accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum
-        dolor sit amet.
-
-        Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu
-        feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril
-        delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
-        sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
-
-        Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea
-        commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel
-        illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent
-        luptatum zzril delenit augue duis dolore te feugait nulla facilisi.
+        lorem ipsum
     </section>
     <section id="contact">
-        Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et
-        dolore magna aliquyam erat, sed diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet
-        clita kasd gubergren, no sea takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet,
-        consetetur sadipscing elitr, sed diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed
-        diam voluptua. At vero eos et accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea
-        takimata sanctus est Lorem ipsum dolor sit amet. Lorem ipsum dolor sit amet, consetetur sadipscing elitr, sed
-        diam nonumy eirmod tempor invidunt ut labore et dolore magna aliquyam erat, sed diam voluptua. At vero eos et
-        accusam et justo duo dolores et ea rebum. Stet clita kasd gubergren, no sea takimata sanctus est Lorem ipsum
-        dolor sit amet.
-
-        Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel illum dolore eu
-        feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent luptatum zzril
-        delenit augue duis dolore te feugait nulla facilisi. Lorem ipsum dolor sit amet, consectetuer adipiscing elit,
-        sed diam nonummy nibh euismod tincidunt ut laoreet dolore magna aliquam erat volutpat.
-
-        Ut wisi enim ad minim veniam, quis nostrud exerci tation ullamcorper suscipit lobortis nisl ut aliquip ex ea
-        commodo consequat. Duis autem vel eum iriure dolor in hendrerit in vulputate velit esse molestie consequat, vel
-        illum dolore eu feugiat nulla facilisis at vero eros et accumsan et iusto odio dignissim qui blandit praesent
-        luptatum zzril delenit augue duis dolore te feugait nulla facilisi.
+        lorem ipsum
     </section>
     <footer>
         <!-- Add your footer here -->
