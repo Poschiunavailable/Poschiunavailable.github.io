@@ -2,6 +2,13 @@
 @import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
 @import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;700&display=swap');
 
+/* Variables */
+:root {
+    --primary-color: #F5F3F5;
+    --secondary-color: #d1d1d1;
+    --3d-shadow: 0 1px 0 #b1b1b1, 0 2px 0 #a7a7a7, 0 3px 0 #999999, 0 4px 0 #9b9b9b, 0 5px 0 #888888, 0 6px 1px rgba(0, 0, 0, .1), 0 0 5px rgba(0, 0, 0, .1), 0 1px 3px rgba(0, 0, 0, .3), 0 3px 5px rgba(0, 0, 0, .2), 0 5px 10px rgba(0, 0, 0, .25), 0 10px 10px rgba(0, 0, 0, .2), 0 20px 20px rgba(0, 0, 0, .15);
+}
+
 /* Reset */
 * {
     margin: 0;
@@ -15,6 +22,37 @@ body {
     color: #f5f3f51c;
 }
 
+/* Global Styles */
+h1 {
+    font-family: 'Lora', serif;
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    color: #FFFFFF;
+    text-shadow: var(--3d-shadow);
+    z-index: 2;
+}
+
+h2 {
+    font-family: 'Roboto', sans-serif;
+    font-size: 1.5rem;
+    margin-bottom: 1rem;
+    text-shadow: var(--3d-shadow);
+    z-index: 2;
+}
+
+p {
+    font-family: 'Roboto', sans-serif;
+    font-size: 1rem;
+    margin-bottom: 2rem;
+    color: var(--secondary-color);
+    z-index: 2;
+}
+
+.container {
+    max-width: 1200px;
+    margin: 0 auto;
+    z-index: -1;
+}
 
 /* Navbar */
 .navbar {
@@ -33,7 +71,7 @@ body {
 .brand a {
     font-family: 'Lora', serif;
     font-size: 1.5rem;
-    color: #F5F3F5;
+    color: var(--primary-color);
     text-decoration: none;
 }
 
@@ -49,7 +87,7 @@ body {
 
 .nav-links a {
     font-size: 1.1rem;
-    color: #F5F3F5;
+    color: var(--primary-color);
     text-decoration: none;
     position: relative;
     transition: color 0.3s ease;
@@ -75,16 +113,7 @@ body {
     transform: scaleX(1);
 }
 
-.background-container {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    z-index: -1;
-}
-
+/* Canvas Section */
 canvas {
     position: absolute;
     top: 0;
@@ -100,6 +129,7 @@ canvas {
     z-index: -100;
 }
 
+/* Hero Section */
 .hero {
     display: flex;
     justify-content: center;
@@ -108,7 +138,7 @@ canvas {
     height: 100vh;
     position: relative;
     background-color: transparent;
-    color: #F5F3F5;
+    color: var(--primary-color);
     text-align: center;
 }
 
@@ -151,55 +181,6 @@ canvas {
     margin-right: auto;
 }
 
-h1 {
-    font-family: 'Lora', serif;
-    font-size: 3rem;
-    margin-bottom: 0.5rem;
-}
-
-h2 {
-    font-family: 'Roboto', sans-serif;
-    font-size: 1.5rem;
-    margin-bottom: 1rem;
-}
-
-p {
-    font-family: 'Roboto', sans-serif;
-    font-size: 1rem;
-    margin-bottom: 2rem;
-    color: #d1d1d1;
-}
-
-.highlight {
-    color: rgb(255, 255, 255);
-    font-weight: bold;
-}
-
-.cta-button {
-    font-family: 'Roboto', sans-serif;
-    font-size: 1rem;
-    text-decoration: none;
-    background-color: #576CA8;
-    color: #F5F3F5;
-    padding: 0.75rem 1.5rem;
-    border-radius: 0.5rem;
-}
-
-.cta-button:hover {
-    background-color: #304C89;
-}
-
-
-
-.content-section {
-    padding: 50px 0;
-}
-
-.container {
-    max-width: 1200px;
-    margin: 0 auto;
-}
-
 /* About Section */
 #about {
     background-color: transparent;
@@ -215,6 +196,7 @@ p {
     padding: 50px;
     display: flex;
     flex-direction: column;
+    z-index: -1;
 }
 
 .about-content {
@@ -222,12 +204,6 @@ p {
     align-items: center;
     flex-wrap: wrap;
     gap: 30px;
-}
-
-h2 {
-    font-size: 2.5rem;
-    margin-bottom: 1.5rem;
-    color: #F5F3F5;
 }
 
 .about-image {
@@ -245,50 +221,290 @@ h2 {
     flex: 1;
     font-size: 1.2rem;
     line-height: 1.6;
-    color: #d1d1d1;
+    color: var(--secondary-color);
 }
 
 .about-text h3 {
     font-size: 1.8rem;
     margin-bottom: 1rem;
-    color: #F5F3F5;
+    color: var(--primary-color);
 }
 
-/* Add responsiveness for smaller screens */
-@media screen and (max-width: 768px) {
-
-    .about-image,
-    .about-text {
-        flex: 0 0 100%;
-        max-width: 100%;
-    }
-
-    .about-image {
-        margin-right: 0;
-        margin-bottom: 20px;
-        max-width: 300px;
-        margin-left: auto;
-        margin-right: auto;
-    }
+/* Portfolio Section */
+#portfolio {
+    padding: 100px 0;
+    perspective: 1000px;
+    overflow: hidden;
 }
 
-.fadeIn {
+#portfolio h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    text-align: center;
+}
+
+.portfolio-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    grid-gap: 30px;
+}
+
+.portfolio-item {
+    background-image: linear-gradient(rgba(49, 255, 52, 0.4), rgba(100, 111, 154, 0.233));
+    border-radius: 10px;
+    padding: 20px;
+    text-align: center;
+    color: var(--secondary-color);
+    transition: transform 0.3s ease-out, background-image 0.3s ease-out;
+}
+
+.portfolio-item:hover {
+    z-index: 1;
+}
+
+.portfolio-item img {
+    width: 100%;
+    height: auto;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.portfolio-item h3 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: var(--primary-color);
+}
+
+.portfolio-detail {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+.detail-content {
+    background-image: linear-gradient(rgba(50, 18, 136, 0.4), rgba(100, 111, 154, 0.233));
+    color: #fff;
+    margin: 10vh auto;
+    padding: 30px;
+    border: 1px solid #888;
+    width: 80%;
+    height: 80vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    pointer-events: auto;
+}
+
+.video-section {
+    flex-basis: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    /* Relative positioning for the play button overlay */
+}
+
+video {
+    width: 90%;
+    height: auto;
+    max-height: 80%;
+    border-radius: 10px;
+    /* Rounded corners */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    /* Subtle shadow */
+    border: 3px solid rgba(50, 18, 136, 0.6);
+    /* Border color matching the gradient */
+}
+
+.play-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2em;
+    cursor: pointer;
+    color: #fff;
+    background: rgba(86, 51, 184, 0.8);
+    border-radius: 50%;
+    padding: 10px 20px;
+    transition: background 0.3s ease;
+    content: '▶';
+    /* This is a simple play symbol; consider using an SVG or font icon for a better look */
+}
+
+.play-overlay:hover {
+    background: rgba(86, 51, 184, 0.8);
+}
+
+.expand-arrow {
+    position: absolute;
+    top: 50%;
+    right: -20px;
+    transform: translateY(-50%);
+    font-size: 2em;
+    cursor: pointer;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    z-index: 2;
+    width: 1.7em;
+    height: 1.8em;
+    text-align: center;
+    line-height: 1.7em;
+    /* Adjust to vertically center the arrow */
+    border-radius: 50%;
+    /* Make it circular */
+    background-color: rgba(68, 19, 201, 0.6);
+    /* Background color from your gradient */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    /* Add a subtle shadow */
+}
+
+.expand-arrow:hover {
+    background-color: rgba(86, 51, 184, 0.8);
+    /* Darken the background on hover */
+    transform: translateY(-50%) scale(1.1);
+    /* Slightly enlarge the button on hover */
+}
+
+.expand-arrow:active {
+    transform: translateY(-50%) scale(0.9);
+    /* Slightly reduce the size of the button when clicked */
+}
+
+.video-section,
+.text-section {
+    transition: flex-basis 0.5s ease;
+}
+
+.video-section.expanded {
+    flex-basis: 90%;
+    /* Video takes up 90% of the detail panel when expanded */
+    transition: flex-basis 0.5s ease;
+    /* Smooth transition for expansion */
+}
+
+.text-section.minimized {
+    flex-basis: 0%;
+    /* Make it disappear */
     opacity: 0;
-    animation: fadeIn 1s ease-out forwards;
+    visibility: hidden;
+    transform: scale(0.8);
+    /* Slightly scale down for a smooth disappearing effect */
 }
 
-/* Animation */
-.animate {
-    opacity: 0;
-    transform: translateY(20px);
-    transition: opacity 1.5s ease-out, transform 1s ease-out;
-}
-
-.animate.visible {
+.text-section {
+    flex-basis: 48%;
     opacity: 1;
-    transform: translateY(0);
+    visibility: visible;
+    transform: scale(1);
+    transition: flex-basis 0.5s ease, opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
 }
 
+.project-detail {
+    background: rgba(50, 18, 136, 0.6);
+    /* A slightly opaque version of the first color in your gradient */
+    border-radius: 5px;
+    margin-bottom: 1em;
+    border: none;
+    overflow: hidden;
+    transition: background 0.3s ease;
+    /* Smooth transition for hover effect */
+    flex-grow: 0;
+    /* Prevent the element from growing vertically */
+    flex-shrink: 0;
+    /* Prevent the element from shrinking */
+    /* Allow the element to grow and take up available space */
+    width: 100%;
+    /* Ensure it takes up the full width */
+}
+
+.project-detail:hover {
+    background: rgba(50, 18, 136, 0.7);
+    /* Darken the background slightly on hover */
+}
+
+.project-detail[open] {
+    box-shadow: 0 0 10px rgba(50, 18, 136, 0.5);
+    /* Use a purple shadow when expanded */
+}
+
+.project-detail summary {
+    color: #fff;
+    /* White text for contrast */
+    padding: 1em;
+    cursor: pointer;
+    list-style: none;
+    background: rgba(100, 111, 154, 0.5);
+    /* A slightly opaque version of the second color in your gradient */
+    transition: background 0.3s ease;
+    /* Smooth transition for hover effect */
+}
+
+.project-detail summary::-webkit-details-marker {
+    display: none;
+    /* Remove default arrow icon in Chrome */
+}
+
+.project-detail summary:hover {
+    background: rgba(100, 111, 154, 0.6);
+    /* Darken the background slightly on hover */
+}
+
+
+.project-detail p {
+    margin: 0;
+    padding: 1em;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    /* Subtle separator */
+    background: rgba(50, 18, 136, 0.2);
+    /* A much lighter version of the first color in your gradient for the content */
+    max-height: 0;
+    opacity: 0;
+    transition: max-height 0.5s ease, opacity 0.3s ease 0.2s;
+    overflow: hidden;
+}
+
+.project-detail[open] p {
+    max-height: 200px;
+    opacity: 1;
+}
+
+
+.arrow {
+    display: inline-block;
+    transition: transform 0.3s ease;
+    /* Animation for rotation */
+    margin-right: 10px;
+    /* Spacing between arrow and text */
+}
+
+/* Rotate the arrow when the details are open */
+.project-detail[open] .arrow {
+    transform: rotate(90deg);
+}
+
+.summary {
+    color: var(--primary-color);
+}
+
+.custom-text {
+    color: var(--secondary-color);
+}
+
+/* Animations */
 @keyframes fadeIn {
     from {
         opacity: 0;
@@ -309,7 +525,7 @@ h2 {
     }
 
     50% {
-        border-color: #F5F3F5;
+        border-color: var(--primary-color);
     }
 }
 
@@ -325,7 +541,7 @@ h2 {
     display: inline;
     overflow: hidden;
     white-space: nowrap;
-    border-right: 2px solid #F5F3F5;
+    border-right: 2px solid var(--primary-color);
     width: 0;
     animation: blink-caret .75s step-end infinite;
 }
@@ -339,191 +555,7 @@ h2 {
     animation: blink-caret .75s step-end infinite;
 }
 
-/* Portfolio Section */
-#portfolio {
-    padding: 100px 0;
-    perspective: 1000px;
-    overflow: hidden;
-}
-
-#portfolio h2 {
-    font-size: 2.5rem;
-    margin-bottom: 1.5rem;
-    color: #F5F3F5;
-    text-align: center;
-}
-
-.portfolio-grid {
-    display: grid;
-    grid-template-columns: repeat(3, 1fr);
-    grid-gap: 30px;
-}
-
-.portfolio-item {
-    background-image: linear-gradient(rgba(49, 255, 52, 0.4), rgba(100, 111, 154, 0.233));
-    border-radius: 10px;
-    padding: 20px;
-    text-align: center;
-    color: #d1d1d1;
-    transition: transform 0.3s ease-out, background-image 0.3s ease-out;
-}
-
-.portfolio-item:hover {
-    z-index: 1;
-}
-
-.portfolio-item img {
-    width: 100%;
-    height: auto;
-    border-radius: 10px;
-    margin-bottom: 20px;
-}
-
-.portfolio-item h3 {
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
-    color: #F5F3F5;
-}
-
-.portfolio-detail {
-    display: none;
-    position: fixed;
-    z-index: 1;
-    left: 0;
-    top: 0;
-    width: 100%;
-    height: 100%;
-    overflow: hidden;
-    background-color: rgba(0, 0, 0, 0);
-}
-
-.detail-content {
-    background-color: #333;
-    background-image: linear-gradient(#66148073, #1111119a);
-    color: #fff;
-    margin: 5vh auto;
-    padding: 20px;
-    border: 1px solid #888;
-    width: 80%;
-    height: 90vh;
-    display: flex;
-    flex-direction: row;
-    justify-content: space-between;
-}
-
-.close-button {
-    position: absolute;
-    top: 10px;
-    right: 10px;
-    background: none;
-    border: none;
-    color: #fff;
-    font-size: 1.5em;
-    cursor: pointer;
-}
-
-/* Responsive layout for mobile */
-@media (max-width: 600px) {
-    .detail-content {
-        flex-direction: column;
-        /* Stack vertically */
-    }
-}
-
-.video-section,
-.text-section {
-    flex-basis: 50%;
-}
-
-.video-section {
-    padding: 10px;
-    position: relative;
-    width: 100%;
-    flex-basis: 50%;
-    height: auto;
-}
-
-.video-js {
-    position: relative;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-}
-
-.vjs-big-play-button {
-    top: 50% !important;
-    left: 50% !important;
-    transform: translate(-50%, -50%) !important;
-}
-
-.video-wrapper {
-    width: 100%;
-    margin-top: auto;
-    height: auto;
-    position: relative;
-}
-
-.text-section {
-    display: grid;
-    grid-template-rows: auto auto;
-    gap: 20px;
-    padding: 20px;
-    max-height: 80vh;
-    overflow-y: auto;
-}
-
-@media only screen and (max-width: 600px) {
-    .video-section {
-        padding-top: 75%;
-        /* Aspect ratio for mobile screens */
-    }
-}
-
-.text-section {
-    display: grid;
-    grid-template-rows: auto auto;
-    gap: 20px;
-    padding: 20px;
-    max-height: 80vh;
-    /* adjust this value as needed */
-    overflow-y: auto;
-}
-
-/* This will affect the scrollbar within .text-section */
-.text-section::-webkit-scrollbar {
-    top: 20px;
-    width: 12px;
-    border-radius: 10px;
-    /* width of the entire scrollbar */
-}
-
-.text-section::-webkit-scrollbar-track {
-    background: #f1f1f1;
-    border-radius: 10px;
-    /* color of the tracking area */
-}
-
-.text-section::-webkit-scrollbar-thumb {
-    background: #888;
-    /* color of the scroll thumb */
-    border-radius: 10px;
-    /* roundness of the scroll thumb */
-}
-
-.text-section::-webkit-scrollbar-thumb:hover {
-    background: #555;
-    /* color of the scroll thumb when hovering */
-}
-
-.summary {
-    color: #F5F3F5;
-}
-
-.custom-text {
-    color: #d1d1d1;
-}
-
+/* Responsive Styles */
 @media screen and (max-width: 768px) {
     .portfolio-detail {
         width: 100%;
@@ -536,79 +568,12 @@ h2 {
     }
 }
 
-.text-section {
-    display: grid;
-    grid-template-rows: auto auto;
-    gap: 20px;
-    padding: 20px;
-}
-
-.summary {
-    font-family: 'Lora', serif;
-    font-size: 1.8rem;
-    color: #F5F3F5;
-    background: rgba(87, 108, 168, 0.2);
-    border-radius: 10px;
-    padding: 20px;
-    margin-bottom: 20px;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-    transition: background 0.3s ease-out;
-}
-
-.summary:hover {
-    background: rgba(87, 108, 168, 0.4);
-}
-
-.custom-text {
-    font-family: 'Roboto', sans-serif;
-    font-size: 1.2rem;
-    color: #d1d1d1;
-    background: rgba(0, 0, 0, 0.4);
-    border-radius: 5px;
-    padding: 15px;
-    line-height: 1.6;
-    box-shadow: 0px 4px 6px rgba(0, 0, 0, 0.2);
-    transition: background 0.3s ease-out;
-}
-
-.custom-text:hover {
-    background: rgba(0, 0, 0, 0.6);
-}
-
-@keyframes pulse {
-    0% {
-        transform: translateX(-50%) scale(1);
-    }
-
-    50% {
-        transform: translateX(-50%) scale(1.1);
-    }
-
-    100% {
-        transform: translateX(-50%) scale(1);
+@media only screen and (max-width: 600px) {
+    .video-section {
+        padding-top: 0;
     }
 }
 
-.click-indicator {
-    position: absolute;
-    bottom: 10px;
-    left: 50%;
-    transform: translateX(-50%);
-    opacity: 0;
-    background-color: rgba(255, 255, 255, 0.8);
-    color: #302B27;
-    padding: 5px 10px;
-    border-radius: 5px;
-    transition: opacity 0.3s;
-    font-size: 0.9rem;
-    animation: pulse 1.2s infinite;
-}
-
-.portfolio-item:hover .click-indicator {
-    opacity: 1;
-}
-
-/* Responsive */
 @media screen and (max-width: 1024px) {
     .portfolio-grid {
         grid-template-columns: repeat(2, 1fr);
