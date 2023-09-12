@@ -48,6 +48,22 @@ p {
     z-index: 2;
 }
 
+/* Initial state: Element is transparent and slightly below its final position */
+.animate {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 1s, transform 1s;
+    /* Define the transition for both opacity and transform */
+    transition-delay: 0s;
+    /* Initial delay */
+}
+
+/* Animated state: Element is fully visible and in its final position */
+.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
 .container {
     max-width: 1200px;
     margin: 0 auto;
@@ -132,10 +148,11 @@ canvas {
 /* Hero Section */
 .hero {
     display: flex;
+    margin-top: 2.8rem;
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 100vh;
+    height: 100%;
     position: relative;
     background-color: transparent;
     color: var(--primary-color);
@@ -145,7 +162,10 @@ canvas {
 .hero-video {
     position: absolute;
     top: 0;
+    bottom: 0;
     left: 0;
+    border-radius: 0;
+    border: 0;
     width: 100%;
     height: 100%;
     object-fit: cover;
@@ -159,12 +179,12 @@ canvas {
     left: 0;
     width: 100%;
     height: 100%;
-    background: linear-gradient(#722b8a81, rgba(47, 53, 75, 0.514));
+    background: linear-gradient(#49374e81, rgba(47, 53, 75, 0.514));
     z-index: -1;
 }
 
 .hero-content {
-    padding: 1rem;
+    padding: 0 rem;
 }
 
 .hero-image {
@@ -189,8 +209,15 @@ canvas {
     z-index: 1;
 }
 
+#about h2 {
+    font-size: 2.5rem;
+    margin-bottom: 1.5rem;
+    color: var(--primary-color);
+    text-align: center;
+}
+
 #about .container {
-    background-image: linear-gradient(#d350ff81, rgba(72, 80, 112, 0.233));
+    background-image: linear-gradient(#35253a81, rgba(72, 80, 112, 0.233));
     border-radius: 10px;
     box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
     padding: 50px;
@@ -251,7 +278,7 @@ canvas {
 }
 
 .portfolio-item {
-    background-image: linear-gradient(rgba(49, 255, 52, 0.4), rgba(100, 111, 154, 0.233));
+    background-image: linear-gradient(rgba(33, 27, 39, 0.4), rgba(100, 111, 154, 0.233));
     border-radius: 10px;
     padding: 20px;
     text-align: center;
@@ -276,6 +303,8 @@ canvas {
     color: var(--primary-color);
 }
 
+/* Portfolio Details Section */
+
 .portfolio-detail {
     display: none;
     position: fixed;
@@ -290,7 +319,7 @@ canvas {
 }
 
 .detail-content {
-    background-image: linear-gradient(rgba(50, 18, 136, 0.4), rgba(100, 111, 154, 0.233));
+    background-image: linear-gradient(rgba(83, 78, 97, 0.4), rgba(100, 111, 154, 0.233));
     color: #fff;
     margin: 10vh auto;
     padding: 30px;
@@ -415,25 +444,19 @@ video {
 
 .project-detail {
     background: rgba(50, 18, 136, 0.6);
-    /* A slightly opaque version of the first color in your gradient */
     border-radius: 5px;
     margin-bottom: 1em;
     border: none;
     overflow: hidden;
-    transition: background 0.3s ease;
-    /* Smooth transition for hover effect */
+    transition: background 0.3s ease, transform 1s ease;
     flex-grow: 0;
-    /* Prevent the element from growing vertically */
     flex-shrink: 0;
-    /* Prevent the element from shrinking */
-    /* Allow the element to grow and take up available space */
     width: 100%;
-    /* Ensure it takes up the full width */
 }
 
 .project-detail:hover {
     background: rgba(50, 18, 136, 0.7);
-    /* Darken the background slightly on hover */
+    transform: translateX(10px);
 }
 
 .project-detail[open] {
@@ -448,9 +471,7 @@ video {
     cursor: pointer;
     list-style: none;
     background: rgba(100, 111, 154, 0.5);
-    /* A slightly opaque version of the second color in your gradient */
     transition: background 0.3s ease;
-    /* Smooth transition for hover effect */
 }
 
 .project-detail summary::-webkit-details-marker {
@@ -468,20 +489,19 @@ video {
     margin: 0;
     padding: 1em;
     border-top: 1px solid rgba(255, 255, 255, 0.1);
-    /* Subtle separator */
     background: rgba(50, 18, 136, 0.2);
-    /* A much lighter version of the first color in your gradient for the content */
-    max-height: 0;
-    opacity: 0;
-    transition: max-height 0.5s ease, opacity 0.3s ease 0.2s;
+    overflow: hidden;
+    transition: transform 10s ease;
+}
+
+.project-detail ul {
+    margin: 0;
+    padding: 1em;
+    padding-left: 2em;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(50, 18, 136, 0.2);
     overflow: hidden;
 }
-
-.project-detail[open] p {
-    max-height: 200px;
-    opacity: 1;
-}
-
 
 .arrow {
     display: inline-block;

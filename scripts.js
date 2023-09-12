@@ -87,6 +87,7 @@ function createTypingEffect(element) {
     };
 }
 
+
 function handleTypingTargets() {
     const typingTargets = document.querySelectorAll(".typing-target");
     const typingEffects = [];
@@ -199,23 +200,6 @@ function handlePortfolioItems() {
         item.appendChild(clickIndicator.cloneNode(true));
 
         let isHovered = false;
-        let targetGradient = {
-            color1: { r: 49, g: 255, b: 52, a: 0.4 },
-            color2: { r: 100, g: 111, b: 154, a: 0.233 },
-        };
-
-        let currentGradient = {
-            color1: { r: 49, g: 255, b: 52, a: 0.4 },
-            color2: { r: 100, g: 111, b: 154, a: 0.233 },
-        };
-        const updateGradient = () => {
-            currentGradient.color1 = lerpColor(currentGradient.color1, targetGradient.color1, 0.05);
-            currentGradient.color1 = lerpColor(currentGradient.color2, targetGradient.color2, 0.05);
-
-            item.style.backgroundImage = `linear-gradient(rgba(${currentGradient.color1.r}, ${currentGradient.color1.g}, ${currentGradient.color1.b}, ${currentGradient.color1.a}), rgba(${currentGradient.color2.r}, ${currentGradient.color2.g}, ${currentGradient.color2.b}, ${currentGradient.color2.a}))`;
-
-            requestAnimationFrame(updateGradient);
-        };
 
         const handleMove = (e, isTouch = false) => {
             const rect = item.getBoundingClientRect();
@@ -257,44 +241,22 @@ function handlePortfolioItems() {
             if (isHovered) {
                 if (rotateXDelta > 0.75) {
                     rotateXDelta = (rotateXDelta - 0.75) * 4;
-                    targetGradient.color1 = {
-                        r: lerp(49, 200, rotateXDelta),
-                        g: lerp(255, 255, rotateXDelta),
-                        b: lerp(52, 200, rotateXDelta),
-                        a: 1,
-                    };
-                    targetGradient.color2 = {
-                        r: lerp(100, 210, rotateXDelta),
-                        g: lerp(111, 200, rotateXDelta),
-                        b: lerp(154, 255, rotateXDelta),
-                        a: 1,
-                    };
-                } else {
-                    targetGradient.color1 = { r: 49, g: 255, b: 52, a: 1 };
-                    targetGradient.color2 = { r: 100, g: 111, b: 154, a: 1 };
                 }
             }
         };
 
         item.addEventListener("mousemove", handleMove);
 
-        requestAnimationFrame(updateGradient);
-
         item.addEventListener("mouseenter", () => {
             isHovered = true;
-            targetGradient.color1.a = 1;
-            targetGradient.color2.a = 1;
         });
 
         item.addEventListener("mouseleave", () => {
             isHovered = false;
-            targetGradient.color1.a = 0.4;
-            targetGradient.color2.a = 0.233;
         });
 
         item.addEventListener("mouseleave", () => {
             item.style.transform = "";
-            item.style.backgroundImage = "linear-gradient(rgba(49, 255, 52, 0.4), rgba(72, 80, 112, 0.4))";
             item.querySelector("div").style.opacity = "0";
         });
 
@@ -331,6 +293,13 @@ window.addEventListener("DOMContentLoaded", function () {
     });
 
     const animateElements = document.querySelectorAll(".animate");
+
+    // Assign a random delay to each element
+    animateElements.forEach((element) => {
+        const randomDelay = Math.random() * 0.5; // Random delay between 0 and 2 seconds
+        element.style.transitionDelay = `${randomDelay}s`;
+    });
+
     animateElements.forEach((element) => {
         observer.observe(element);
     });
