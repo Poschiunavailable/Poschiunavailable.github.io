@@ -152,22 +152,21 @@ canvas {
     justify-content: center;
     align-items: center;
     width: 100%;
-    height: 100%;
+    height: 100vh;
     position: relative;
     background-color: transparent;
     color: var(--primary-color);
     text-align: center;
+    overflow: hidden;
 }
 
 .hero-video {
     position: absolute;
     top: 0;
-    bottom: 0;
     left: 0;
-    border-radius: 0;
-    border: 0;
     width: 100%;
     height: 100%;
+    /* Cover the entire viewport */
     object-fit: cover;
     z-index: -2;
 }
@@ -175,11 +174,11 @@ canvas {
 .hero::before {
     content: '';
     position: absolute;
-    top: 0;
-    left: 0;
     width: 100%;
-    height: 100%;
-    background: linear-gradient(#49374e81, rgba(47, 53, 75, 0.514));
+    /* Set the width to match the video */
+    height: 56.25%;
+    /* Set the height to match the video's aspect ratio (9/16) */
+    background: linear-gradient(#c800ff81, rgba(255, 0, 13, 0.514));
     z-index: -1;
 }
 
@@ -199,6 +198,126 @@ canvas {
     width: 100%;
     margin-left: auto;
     margin-right: auto;
+}
+
+/* List Design */
+
+/* Reset default list styles */
+ul {
+    list-style: none;
+    padding: 0;
+}
+
+/* Style the list container */
+.list-container {
+    display: flex;
+    flex-direction: column;
+    align-items: left;
+    overflow: visible;
+}
+
+/* Style each list item */
+.list-item {
+    background-color: rgba(36, 22, 53, 0.74);
+    border: 1px solid #ccc;
+    padding: 10px;
+    margin: 10px;
+    width: fit-content;
+    text-align: left;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transform: translateX(0);
+    opacity: 1;
+    transition: transform 0.3s, opacity 0.3s;
+    overflow: visible;
+}
+
+/* Add hover effect */
+.list-item:hover {
+    transform: translateX(10px);
+    z-index: 10;
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Add animation for list items */
+.list-item:nth-child(odd) {
+    animation: slideFromLeft 0.5s ease-in-out;
+}
+
+.list-item:nth-child(even) {
+    animation: slideFromRight 0.5s ease-in-out;
+}
+
+/* Add styles for the sub-list */
+.sub-list {
+    margin-left: 20px;
+    margin-right: 20px;
+    list-style: none;
+}
+
+/* Style each list item */
+.sub-list-item {
+    background-color: rgba(36, 22, 53, 0.342);
+    border: 1px solid #ccc;
+    font-size: small;
+    padding: 5px;
+    margin: 5px;
+    width: fit-content;
+    text-align: left;
+    border-radius: 5px;
+    box-shadow: 0 2px 5px rgba(0, 0, 0, 0.1);
+    transform: scale(1, 1);
+    opacity: 1;
+    transition: transform 0.3s, opacity 0.3s;
+    overflow: visible;
+}
+
+/* Add hover effect */
+.sub-list-item:hover {
+    transform: scale(1.3, 1.3);
+    box-shadow: 0 5px 10px rgba(0, 0, 0, 0.2);
+}
+
+/* Style the link within the list item */
+.list-item a {
+    color: #007bff;
+    /* Change the link text color */
+    text-decoration: none;
+    /* Remove underline */
+    font-weight: bold;
+    /* Make the text bold */
+    transition: color 0.3s ease;
+    /* Add color transition on hover */
+}
+
+/* Change link color on hover */
+.list-item a:hover {
+    color: #ff5733;
+    /* Change the link text color on hover */
+}
+
+@keyframes slideFromLeft {
+    from {
+        transform: translateX(-100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
+}
+
+@keyframes slideFromRight {
+    from {
+        transform: translateX(100%);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateX(0);
+        opacity: 1;
+    }
 }
 
 /* About Section */
@@ -378,20 +497,16 @@ video {
 .expand-arrow {
     position: absolute;
     top: 50%;
-    right: -20px;
+    right: 10px;
     transform: translateY(-50%);
-    font-size: 2em;
+    font-size: 3em;
     cursor: pointer;
     transition: transform 0.3s ease, background-color 0.3s ease;
     z-index: 2;
-    width: 1.7em;
-    height: 1.8em;
+    width: 0.5em;
+    height: 0.6em;
     text-align: center;
-    line-height: 1.7em;
-    /* Adjust to vertically center the arrow */
-    border-radius: 50%;
-    /* Make it circular */
-    background-color: rgba(68, 19, 201, 0.6);
+    line-height: 0.45em;
     /* Background color from your gradient */
     box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
     /* Add a subtle shadow */
@@ -431,7 +546,7 @@ video {
 }
 
 .text-section {
-    flex-basis: 48%;
+    flex-basis: 50%;
     opacity: 1;
     visibility: visible;
     transform: scale(1);
@@ -440,6 +555,29 @@ video {
     align-items: center;
     justify-content: center;
     flex-direction: column;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+/* Style the scrollbar track */
+.text-section::-webkit-scrollbar {
+    width: 12px;
+    padding: 3px;
+    /* Set the width of the scrollbar */
+}
+
+/* Style the scrollbar thumb (the draggable part) */
+.text-section::-webkit-scrollbar-thumb {
+    background-color: rgba(181, 91, 241, 0.425);
+    /* Semi-transparent background color */
+    border-radius: 10px;
+    /* Round the corners */
+}
+
+/* Style the scrollbar track on hover */
+.text-section::-webkit-scrollbar:hover {
+    background-color: rgba(181, 91, 241, 0.3);
+    /* Semi-transparent background color on hover */
 }
 
 .project-detail {
@@ -462,6 +600,22 @@ video {
 .project-detail[open] {
     box-shadow: 0 0 10px rgba(50, 18, 136, 0.5);
     /* Use a purple shadow when expanded */
+}
+
+.project-detail:not([open]) {
+    background: none;
+    /* Reset the background for the folded state */
+}
+
+
+.project-detail-everslaught1[open] {
+    background-image: url('resources/Everslaught_Ship.png');
+    background-size: cover;
+}
+
+.project-detail-everslaught2[open] {
+    background-image: url('resources/Everslaught_Ship2.png');
+    background-size: cover;
 }
 
 .project-detail summary {
