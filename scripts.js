@@ -134,8 +134,8 @@ function playVideo(videoId) {
 }
 
 function toggleVideoSize(videoId) {
-    const videoSection = document.querySelector('.video-section');
-    const textSection = document.querySelector('.text-section');
+    const videoSection = document.getElementById(videoId).parentElement;
+    const textSection = videoSection.parentElement.querySelector('.text-section');
     const arrow = videoSection.querySelector('.expand-arrow');
 
     if (videoSection.classList.contains('expanded')) {

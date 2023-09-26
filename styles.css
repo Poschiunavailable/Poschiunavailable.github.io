@@ -453,6 +453,16 @@ ul {
     pointer-events: auto;
 }
 
+.project-detail b {
+    font-weight: bold;
+    color: rgb(104, 88, 245)
+}
+
+.project-detail strong {
+    font-weight: bold;
+    color: rgb(88, 130, 245)
+}
+
 .video-section {
     flex-basis: 50%;
     display: flex;
