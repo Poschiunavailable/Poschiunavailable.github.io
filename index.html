@@ -25,7 +25,7 @@ ste
     <script src="background.js" type="module"></script>
     <div id="canvas-container"></div>
     <header>
-        <nav class="navbar">
+        <nav class="navbar" id="nonCVContent">
             <div class="brand">
                 <a href="#hero" onclick="scrollToSection(event, 'hero')">Patrick Temborius</a>
             </div>
@@ -37,7 +37,7 @@ ste
             </ul>
         </nav>
     </header>
-    <section id="hero" class="hero">
+    <section id="hero nonCVContent" class="hero">
         <video class="hero-video" autoplay muted loop playsinline>
             <source src="resources/PortfolioVideoLowerRes.mp4" type="video/mp4">
             Your browser does not support HTML5 video.
@@ -55,7 +55,7 @@ ste
             <a href="#portfolio" class="cta-button">View My Work</a>
         </div>
     </section>
-    <section id="about">
+    <section id="about nonCVContent">
         <div class="container animate">
             <div class="typing-effect">
                 <h2 class="typing-text typing-target">About Me</h2>
@@ -87,7 +87,7 @@ ste
             </div>
         </div>
     </section>
-    <section id="portfolio">
+    <section id="portfolio nonCVContent">
         <div class="container animate">
             <div class="typing-effect animate">
                 <h2 class="typing-text typing-target">Portfolio</h2>
@@ -115,7 +115,7 @@ ste
                 </div>
             </div>
     </section>
-    <section id="Everslaught-Invastion Detail">
+    <section id="Everslaught-Invastion Detail nonCVContent">
         <div class="portfolio-detail animate" id="detail-EverslaughtInvasion">
             <div class="detail-content">
                 <div class="video-section">
@@ -222,7 +222,7 @@ ste
             </div>
         </div>
     </section>
-    <section id="Rough-Justice Detail">
+    <section id="Rough-Justice Detail nonCVContent">
         <div class="portfolio-detail animate" id="detail-RoughJustice">
             <div class="detail-content">
                 <div class="video-section">
@@ -317,10 +317,27 @@ ste
         </div>
     </section>
     <section id="cv">
-        lorem ipsum
+        <div class="separator">
+        </div>
+        <div class="cv-section">
+            <div id="container">
+                <div id="timeline"></div>
+                <div id="currentTime">January 2023</div>
+                <div id="projects">
+                    <article class="cv-project" data-start="2023-01" data-end="2022-12">Project A</article>
+                    <article class="cv-project" data-start="2022-11" data-end="2022-10">Project B</article>
+                    <article class="cv-project" data-start="2022-9" data-end="2021-10">Project C</article>
+                    <article class="cv-project" data-start="2021-7" data-end="2021-0">Project D</article>
+                    <article class="cv-project" data-start="2020-11" data-end="2020-1">Project E</article>
+                    <!-- Add more projects as needed -->
+                </div>
+            </div>
+        </div>
+        <div class="separator"></div>
+        <div class="separator"></div>
     </section>
     <section id="contact">
-        lorem ipsum
+        lorem ipsum lorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsum
     </section>
     <footer>
         <!-- Add your footer here -->

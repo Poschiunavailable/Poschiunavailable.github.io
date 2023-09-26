@@ -7,6 +7,9 @@
     --primary-color: #F5F3F5;
     --secondary-color: #d1d1d1;
     --3d-shadow: 0 1px 0 #b1b1b1, 0 2px 0 #a7a7a7, 0 3px 0 #999999, 0 4px 0 #9b9b9b, 0 5px 0 #888888, 0 6px 1px rgba(0, 0, 0, .1), 0 0 5px rgba(0, 0, 0, .1), 0 1px 3px rgba(0, 0, 0, .3), 0 3px 5px rgba(0, 0, 0, .2), 0 5px 10px rgba(0, 0, 0, .25), 0 10px 10px rgba(0, 0, 0, .2), 0 20px 20px rgba(0, 0, 0, .15);
+    --text-color: #fff;
+    --border-color: #fff;
+    --primary-font: 'Roboto', sans-serif;
 }
 
 /* Reset */
@@ -18,7 +21,7 @@
 
 body {
     background-image: linear-gradient(rgb(52, 14, 70), rgba(0, 0, 0, 1));
-    font-family: 'Roboto', sans-serif;
+    font-family: var(--primary-font);
     color: #f5f3f51c;
 }
 
@@ -423,7 +426,6 @@ ul {
 }
 
 /* Portfolio Details Section */
-
 .portfolio-detail {
     display: none;
     position: fixed;
@@ -686,6 +688,95 @@ video {
 
 .custom-text {
     color: var(--secondary-color);
+}
+
+/* CV Section */
+
+.cv-section-wrapper {
+    margin: 0;
+    overflow: hidden;
+    font-family: var(--primary-font);
+    /* If --primary-font is defined and you want to use it */
+    color: #fff;
+    /* Or any color you prefer for the text in the CV section */
+}
+
+.cv-section #container {
+    position: relative;
+}
+
+.cv-section #timeline {
+    position: absolute;
+    height: fit-content;
+    width: 2px;
+    top: 0;
+    bottom: 0;
+    left: 50%;
+
+}
+
+.cv-section #currentTime {
+    position: fixed;
+    top: 50%;
+    right: calc(50% + 1em);
+    /* Using em for responsive design */
+    transform: translateY(-50%);
+    z-index: 10;
+    text-align: right;
+    color: #F5F3F5;
+    /* To ensure it is above other elements */
+}
+
+.cv-project {
+    position: absolute;
+    width: 10em;
+    /* Using em for responsive design */
+    height: 3em;
+    /* Using em for responsive design */
+    line-height: 3em;
+    /* Using em for responsive design */
+    text-align: center;
+    background-color: var(--primary-color);
+    color: var(--text-color);
+    opacity: 0;
+    transition: opacity 0.5s ease-in-out;
+}
+
+.nonCVContent {
+    transition: opacity 1.0s ease-in-out;
+}
+
+.year,
+.month {
+    position: relative;
+    height: 20vh;
+    width: 2px;
+    color: var(--text-color);
+    background-color: #fff;
+}
+
+.year {
+    font-size: 1.5em;
+}
+
+.month {
+    font-size: 0.8em;
+}
+
+.year::before,
+.month::before {
+    position: absolute;
+    content: attr(data-time);
+    left: -10px;
+    padding: 0px;
+    width: 40px;
+    height: 1px;
+    background-color: #fff;
+    transform: translateY(-50%);
+}
+
+.separator {
+    height: 20vh;
 }
 
 /* Animations */
