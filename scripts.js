@@ -291,6 +291,8 @@ function handleCVTimeline() {
     let currentMonth = currentDate.getMonth();
     let currentYear = currentDate.getFullYear();
 
+    //element.getAttribute("data-text");
+
     let minYear = currentYear;
     let maxYear = currentYear;
 
@@ -313,28 +315,34 @@ function handleCVTimeline() {
             monthDiv.className = 'month';
             monthDiv.textContent = new Date(year, month).toLocaleString('default', { month: 'short' });
             timeline.appendChild(monthDiv);
+            for (let subdivision = 4; subdivision >= 0; subdivision--) {
+                let subdivisionDiv = document.createElement('div');
+                subdivisionDiv.className = "subdivision";
+                timeline.appendChild(subdivisionDiv);
+            }
         }
     }
 
     window.addEventListener('scroll', () => {
         let scrollY = window.scrollY;
+        // Calculate the position of the currentTime element within the limits of the timeline
+        let timelineRect = timeline.getBoundingClientRect();
+        let timelineTop = timelineRect.top;
+        let timelineBottom = timelineRect.bottom;
+
+        let timelineDelta = Math.abs(timelineTop) / (Math.abs(timelineTop) + Math.abs(timelineBottom))
 
         // Calculate the total number of months
         let totalMonths = (maxYear - minYear + 1) * 12;
 
         // Adjust the monthsScrolled calculation
-        let monthsScrolled = Math.floor(scrollY / (20 /* Height of each month in px */));
+        let monthsScrolled = Math.floor(scrollY / (24 /* Height of each month in px */));
 
         let newDate = new Date(currentYear, currentMonth - monthsScrolled);
         let newMonth = newDate.toLocaleString('default', { month: 'long' });
         let newYear = newDate.getFullYear();
 
         currentTime.textContent = `${newMonth} ${newYear}`;
-
-        // Calculate the position of the currentTime element within the limits of the timeline
-        let timelineRect = timeline.getBoundingClientRect();
-        let timelineTop = timelineRect.top;
-        let timelineBottom = timelineRect.bottom;
 
         if (timelineTop <= window.innerHeight / 2 && timelineBottom >= window.innerHeight / 2) {
             currentTime.style.top = `50%`;
@@ -353,6 +361,20 @@ function handleCVTimeline() {
 
             project.style.opacity = newDate >= startDate && newDate <= endDate ? '1' : '0';
         });
+    });
+}
+
+function setupVideo() {
+    var video = document.getElementById('heroVideo');
+    var overlay = document.getElementById('videoOverlay');
+
+    // Set the height of the ::after pseudo-element to be the same as the height of the video
+    overlay.style.setProperty('--video-height', video.clientHeight + 'px');
+    console.log(video.clientHeight);
+
+    // Update the height of the ::after pseudo-element when the window is resized
+    window.addEventListener('resize', function () {
+        overlay.style.setProperty('--video-height', video.clientHeight + 'px');
     });
 }
 
@@ -391,5 +413,7 @@ window.addEventListener("DOMContentLoaded", function () {
     handleVideoPlayers();
 
     handleCVTimeline();
+
+    setupVideo();
 });
 

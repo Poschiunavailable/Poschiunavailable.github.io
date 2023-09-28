@@ -38,13 +38,15 @@ ste
         </nav>
     </header>
     <section id="hero nonCVContent" class="hero">
-        <video class="hero-video" autoplay muted loop playsinline>
-            <source src="resources/PortfolioVideoLowerRes.mp4" type="video/mp4">
-            Your browser does not support HTML5 video.
-        </video>
+        <div class="hero-video-overlay" id="videoOverlay">
+            <video class="hero-video" id="heroVideo" autoplay muted loop playsinline>
+                <source src="resources/PortfolioVideoLowerRes.mp4" type="video/mp4">
+            </video>
+        </div>
         <div class="hero-content">
+            <div class="small-separator"></div>
             <div class="hero-image animate">
-                <img src="resources/website_icon.png" alt="Website Logo">
+                <img src="resources/profile_picture.jpg" alt="Website Logo">
             </div>
             <h1>Patrick Temborius</h1>
             <h2>Game Developer</h2>
@@ -53,8 +55,10 @@ ste
                 <span class="highlight">game systems</span> and <span class="highlight">tools</span>.
             </p>
             <a href="#portfolio" class="cta-button">View My Work</a>
+            <div class="small-separator"></div>
         </div>
     </section>
+    <div class="small-separator"></div>
     <section id="about nonCVContent">
         <div class="container animate">
             <div class="typing-effect">
@@ -118,7 +122,7 @@ ste
     <section id="Everslaught-Invastion Detail nonCVContent">
         <div class="portfolio-detail animate" id="detail-EverslaughtInvasion">
             <div class="detail-content">
-                <div class="video-section">
+                <div class="project-detail-video-section">
                     <video id="new-video-EverslaughtInvasion" controls preload="none"
                         poster="resources/everslaught_invasion_splashart.webp">
                         <source src="resources/PortfolioVideoLowerRes.mp4" type="video/mp4">
@@ -225,7 +229,7 @@ ste
     <section id="Rough-Justice Detail nonCVContent">
         <div class="portfolio-detail animate" id="detail-RoughJustice">
             <div class="detail-content">
-                <div class="video-section">
+                <div class="project-detail-video-section">
                     <video id="new-video-RoughJustice" controls preload="none"
                         poster="resources/rough_justice_splashart.webp">
                         <source src="resources/PortfolioVideoLowerRes.mp4" type="video/mp4">
