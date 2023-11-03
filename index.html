@@ -22,7 +22,7 @@
 ste
 
 <body>
-    <script src="background.js" type="module"></script>
+    <script src="modules/background.js" type="module"></script>
     <div id="canvas-container"></div>
     <header>
         <nav class="navbar" id="nonCVContent">
@@ -323,9 +323,12 @@ ste
     <section id="cv">
         <div class="separator">
         </div>
-        <div class="cv-section">
+        <div class="cv-section" id="cvSection">
             <div id="container">
-                <div id="timeline"></div>
+                <div id="timeline">
+                    <div id="timeline-marker-left">▷</div>
+                    <div id="timeline-marker-right">◁</div>
+                </div>
                 <div id="currentTime">January 2023</div>
                 <div id="projects">
                     <article class="cv-project" data-start="2023-01" data-end="2022-12">Project A</article>
@@ -338,15 +341,15 @@ ste
             </div>
         </div>
         <div class="separator"></div>
-        <div class="separator"></div>
     </section>
+    <script src="modules/timeline.js"></script>
     <section id="contact">
         lorem ipsum lorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsum
     </section>
     <footer>
         <!-- Add your footer here -->
     </footer>
-    <script src="scripts.js"></script>
+    <script src="modules/scripts.js"></script>
 
 </body>
 

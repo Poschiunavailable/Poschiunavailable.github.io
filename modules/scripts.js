@@ -279,89 +279,10 @@ function handlePortfolioItems() {
     });
 }
 
-function handleCVTimeline() {
-    const container = document.getElementById('container');
-    const otherContent = document.getElementById('nonCVContent');
-    const containerTop = container.offsetTop;
-    const projects = document.querySelectorAll('.cv-project'); // Fixed class name
-    const currentTime = document.getElementById('currentTime');
-    const timeline = document.getElementById('timeline');
+function getMontFromScroll() {
+    const MonthSizeInPx = 5;
+    const YearSizeInPx = 10;
 
-    let currentDate = new Date();
-    let currentMonth = currentDate.getMonth();
-    let currentYear = currentDate.getFullYear();
-
-    //element.getAttribute("data-text");
-
-    let minYear = currentYear;
-    let maxYear = currentYear;
-
-    projects.forEach(project => {
-        let [startYear] = project.dataset.start.split('-').map(Number);
-        let [endYear] = project.dataset.end.split('-').map(Number);
-
-        minYear = Math.min(minYear, startYear, endYear);
-        maxYear = Math.max(maxYear, startYear, endYear);
-    });
-
-    for (let year = maxYear; year >= minYear; year--) {
-        let yearDiv = document.createElement('div');
-        yearDiv.className = 'year';
-        yearDiv.textContent = year;
-        timeline.appendChild(yearDiv);
-
-        for (let month = 11; month >= 0; month--) {
-            let monthDiv = document.createElement('div');
-            monthDiv.className = 'month';
-            monthDiv.textContent = new Date(year, month).toLocaleString('default', { month: 'short' });
-            timeline.appendChild(monthDiv);
-            for (let subdivision = 4; subdivision >= 0; subdivision--) {
-                let subdivisionDiv = document.createElement('div');
-                subdivisionDiv.className = "subdivision";
-                timeline.appendChild(subdivisionDiv);
-            }
-        }
-    }
-
-    window.addEventListener('scroll', () => {
-        let scrollY = window.scrollY;
-        // Calculate the position of the currentTime element within the limits of the timeline
-        let timelineRect = timeline.getBoundingClientRect();
-        let timelineTop = timelineRect.top;
-        let timelineBottom = timelineRect.bottom;
-
-        let timelineDelta = Math.abs(timelineTop) / (Math.abs(timelineTop) + Math.abs(timelineBottom))
-
-        // Calculate the total number of months
-        let totalMonths = (maxYear - minYear + 1) * 12;
-
-        // Adjust the monthsScrolled calculation
-        let monthsScrolled = Math.floor(scrollY / (24 /* Height of each month in px */));
-
-        let newDate = new Date(currentYear, currentMonth - monthsScrolled);
-        let newMonth = newDate.toLocaleString('default', { month: 'long' });
-        let newYear = newDate.getFullYear();
-
-        currentTime.textContent = `${newMonth} ${newYear}`;
-
-        if (timelineTop <= window.innerHeight / 2 && timelineBottom >= window.innerHeight / 2) {
-            currentTime.style.top = `50%`;
-        } else if (timelineTop > window.innerHeight / 2) {
-            currentTime.style.top = `${timelineTop}px`;
-        } else {
-            currentTime.style.top = `${timelineBottom - currentTime.clientHeight}px`;
-        }
-
-        projects.forEach(project => {
-            let [startYear, startMonth] = project.dataset.start.split('-').map(Number);
-            let [endYear, endMonth] = project.dataset.end.split('-').map(Number);
-
-            let startDate = new Date(startYear, startMonth - 1);
-            let endDate = new Date(endYear, endMonth - 1);
-
-            project.style.opacity = newDate >= startDate && newDate <= endDate ? '1' : '0';
-        });
-    });
 }
 
 function setupVideo() {
@@ -411,8 +332,6 @@ window.addEventListener("DOMContentLoaded", function () {
     handlePortfolioDetails();
 
     handleVideoPlayers();
-
-    handleCVTimeline();
 
     setupVideo();
 });
