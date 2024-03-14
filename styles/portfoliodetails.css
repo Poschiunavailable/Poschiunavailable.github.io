@@ -1,0 +1,259 @@
+@import url("base.css");
+
+
+/* Portfolio Details Section */
+.portfolio-detail {
+    display: none;
+    position: fixed;
+    z-index: 1;
+    left: 0;
+    top: 0;
+    width: 100%;
+    height: 100%;
+    overflow: auto;
+    background-color: rgba(0, 0, 0, 0.8);
+    backdrop-filter: blur(10px);
+}
+
+.detail-content {
+    background-image: linear-gradient(rgba(83, 78, 97, 0.4), rgba(100, 111, 154, 0.233));
+    color: #fff;
+    margin: 10vh auto;
+    padding: 30px;
+    border: 1px solid #888;
+    width: 80%;
+    height: 80vh;
+    display: flex;
+    flex-direction: row;
+    justify-content: space-between;
+    box-shadow: 0px 0px 15px rgba(0, 0, 0, 0.5);
+    border-radius: 10px;
+    pointer-events: auto;
+}
+
+.project-detail b {
+    font-weight: bold;
+    color: rgb(104, 88, 245)
+}
+
+.project-detail strong {
+    font-weight: bold;
+    color: rgb(88, 130, 245)
+}
+
+.project-detail-video-section {
+    flex-basis: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    position: relative;
+    /* Relative positioning for the play button overlay */
+}
+
+.project-detail-video-section video {
+    width: 90%;
+    height: auto;
+    max-height: 80%;
+    border-radius: 10px;
+    /* Rounded corners */
+    box-shadow: 0 0 15px rgba(0, 0, 0, 0.3);
+    /* Subtle shadow */
+    border: 3px solid rgba(50, 18, 136, 0.6);
+    /* Border color matching the gradient */
+}
+
+.play-overlay {
+    position: absolute;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    font-size: 2em;
+    cursor: pointer;
+    color: #fff;
+    background: rgba(86, 51, 184, 0.8);
+    border-radius: 50%;
+    padding: 10px 20px;
+    transition: background 0.3s ease;
+    content: '▶';
+    /* This is a simple play symbol; consider using an SVG or font icon for a better look */
+}
+
+.play-overlay:hover {
+    background: rgba(86, 51, 184, 0.8);
+}
+
+.expand-arrow {
+    position: absolute;
+    top: 50%;
+    right: 10px;
+    transform: translateY(-50%);
+    font-size: 3em;
+    cursor: pointer;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+    z-index: 2;
+    width: 0.5em;
+    height: 0.6em;
+    text-align: center;
+    line-height: 0.45em;
+    /* Background color from your gradient */
+    box-shadow: 0 0 10px rgba(0, 0, 0, 0.3);
+    /* Add a subtle shadow */
+}
+
+.expand-arrow:hover {
+    background-color: rgba(86, 51, 184, 0.8);
+    /* Darken the background on hover */
+    transform: translateY(-50%) scale(1.1);
+    /* Slightly enlarge the button on hover */
+}
+
+.expand-arrow:active {
+    transform: translateY(-50%) scale(0.9);
+    /* Slightly reduce the size of the button when clicked */
+}
+
+.project-detail-video-section,
+.text-section {
+    transition: flex-basis 0.5s ease;
+}
+
+.project-detail-video-section.expanded {
+    flex-basis: 90%;
+    /* Video takes up 90% of the detail panel when expanded */
+    transition: flex-basis 0.5s ease;
+    /* Smooth transition for expansion */
+}
+
+.text-section.minimized {
+    flex-basis: 0%;
+    /* Make it disappear */
+    opacity: 0;
+    visibility: hidden;
+    transform: scale(0.8);
+    /* Slightly scale down for a smooth disappearing effect */
+}
+
+.text-section {
+    flex-basis: 50%;
+    opacity: 1;
+    visibility: visible;
+    transform: scale(1);
+    transition: flex-basis 0.5s ease, opacity 0.3s ease, transform 0.3s ease, visibility 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    flex-direction: column;
+    overflow-y: scroll;
+    overflow-x: hidden;
+}
+
+/* Style the scrollbar track */
+.text-section::-webkit-scrollbar {
+    width: 12px;
+    padding: 3px;
+    /* Set the width of the scrollbar */
+}
+
+/* Style the scrollbar thumb (the draggable part) */
+.text-section::-webkit-scrollbar-thumb {
+    background-color: rgba(181, 91, 241, 0.425);
+    /* Semi-transparent background color */
+    border-radius: 10px;
+    /* Round the corners */
+}
+
+/* Style the scrollbar track on hover */
+.text-section::-webkit-scrollbar:hover {
+    background-color: rgba(181, 91, 241, 0.3);
+    /* Semi-transparent background color on hover */
+}
+
+.project-detail {
+    background: rgba(50, 18, 136, 0.6);
+    border-radius: 5px;
+    margin-bottom: 1em;
+    border: none;
+    overflow: hidden;
+    transition: background 0.3s ease, transform 1s ease;
+    flex-grow: 0;
+    flex-shrink: 0;
+    width: 100%;
+}
+
+.project-detail:hover {
+    background: rgba(50, 18, 136, 0.7);
+    transform: translateX(10px);
+}
+
+.project-detail[open] {
+    box-shadow: 0 0 10px rgba(50, 18, 136, 0.5);
+    /* Use a purple shadow when expanded */
+}
+
+.project-detail:not([open]) {
+    background: none;
+    /* Reset the background for the folded state */
+}
+
+
+.project-detail-everslaught1[open] {
+    background-image: url('resources/Everslaught_Ship.png');
+    background-size: cover;
+}
+
+.project-detail-everslaught2[open] {
+    background-image: url('resources/Everslaught_Ship2.png');
+    background-size: cover;
+}
+
+.project-detail summary {
+    color: #fff;
+    /* White text for contrast */
+    padding: 1em;
+    cursor: pointer;
+    list-style: none;
+    background: rgba(100, 111, 154, 0.5);
+    transition: background 0.3s ease;
+}
+
+.project-detail summary::-webkit-details-marker {
+    display: none;
+    /* Remove default arrow icon in Chrome */
+}
+
+.project-detail summary:hover {
+    background: rgba(100, 111, 154, 0.6);
+    /* Darken the background slightly on hover */
+}
+
+
+.project-detail p {
+    margin: 0;
+    padding: 1em;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(50, 18, 136, 0.2);
+    overflow: hidden;
+    transition: transform 10s ease;
+}
+
+.project-detail ul {
+    margin: 0;
+    padding: 1em;
+    padding-left: 2em;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    background: rgba(50, 18, 136, 0.2);
+    overflow: hidden;
+}
+
+.arrow {
+    display: inline-block;
+    transition: transform 0.3s ease;
+    /* Animation for rotation */
+    margin-right: 10px;
+    /* Spacing between arrow and text */
+}
+
+/* Rotate the arrow when the details are open */
+.project-detail[open] .arrow {
+    transform: rotate(90deg);
+}

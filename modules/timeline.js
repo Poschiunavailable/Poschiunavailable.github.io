@@ -1,66 +1,70 @@
-let currentDate;
-let currentMonth;
-let currentYear;
+const timeData = {
+    currentDate: null,
+    currentMonth: null,
+    currentYear: null,
+    minYear: null,
+    maxYear: null,
+    minMonth: null,
+    maxMonth: null,
+}
 
-let minYear;
-let maxYear;
+const timelineElements = {
+    cvSection: document.getElementById('cvSection'),
+    projects: document.querySelectorAll('.cv-project'),
+    currentTime: document.getElementById('currentTime'),
+    timeline: document.getElementById('timeline'),
+    timelineMarkerLeft: document.getElementById('timeline-marker-left'),
+    timelineMarkerRight: document.getElementById('timeline-marker-right'),
+}
 
-let minMonth;
-let maxMonth;
+function generateCVTimeline() {
 
+    timeData.currentDate = new Date();
+    timeData.currentMonth = timeData.currentDate.getMonth();
+    timeData.currentYear = timeData.currentDate.getFullYear();
 
-const cvSection = document.getElementById('cvSection');
-const projects = document.querySelectorAll('.cv-project');
-const currentTime = document.getElementById('currentTime');
-const timeline = document.getElementById('timeline');
-const timelineMarkerLeft = document.getElementById('timeline-marker-left');
-const timelineMarkerRight = document.getElementById('timeline-marker-right');
+    timeData.minYear = timeData.currentYear;
+    timeData.maxYear = timeData.currentYear;
 
-function handleCVTimeline() {
+    timeData.minMonth = timeData.currentMonth;
+    timeData.maxMonth = timeData.currentMonth;
 
-    currentDate = new Date();
-    currentMonth = currentDate.getMonth();
-    currentYear = currentDate.getFullYear();
-
-    minYear = currentYear;
-    maxYear = currentYear;
-
-    minMonth = currentMonth;
-    maxMonth = currentMonth;
-
-    projects.forEach(project => {
+    timelineElements.projects.forEach(project => {
         let [startYear] = project.dataset.start.split('-').map(Number);
         let [endYear] = project.dataset.end.split('-').map(Number);
-        //let [startMonth] = project.dataset.split('-')
 
-        minYear = Math.min(minYear, startYear, endYear);
-        maxYear = Math.max(maxYear, startYear, endYear);
+        timeData.minYear = Math.min(timeData.minYear, startYear, endYear);
+        timeData.maxYear = Math.max(timeData.maxYear, startYear, endYear);
 
-        minMonth = Math.min()
+        timeData.minMonth = Math.min()
     });
 
-    for (let year = maxYear; year >= minYear; year--) {
+    for (let year = timeData.maxYear; year >= timeData.minYear; year--) {
         let yearDiv = document.createElement('div');
         yearDiv.className = 'year';
         yearDiv.textContent = year;
-        timeline.appendChild(yearDiv);
+        timelineElements.timeline.appendChild(yearDiv);
 
         for (let month = 11; month >= 0; month--) {
             let monthDiv = document.createElement('div');
             monthDiv.className = 'month';
             monthDiv.textContent = new Date(year, month).toLocaleString('default', { month: 'short' });
             timeline.appendChild(monthDiv);
+
             for (let subdivision = 4; subdivision >= 0; subdivision--) {
+                let startMonth = month * 5 + subdivision; // Calculate start month for subdivisions
+                let endMonth = startMonth + 1; // Calculate end month for subdivisions
+
                 let subdivisionDiv = document.createElement('div');
                 subdivisionDiv.className = "subdivision";
-                timeline.appendChild(subdivisionDiv);
+                monthDiv.appendChild(subdivisionDiv);
             }
         }
     }
 
-    let cvSectionRect = cvSection.getBoundingClientRect();
+    let cvSectionRect = timelineElements.cvSection.getBoundingClientRect();
 
-    cvSection.style.setProperty('--timeline-height', cvSectionRect.height + 'px');
+    timelineElements.cvSection.style.setProperty('--timeline-height', cvSectionRect.height + 'px');
 
     console.log("cv height: " + cvSectionRect.height);
 
@@ -69,37 +73,39 @@ function handleCVTimeline() {
     });
 }
 
+generateCVTimeline();
+
 function updateTimelineScroll() {
     let scrollY = window.scrollY;
     // Calculate the position of the currentTime element within the limits of the timeline
-    let timelineRect = timeline.getBoundingClientRect();
+    let timelineRect = timelineElements.timeline.getBoundingClientRect();
     let timelineTop = timelineRect.top;
     let timelineBottom = timelineRect.bottom;
 
     // Adjust the monthsScrolled calculation
     let monthsScrolled = Math.floor(scrollY / (24 /* Height of each month in px */));
 
-    let newDate = new Date(currentYear, currentMonth - monthsScrolled);
+    let newDate = new Date(timeData.currentYear, timeData.currentMonth - monthsScrolled);
     let newMonth = newDate.toLocaleString('default', { month: 'long' });
     let newYear = newDate.getFullYear();
 
-    currentTime.textContent = `${newMonth} ${newYear}`;
+    timelineElements.currentTime.textContent = `${newMonth} ${newYear}`;
 
     if (timelineTop <= window.innerHeight / 2 && timelineBottom >= window.innerHeight / 2) {
-        currentTime.style.top = `50%`;
-        timelineMarkerLeft.style.top = `50%`;
-        timelineMarkerRight.style.top = `50%`;
+        timelineElements.currentTime.style.top = `50%`;
+        timelineElements.timelineMarkerLeft.style.top = `50%`;
+        timelineElements.timelineMarkerRight.style.top = `50%`;
     } else if (timelineTop > window.innerHeight / 2) {
-        currentTime.style.top = `${timelineTop}px`;
-        timelineMarkerLeft.style.top = `${timelineTop}px`;
-        timelineMarkerRight.style.top = `${timelineTop}px`;
+        timelineElements.currentTime.style.top = `${timelineTop}px`;
+        timelineElements.timelineMarkerLeft.style.top = `${timelineTop}px`;
+        timelineElements.timelineMarkerRight.style.top = `${timelineTop}px`;
     } else {
-        currentTime.style.top = `${timelineBottom - currentTime.clientHeight}px`;
-        timelineMarkerLeft.style.top = `${timelineTop}px`;
-        timelineMarkerRight.style.top = `${timelineTop}px`;
+        timelineElements.currentTime.style.top = `${timelineBottom - timelineElements.currentTime.clientHeight}px`;
+        timelineElements.timelineMarkerLeft.style.top = `${timelineTop}px`;
+        timelineElements.timelineMarkerRight.style.top = `${timelineTop}px`;
     }
 
-    projects.forEach(project => {
+    timelineElements.projects.forEach(project => {
         let [startYear, startMonth] = project.dataset.start.split('-').map(Number);
         let [endYear, endMonth] = project.dataset.end.split('-').map(Number);
 
@@ -110,7 +116,5 @@ function updateTimelineScroll() {
     });
 }
 
-//window.addEventListener("DOMContentLoaded", function () {
-handleCVTimeline();
+generateCVTimeline();
 updateTimelineScroll();
-//});

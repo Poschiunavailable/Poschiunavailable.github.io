@@ -5,7 +5,8 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>Patrick Temborius</title>
-    <link rel="stylesheet" href="styles.css">
+    <link rel="stylesheet" href="styles/styles.css">
+    <link rel="stylesheet" href="styles/animations.css">
     <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet" />
     <script src="https://vjs.zencdn.net/7.15.4/video.min.js"></script>
 
@@ -24,6 +25,7 @@ ste
 <body>
     <script src="modules/background.js" type="module"></script>
     <div id="canvas-container"></div>
+    <link rel="stylesheet" href="styles/navbar.css">
     <header>
         <nav class="navbar" id="nonCVContent">
             <div class="brand">
@@ -37,16 +39,17 @@ ste
             </ul>
         </nav>
     </header>
+    <link rel="stylesheet" href="styles/hero.css">
     <section id="hero nonCVContent" class="hero">
         <div class="hero-video-overlay" id="videoOverlay">
             <video class="hero-video" id="heroVideo" autoplay muted loop playsinline>
-                <source src="resources/PortfolioVideoLowerRes.mp4" type="video/mp4">
+                <source src="assets/PortfolioVideoLowerRes.mp4" type="video/mp4">
             </video>
         </div>
         <div class="hero-content">
             <div class="small-separator"></div>
             <div class="hero-image animate">
-                <img src="resources/profile_picture.jpg" alt="Website Logo">
+                <img src="assets/profile_picture.jpg" alt="Website Logo">
             </div>
             <h1>Patrick Temborius</h1>
             <h2>Game Developer</h2>
@@ -59,6 +62,7 @@ ste
         </div>
     </section>
     <div class="small-separator"></div>
+    <link rel="stylesheet" href="styles/about.css">
     <section id="about nonCVContent">
         <div class="container animate">
             <div class="typing-effect">
@@ -66,7 +70,7 @@ ste
             </div>
             <div class="about-content">
                 <div class="about-image animate">
-                    <img src="resources/profile_picture.jpg" alt="Patrick Temborius">
+                    <img src="assets/profile_picture.jpg" alt="Patrick Temborius">
                 </div>
                 <div class="about-text">
                     <!-- Add your personal description -->
@@ -91,6 +95,7 @@ ste
             </div>
         </div>
     </section>
+    <link rel="stylesheet" href="styles/portfolio.css">
     <section id="portfolio nonCVContent">
         <div class="container animate">
             <div class="typing-effect animate">
@@ -98,34 +103,36 @@ ste
             </div>
             <div class="portfolio-grid animate">
                 <div class="portfolio-item" id="item-EverslaughtInvasion">
-                    <img src="resources/everslaught_invasion_splashart.webp" alt="Everslaught Invasion Splashart">
+                    <img src="assets/everslaught_invasion_splashart.webp" alt="Everslaught Invasion Splashart">
                     <h3>Everslaught Invasion</h3>
                     <p>A Virtual Reality Zombie Horde Mode Game Released on the Quest 2 Headset, developed in the
                         Unity Engine.</p>
                     <div class="click-indicator">Click to show more</div>
                 </div>
                 <div class="portfolio-item" id="item-RoughJustice">
-                    <img src="resources/rough_justice_splashart.webp" alt="Rough Justice: '84 Splashart">
+                    <img src="assets/rough_justice_splashart.webp" alt="Rough Justice: '84 Splashart">
                     <h3>Rough Justice: '84</h3>
                     <p>An Agency management simulator with contracts and many mini-games released on steam,
                         developed in the Unreal Engine 4.</p>
                     <div class="click-indicator">Click to show more</div>
                 </div>
                 <div class="portfolio-item" id="item-ColdComfort">
-                    <img src="resources/cold_comfort_splashart.webp" alt="Cold Comfort Splashart">
+                    <img src="assets/cold_comfort_splashart.webp" alt="Cold Comfort Splashart">
                     <h3>Cold Comfort</h3>
                     <p>An asymmetric multiplayer zombie game prototype done in the Unreal Engine 4.</p>
                     <div class="click-indicator">Click to show more</div>
                 </div>
             </div>
     </section>
+    <link rel="stylesheet" href="styles/liststyles.css">
+    <link rel="stylesheet" href="styles/portfoliodetails.css">
     <section id="Everslaught-Invastion Detail nonCVContent">
         <div class="portfolio-detail animate" id="detail-EverslaughtInvasion">
             <div class="detail-content">
                 <div class="project-detail-video-section">
                     <video id="new-video-EverslaughtInvasion" controls preload="none"
-                        poster="resources/everslaught_invasion_splashart.webp">
-                        <source src="resources/PortfolioVideoLowerRes.mp4" type="video/mp4">
+                        poster="assets/everslaught_invasion_splashart.webp">
+                        <source src="assets/PortfolioVideoLowerRes.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                     <div class="play-overlay" onclick="playVideo('new-video-EverslaughtInvasion')">
@@ -231,8 +238,8 @@ ste
             <div class="detail-content">
                 <div class="project-detail-video-section">
                     <video id="new-video-RoughJustice" controls preload="none"
-                        poster="resources/rough_justice_splashart.webp">
-                        <source src="resources/PortfolioVideoLowerRes.mp4" type="video/mp4">
+                        poster="assets/rough_justice_splashart.webp">
+                        <source src="assets/PortfolioVideoLowerRes.mp4" type="video/mp4">
                         Your browser does not support the video tag.
                     </video>
                     <div class="play-overlay" onclick="playVideo('new-video-RoughJustice')">
@@ -320,16 +327,15 @@ ste
             </div>
         </div>
     </section>
+    <link rel="stylesheet" href="styles/cvstyle.css">
     <section id="cv">
-        <div class="separator">
-        </div>
+        <div class="small-separator"></div>
         <div class="cv-section" id="cvSection">
             <div id="container">
-                <div id="timeline">
-                    <div id="timeline-marker-left">▷</div>
-                    <div id="timeline-marker-right">◁</div>
-                </div>
+                <div id="timeline"></div>
                 <div id="currentTime">January 2023</div>
+                <div id="timeline-marker-left">▷</div>
+                <div id="timeline-marker-right">◁</div>
                 <div id="projects">
                     <article class="cv-project" data-start="2023-01" data-end="2022-12">Project A</article>
                     <article class="cv-project" data-start="2022-11" data-end="2022-10">Project B</article>
@@ -340,10 +346,10 @@ ste
                 </div>
             </div>
         </div>
-        <div class="separator"></div>
     </section>
     <script src="modules/timeline.js"></script>
     <section id="contact">
+        <div class="small-separator"></div>
         lorem ipsum lorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsumlorem ipsum
     </section>
     <footer>

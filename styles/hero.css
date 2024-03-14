@@ -1,0 +1,71 @@
+@import url("base.css");
+
+/* Hero Section */
+.hero {
+    position: relative;
+    display: flex;
+    margin-top: 2.8rem;
+    justify-content: center;
+    align-items: center;
+    width: 100%;
+    height: fit-content;
+    background-color: transparent;
+    color: var(--primary-color);
+    text-align: center;
+    overflow: hidden;
+}
+
+.hero-video-overlay {
+    position: absolute;
+    width: 100%;
+    height: 100%;
+    /* or 100% if it's inside a container */
+    overflow: hidden;
+    z-index: -1;
+}
+
+.hero-video {
+    position: absolute;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 80vh;
+    padding: 0;
+    margin: 0;
+    object-fit: cover;
+    z-index: -2;
+}
+
+.hero-video-overlay::after {
+    content: "";
+    position: absolute;
+    top: 0;
+    left: 0;
+    right: 0;
+    height: var(--video-height);
+    /* Using the variable set by JavaScript */
+    background: linear-gradient(to bottom, rgba(38, 9, 170, 0.925), rgba(45, 9, 59, 0.363));
+    pointer-events: none;
+}
+
+
+.hero-content {
+    height: fit-content;
+}
+
+.hero-image {
+    max-width: 400px;
+
+    margin-left: auto;
+    margin-right: auto;
+}
+
+.hero-image img {
+    border-radius: 50%;
+}
+
+.hero-image img {
+    width: 100%;
+    margin-left: auto;
+    margin-right: auto;
+}

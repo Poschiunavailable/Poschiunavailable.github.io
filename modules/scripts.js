@@ -335,4 +335,3 @@ window.addEventListener("DOMContentLoaded", function () {
 
     setupVideo();
 });
-
