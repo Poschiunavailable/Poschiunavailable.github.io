@@ -26,10 +26,45 @@ function startTypingEffect(element) {
     type();
 }
 
+function handlePortfolioDetails() {
+    document.querySelectorAll('.portfolio-item').forEach(function (item) {
+        item.addEventListener('click', function () {
+            let id = this.id.replace('item-', 'detail-');
+            let detail = document.getElementById(id);
+            // Check if the detail element exists
+            if (detail) {
+                // Show the detail panel
+                detail.style.display = 'block';
+                // Disable interactions with the background content
+                let portfolio = document.getElementById('portfolio');
+                if (portfolio) {
+                    portfolio.style.pointerEvents = 'none';
+                }
+                // Disable scrolling on the main page
+                document.body.style.overflow = 'hidden';
+            } else {
+                console.error('Detail element not found:', id);
+            }
+        });
+    });
+
+    // Close the detail panel when the overlay is clicked
+    document.querySelectorAll('.portfolio-detail').forEach(function (detailElement) {
+        detailElement.addEventListener('click', function (event) {
+            if (event.target == this) {
+                closeDetail(this.id);
+            }
+        });
+    });
+}
+
 function closeDetail(detailId) {
     document.getElementById(detailId).style.display = 'none';
     // Enable interactions with the background content
-    document.getElementById('portfolio').style.pointerEvents = 'auto';
+    let portfolio = document.getElementById('portfolio');
+    if (portfolio) {
+        portfolio.style.pointerEvents = 'auto';
+    }
     // Enable scrolling on the main page
     document.body.style.overflow = 'auto'; // or 'visible' depending on your preference
 }
@@ -161,34 +196,6 @@ if (typeof videojs !== 'undefined') {
     console.error('Video.js library is not loaded.');
 }
 
-function handlePortfolioDetails() {
-    document.querySelectorAll('.portfolio-item').forEach(function (item) {
-        item.addEventListener('click', function () {
-            let id = this.id.replace('item-', 'detail-');
-            let detail = document.getElementById(id);
-            // Check if the detail element exists
-            if (detail) {
-                // Show the detail panel
-                detail.style.display = 'block';
-                // Disable interactions with the background content
-                document.getElementById('portfolio').style.pointerEvents = 'none';
-                // Disable scrolling on the main page
-                document.body.style.overflow = 'hidden';
-            } else {
-                console.error('Detail element not found:', id);
-            }
-        });
-    });
-
-    // Close the detail panel when the overlay is clicked
-    document.querySelectorAll('.portfolio-detail').forEach(function (detailElement) {
-        detailElement.addEventListener('click', function (event) {
-            if (event.target == this) {
-                closeDetail(this.id);
-            }
-        });
-    });
-}
 
 function handlePortfolioItems() {
     const portfolioItems = document.querySelectorAll(".portfolio-item");
