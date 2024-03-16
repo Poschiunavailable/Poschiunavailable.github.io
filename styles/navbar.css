@@ -5,7 +5,7 @@
     display: flex;
     justify-content: space-between;
     align-items: center;
-    background-color: #302B27;
+    background-color: var(--background-color-translucent);
     padding: 1rem 2rem;
     position: fixed;
     top: 0;
