@@ -174,7 +174,7 @@
 }
 
 .project-detail {
-    background: rgba(16, 26, 28, 0.44);
+    background: var(--background-color);
     border-radius: 5px;
     margin-bottom: 1em;
     border: none;
@@ -205,7 +205,7 @@
     padding: 1em;
     cursor: pointer;
     list-style: none;
-    background: rgba(100, 111, 154, 0.5);
+    background: var(--secondary-background-color);
     transition: background 0.3s ease;
 }
 

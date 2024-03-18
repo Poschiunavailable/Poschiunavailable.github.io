@@ -32,7 +32,7 @@
     top: 50%;
     right: calc(50% + 1em);
     transform: translateY(-50%);
-    z-index: 10;
+    z-index: 0;
     color: #F5F3F5;
 }
 
@@ -42,7 +42,7 @@
     visibility: hidden;
     left: 5.5em;
     transform: translateY(-50%);
-    z-index: 10;
+    z-index: 0;
     color: #F5F3F5;
 }
 
@@ -62,7 +62,7 @@
     right: calc(50% + 2em);
     /* Using em for responsive design */
     transform: translateY(-50%);
-    z-index: 10;
+    z-index: 0;
     text-align: right;
     color: #F5F3F5;
     /* To ensure it is above other elements */

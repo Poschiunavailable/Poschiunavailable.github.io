@@ -2,7 +2,7 @@
 @import url("base.css");
 
 body {
-    background-image: linear-gradient(rgb(52, 14, 70), rgba(0, 0, 0, 1));
+    background-image: linear-gradient(var(--background-color), var(--secondary-background-color));
     font-family: var(--primary-font);
     background-color: #000000;
     height: 500vh;
@@ -23,27 +23,33 @@ body::before {
 
 /* Global Styles */
 h1 {
-    font-family: 'Lora', serif;
+    font-family: var(--primary-font);
     font-size: 3rem;
     margin-bottom: 0.5rem;
-    color: #FFFFFF;
-    text-shadow: var(--3d-shadow);
+    color: var(--primary-color);
     z-index: 2;
 }
 
 h2 {
-    font-family: 'Roboto', sans-serif;
+    font-family: var(--secondary-font);
     font-size: 1.5rem;
     margin-bottom: 1rem;
-    text-shadow: var(--3d-shadow);
+    color: var(--senary-color);
+    z-index: 2;
+}
+
+h3 {
+    font-size: 1.8rem;
+    margin-bottom: 1rem;
+    color: var(--tertiary-color);
     z-index: 2;
 }
 
 p {
-    font-family: 'Roboto', sans-serif;
+    font-family: var(--primary-font);
     font-size: 1rem;
     margin-bottom: 2rem;
-    color: var(--secondary-color);
+    color: var(--primary-color);
     z-index: 2;
 }
 
@@ -152,6 +158,10 @@ canvas {
     height: 10vh;
 }
 
+.tiny-separator {
+    height: 2vh;
+}
+
 .typing-effect {
     display: inline-block;
     position: relative;
@@ -177,6 +187,31 @@ canvas {
     height: 1em;
     animation: blink-caret .75s step-end infinite;
 }
+
+/* Unvisited link */
+a:link {
+    color: var(--quinary-color);
+    text-decoration: underline;
+    transition: color 0.3s ease;
+}
+
+/* Visited link */
+a:visited {
+    color: var(--tertiary-color);
+    text-decoration: underline;
+}
+
+/* Link when hovered */
+a:hover {
+    color: var(--senary-color);
+}
+
+/* Selected link (being clicked) */
+a:active {
+    color: var(--quinary-color);
+    /* Changes color to green when the link is being clicked */
+}
+
 
 /* Responsive Styles */
 @media screen and (max-width: 1024px) {

@@ -75,35 +75,48 @@ function generateCVTimeline() {
 
 generateCVTimeline();
 
+function updateTimelineElements(value) {
+    timelineElements.currentTime.style.top = value;
+    timelineElements.timelineMarkerLeft.style.top = value;
+    timelineElements.timelineMarkerRight.style.top = value;
+}
+
 function updateTimelineScroll() {
     let scrollY = window.scrollY;
+    let scrollYMax = scrollY + window.innerHeight;
+    let scrollCenter = scrollY + scrollYMax / 2;
+    const halfScreenSize = window.innerHeight / 2;
     // Calculate the position of the currentTime element within the limits of the timeline
-    let timelineRect = timelineElements.timeline.getBoundingClientRect();
-    let timelineTop = timelineRect.top;
-    let timelineBottom = timelineRect.bottom;
+    const timelineRect = timelineElements.timeline.getBoundingClientRect();
+    const timelineTop = timelineRect.top;
+    const timelineBottom = timelineRect.bottom;
 
-    // Adjust the monthsScrolled calculation
-    let monthsScrolled = Math.floor(scrollY / (24 /* Height of each month in px */));
+    // Calculate the monthsScrolled
+    let timeScrolledPercentage = (timelineBottom - halfScreenSize) / (Math.abs((timelineBottom - halfScreenSize)) + Math.abs((timelineTop - halfScreenSize)));
+    const totalMonths = timeData.maxYear * 12 + timeData.maxMonth + timeData.minMonth;
+    console.log(totalMonths);
+    updateTimelineElements(`50%`);
+
+    //handle window center is outside bounds of the timeline
+    if (window.innerHeight / 2 <= timelineTop) {
+        updateTimelineElements(`${timelineTop}px`);
+        timeScrolledPercentage = 0;
+    }
+    else if (window.innerHeight / 2 >= timelineBottom) {
+        updateTimelineElements(`${timelineBottom}px`);
+        timeScrolledPercentage = 1;
+    }
+    let monthsScrolled = Math.floor(totalMonths * timeScrolledPercentage);
+    console.log(timeScrolledPercentage + "   " + (timelineTop - halfScreenSize) + "   " + (timelineBottom - halfScreenSize));
 
     let newDate = new Date(timeData.currentYear, timeData.currentMonth - monthsScrolled);
     let newMonth = newDate.toLocaleString('default', { month: 'long' });
     let newYear = newDate.getFullYear();
-
     timelineElements.currentTime.textContent = `${newMonth} ${newYear}`;
 
-    if (timelineTop <= window.innerHeight / 2 && timelineBottom >= window.innerHeight / 2) {
-        timelineElements.currentTime.style.top = `50%`;
-        timelineElements.timelineMarkerLeft.style.top = `50%`;
-        timelineElements.timelineMarkerRight.style.top = `50%`;
-    } else if (timelineTop > window.innerHeight / 2) {
-        timelineElements.currentTime.style.top = `${timelineTop}px`;
-        timelineElements.timelineMarkerLeft.style.top = `${timelineTop}px`;
-        timelineElements.timelineMarkerRight.style.top = `${timelineTop}px`;
-    } else {
-        timelineElements.currentTime.style.top = `${timelineBottom - timelineElements.currentTime.clientHeight}px`;
-        timelineElements.timelineMarkerLeft.style.top = `${timelineTop}px`;
-        timelineElements.timelineMarkerRight.style.top = `${timelineTop}px`;
-    }
+
+    // Parallax effect for projects
+    const parallaxFactor = 0.5; // Adjust for desired parallax intensity
 
     timelineElements.projects.forEach(project => {
         let [startYear, startMonth] = project.dataset.start.split('-').map(Number);
@@ -113,6 +126,13 @@ function updateTimelineScroll() {
         let endDate = new Date(endYear, endMonth - 1);
 
         project.style.opacity = newDate >= startDate && newDate <= endDate ? '1' : '0';
+
+        const projectRect = project.getBoundingClientRect();
+        const projectCenterY = (projectRect.top + projectRect.bottom) / 2;
+        const offsetFromCenter = projectCenterY - (window.innerHeight / 2);
+
+        // Apply parallax offset (you might want to tweak this)
+        project.style.transform = `translateY(${offsetFromCenter * parallaxFactor}px)`;
     });
 }
 

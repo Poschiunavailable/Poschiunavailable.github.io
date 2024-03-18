@@ -50,9 +50,3 @@
     line-height: 1.6;
     color: var(--secondary-color);
 }
-
-.about-text h3 {
-    font-size: 1.8rem;
-    margin-bottom: 1rem;
-    color: var(--primary-color);
-}

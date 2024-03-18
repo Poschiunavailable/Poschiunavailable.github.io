@@ -62,21 +62,3 @@ ul {
     opacity: 1;
     overflow: visible;
 }
-
-/* Style the link within the list item */
-.list-item a {
-    color: #007bff;
-    /* Change the link text color */
-    text-decoration: none;
-    /* Remove underline */
-    font-weight: bold;
-    /* Make the text bold */
-    transition: color 0.3s ease;
-    /* Add color transition on hover */
-}
-
-/* Change link color on hover */
-.list-item a:hover {
-    background-color: #e8e8e8;
-    color: #333;
-}

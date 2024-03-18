@@ -21,7 +21,7 @@
 }
 
 .portfolio-item {
-    background-image: linear-gradient(rgba(33, 27, 39, 0.4), rgba(100, 111, 154, 0.233));
+    background-image: linear-gradient(rgba(190, 137, 115, 0.658), rgba(100, 111, 154, 0.233));
     border-radius: 10px;
     padding: 20px;
     text-align: center;
@@ -43,5 +43,5 @@
 .portfolio-item h3 {
     font-size: 1.8rem;
     margin-bottom: 1rem;
-    color: var(--primary-color);
+    color: var(--tertiary-color);
 }

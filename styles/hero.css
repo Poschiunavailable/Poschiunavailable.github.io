@@ -44,7 +44,7 @@
     right: 0;
     height: var(--video-height);
     /* Using the variable set by JavaScript */
-    background: linear-gradient(to bottom, rgba(38, 9, 170, 0.925), rgba(45, 9, 59, 0.363));
+    background: linear-gradient(to bottom, var(--secondary-background-color-translucent), var(--secondary-background-color-translucent));
     pointer-events: none;
 }
 
