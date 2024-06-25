@@ -10,63 +10,48 @@ function scrollToSection(event, sectionId) {
 }
 
 function startTypingEffect(element) {
-    element.textContent = ""; // Clear the text content
     const fullText = element.getAttribute("data-text");
-    const totalCharacters = fullText.length;
     let currentCharacter = 0;
 
     function type() {
-        if (currentCharacter < totalCharacters) {
+        if (currentCharacter < fullText.length) {
             element.textContent += fullText.charAt(currentCharacter);
             currentCharacter++;
-            setTimeout(type, 70);
+            setTimeout(type, 70); // Adjust the typing speed as desired
+        } else {
+            element.classList.remove('typing');
+            element.classList.add('typed'); // Add a 'typed' class when finished
+            element.dispatchEvent(new Event('typed')); // Dispatch a custom event
         }
     }
 
-    type();
+    type(); // Start typing immediately
 }
 
 function handlePortfolioDetails() {
-    document.querySelectorAll('.portfolio-item').forEach(function (item) {
-        item.addEventListener('click', function () {
-            let id = this.id.replace('item-', 'detail-');
-            let detail = document.getElementById(id);
-            // Check if the detail element exists
-            if (detail) {
-                // Show the detail panel
-                detail.style.display = 'block';
-                // Disable interactions with the background content
-                let portfolio = document.getElementById('portfolio');
-                if (portfolio) {
-                    portfolio.style.pointerEvents = 'none';
-                }
-                // Disable scrolling on the main page
-                document.body.style.overflow = 'hidden';
-            } else {
-                console.error('Detail element not found:', id);
-            }
-        });
-    });
+    const items = document.querySelectorAll('.portfolio-item');
+    const details = document.querySelectorAll('.portfolio-detail');
 
-    // Close the detail panel when the overlay is clicked
-    document.querySelectorAll('.portfolio-detail').forEach(function (detailElement) {
-        detailElement.addEventListener('click', function (event) {
-            if (event.target == this) {
-                closeDetail(this.id);
-            }
-        });
-    });
-}
-
-function closeDetail(detailId) {
-    document.getElementById(detailId).style.display = 'none';
-    // Enable interactions with the background content
-    let portfolio = document.getElementById('portfolio');
-    if (portfolio) {
-        portfolio.style.pointerEvents = 'auto';
+    function openDetail(itemId) {
+        const detailId = itemId.replace('item-', 'detail-');
+        const detail = document.getElementById(detailId);
+        if (detail) {
+            detail.style.display = 'block';
+            document.getElementById('portfolio').style.pointerEvents = 'none';
+            document.body.style.overflow = 'hidden';
+        }
     }
-    // Enable scrolling on the main page
-    document.body.style.overflow = 'auto'; // or 'visible' depending on your preference
+
+    function closeDetail(detailId) {
+        document.getElementById(detailId).style.display = 'none';
+        document.getElementById('portfolio').style.pointerEvents = 'auto';
+        document.body.style.overflow = 'auto';
+    }
+
+    items.forEach(item => item.addEventListener('click', () => openDetail(item.id)));
+    details.forEach(detail => detail.addEventListener('click', (event) => {
+        if (event.target === detail) closeDetail(detail.id);
+    }));
 }
 
 document.querySelectorAll('.portfolio-item').forEach(function (item) {
@@ -86,64 +71,103 @@ let currentlyPlayingEffectElement;
 
 function createTypingEffect(element) {
     let animationPlayed = false;
+    let observer; // Declare observer outside the returned function
 
     return function () {
         const sectionTop = element.parentElement.getBoundingClientRect().top;
         const sectionBottom = element.parentElement.getBoundingClientRect().bottom;
         const screenHeight = window.innerHeight;
 
-        if (
-            !animationPlayed &&
-            sectionTop <= screenHeight &&
-            sectionBottom >= 0
-        ) {
-            if (currentlyPlayingEffectElement != null
-                && currentlyPlayingEffectElement != element) {
-                currentlyPlayingEffectElement.style.animationPlayState = "paused";
-                currentlyPlayingEffectElement.style.borderColor = "transparent";
+        if (sectionTop <= screenHeight && sectionBottom >= 0) {
+            if (!animationPlayed) {
+                animationPlayed = true;
+                element.style.visibility = "visible";
+                startTypingEffect(element);
             }
-            currentlyPlayingEffectElement = element;
-            element.style.visibility = "visible";
-            element.style.animationPlayState = "running";
-            startTypingEffect(element);
-            animationPlayed = true;
-        } else if (
-            sectionTop >= screenHeight ||
-            sectionBottom <= 0
-        ) {
-            if (currentlyPlayingEffectElement == element) {
-                currentlyPlayingEffectElement.style.animationPlayState = "paused";
-                currentlyPlayingEffectElement.style.borderColor = "transparent";
-                currentlyPlayingEffectElement = null;
+
+            // If an observer is already attached, disconnect it
+            if (observer) {
+                observer.disconnect();
             }
+
+            // Create a new observer that will reset the animation when the element is no longer visible
+            observer = new IntersectionObserver(
+                ([entry]) => {
+                    if (!entry.isIntersecting) {
+                        element.textContent = "";
+                        currentCharacter = 0;
+                        animationPlayed = false; // Reset the animationPlayed flag
+                    }
+                    // Inside the IntersectionObserver callback
+                    if (!entry.isIntersecting && sectionBottom <= 0) {
+                        setTimeout(() => {
+                            element.textContent = "";
+                            currentCharacter = 0;
+                            animationPlayed = false;
+                        }, 500); // Add a slight delay (e.g., 500ms) before resetting
+                    }
+                },
+                { threshold: 0.5 }
+            );
+
+            observer.observe(element);
+
+        } else {
             element.style.visibility = "hidden";
-            animationPlayed = false;
+
+            // Disconnect the observer if the element is not in view
+            if (observer) {
+                observer.disconnect();
+            }
         }
     };
 }
 
-
 function handleTypingTargets() {
     const typingTargets = document.querySelectorAll(".typing-target");
-    const typingEffects = [];
+    let currentTypingTargetIndex = 0;
+    const observers = [];
 
-    typingTargets.forEach((target) => {
-        target.setAttribute("data-text", target.textContent);
-        target.textContent = "";
-        target.style.visibility = "hidden";
-        typingEffects.push(createTypingEffect(target));
-    });
+    function processNextTypingTarget() {
+        if (currentTypingTargetIndex < typingTargets.length) {
+            const target = typingTargets[currentTypingTargetIndex];
+            target.setAttribute("data-text", target.textContent);
+            target.textContent = "";
+            target.style.visibility = "hidden";
 
-    window.addEventListener("scroll", () => {
-        typingEffects.forEach((effect) => effect());
-    });
+            if (observers[currentTypingTargetIndex]) {
+                observers[currentTypingTargetIndex].disconnect();
+            }
 
-    typingEffects.forEach((effect) => effect());
+            observers[currentTypingTargetIndex] = new IntersectionObserver(([entry]) => {
+                if (entry.isIntersecting && entry.intersectionRatio >= 0.5) {
+                    if (!target.classList.contains('typing')) { // Check if already typing
+                        target.style.visibility = "visible";
+                        startTypingEffect(target);
+                    }
+                } else {
+                    // Only reset if not currently typing
+                    if (!target.classList.contains('typing')) {
+                        target.textContent = "";
+                        target.classList.remove('typed');
+                    }
+                }
+            }, { threshold: 0.5 });
+
+            observers[currentTypingTargetIndex].observe(target);
+
+            target.addEventListener('typed', () => {
+                currentTypingTargetIndex++;
+                processNextTypingTarget();
+            }, { once: true });
+        }
+    }
+
+    processNextTypingTarget();
 }
 
+
 const lerp = (start, end, delta) => start * (1 - delta) + end * delta;
-
-
 
 const rotationStrength = 50;
 
@@ -286,7 +310,7 @@ function handlePortfolioItems() {
     });
 }
 
-function getMontFromScroll() {
+function getMonthFromScroll() {
     const MonthSizeInPx = 5;
     const YearSizeInPx = 10;
 
@@ -306,39 +330,22 @@ function setupVideo() {
     });
 }
 
-window.addEventListener("DOMContentLoaded", function () {
+window.addEventListener("DOMContentLoaded", () => {
     const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add("visible");
-            } else {
-                entry.target.classList.remove("visible");
-            }
+            entry.target.classList.toggle("visible", entry.isIntersecting);
         });
-    }, {
-        threshold: 0.1
-    });
+    }, { threshold: 0.1 });
 
-    const animateElements = document.querySelectorAll(".animate");
-
-    // Assign a random delay to each element
-    animateElements.forEach((element) => {
-        const randomDelay = Math.random() * 0.5; // Random delay between 0 and 2 seconds
+    document.querySelectorAll(".animate").forEach(element => {
+        const randomDelay = Math.random() * 0.5;
         element.style.transitionDelay = `${randomDelay}s`;
-    });
-
-    animateElements.forEach((element) => {
         observer.observe(element);
     });
 
-
     handleTypingTargets();
-
     handlePortfolioItems();
-
     handlePortfolioDetails();
-
     handleVideoPlayers();
-
     setupVideo();
 });
