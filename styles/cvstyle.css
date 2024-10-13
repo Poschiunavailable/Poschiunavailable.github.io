@@ -30,7 +30,7 @@
 .cv-section #timeline-marker-left {
     position: fixed;
     top: 50%;
-    right: calc(50% + 1em);
+    left: 3em;
     transform: translateY(-50%);
     z-index: 0;
     color: #F5F3F5;
@@ -40,7 +40,7 @@
     position: fixed;
     top: 50%;
     visibility: hidden;
-    left: 5.5em;
+    left: 3em;
     transform: translateY(-50%);
     z-index: 0;
     color: #F5F3F5;
@@ -52,14 +52,14 @@
     width: 2px;
     top: 0;
     bottom: 0;
-    left: 50%;
+    left: 1em;
     transform: translateX(-50%);
 }
 
 .cv-section #currentTime {
     position: fixed;
     top: 50%;
-    right: calc(50% + 2em);
+    left: 4em;
     /* Using em for responsive design */
     transform: translateY(-50%);
     z-index: 0;
@@ -69,16 +69,20 @@
 }
 
 .cv-project {
-    position: absolute;
-    width: 10em;
-    /* Using em for responsive design */
-    height: 3em;
+    position: fixed;
+
+    left: 15em;
+    top: 10em;
+    right: 5em;
+    bottom: 10em;
     /* Using em for responsive design */
     line-height: 3em;
     /* Using em for responsive design */
     text-align: center;
     background-color: var(--primary-color);
     color: var(--text-color);
-    opacity: 0;
-    transition: opacity 0.5s ease-in-out;
+    opacity: 0.7;
+    /*transition: opacity 0.5s ease;*/
+    z-index: 1;
+
 }

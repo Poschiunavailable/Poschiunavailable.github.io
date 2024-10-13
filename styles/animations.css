@@ -65,3 +65,23 @@
         border-color: var(--primary-color);
     }
 }
+
+@keyframes fadeInTimeLineProject {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
+}
+
+@keyframes fadeOutTimeLineProject {
+    from {
+        opacity: 1;
+    }
+
+    to {
+        opacity: 0;
+    }
+}

@@ -3,8 +3,8 @@ const timeData = {
     currentYear: null,
     minYear: null,
     maxYear: null,
-    minMonth: null,
-    maxMonth: null,
+    startMonth: null,
+    endMonth: null,
     totalMonths: null,
 }
 
@@ -17,12 +17,28 @@ const timelineElements = {
     timelineMarkerRight: document.getElementById('timeline-marker-right'),
 }
 
+const observer = new IntersectionObserver((entries) => {
+    entries.forEach(entry => {
+        if (entry.isIntersecting) {
+            entry.target.classList.add('fadeInTimeLineProject');
+            entry.target.classList.remove('fadeOutTimeLineProject');
+        } else {
+            entry.target.classList.add('fadeOutTimeLineProject');
+            entry.target.classList.remove('fadeInTimeLineProject');
+        }
+    });
+});
+
+document.querySelectorAll('.cv-project').forEach(project => {
+    observer.observe(project);
+});
+
 function generateCVTimeline() {
     timeData.minYear = Infinity;
     timeData.maxYear = -Infinity;
 
-    timeData.minMonth = 12;
-    timeData.maxMonth = 1;
+    timeData.startMonth = timelineElements.projects[0].dataset.start.split('-').map(Number)[1];
+    timeData.endMonth = timelineElements.projects[timelineElements.projects.length - 1].dataset.end.split('-').map(Number)[1];
 
     timelineElements.projects.forEach(project => {
         //parse project data into array with year [0] and month [1]
@@ -30,39 +46,25 @@ function generateCVTimeline() {
         let endDate = project.dataset.end.split('-').map(Number);
 
         //define min and max year
-        timeData.minYear = Math.min(timeData.minYear, startDate[0], endDate[0]);
-        timeData.maxYear = Math.max(timeData.maxYear, startDate[0], endDate[0]);
-
-        //define min month and max month
-        if (startDate[0] === timeData.minYear) {
-            timeData.minMonth = Math.min(timeData.minMonth, startDate[1]);
-        }
-        if (endDate[0] === timeData.minYear) {
-            timeData.minMonth = Math.min(timeData.minMonth, endDate[1]);
-        }
-        if (startDate[0] === timeData.maxYear) {
-            timeData.maxMonth = Math.max(timeData.maxMonth, startDate[1]);
-        }
-        if (endDate[0] === timeData.maxYear) {
-            timeData.maxMonth = Math.max(timeData.maxMonth, endDate[1]);
-        }
+        timeData.minYear = Math.min(timeData.minYear, startDate[0]);
+        timeData.maxYear = Math.max(timeData.maxYear, endDate[0]);
     });
 
-    timeData.currentMonth = timeData.minMonth;
+    timeData.currentMonth = timeData.startMonth;
     timeData.currentYear = timeData.minYear;
 
-    timeData.totalMonths = ((timeData.maxYear - timeData.minYear) - 1) * 12 + timeData.maxMonth - 1 + (12 - timeData.minMonth);
+    timeData.totalMonths = (timeData.maxYear - timeData.minYear + 1) * 12 - timeData.startMonth - (12 - timeData.endMonth);
 
-    console.log(timeData.totalMonths);
+    // Start from the maximum year and month
+    let currentYear = timeData.maxYear;
+    let currentMonth = timeData.endMonth;
 
-    for (let month = timeData.totalMonths; month >= 0; month--) {
+    // Loop until reaching the minimum year and month
+    while (currentYear > timeData.minYear || (currentYear === timeData.minYear && currentMonth >= timeData.startMonth)) {
+
         let monthDiv = document.createElement('div');
         monthDiv.className = 'month';
-
-        let yearInsert = timeData.minYear + 1 + Math.floor((month - (timeData.maxMonth - 1)) / 12);
-        let monthInsert = (month + 2) % 12;
-
-        monthDiv.textContent = new Date(yearInsert, monthInsert).toLocaleString('default', { month: 'short' });
+        monthDiv.textContent = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'short' });
         timeline.appendChild(monthDiv);
 
         for (let subdivision = 4; subdivision >= 0; subdivision--) {
@@ -70,38 +72,25 @@ function generateCVTimeline() {
             subdivisionDiv.className = "subdivision";
             monthDiv.appendChild(subdivisionDiv);
         }
-    }
 
-    /*
-    for (let year = timeData.maxYear; year >= timeData.minYear; year--) {
-        let yearDiv = document.createElement('div');
-        yearDiv.className = 'year';
-        yearDiv.textContent = year;
-        timelineElements.timeline.appendChild(yearDiv);
+        monthDiv.textContent = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'short' });
+        timeline.appendChild(monthDiv);
 
-        for (let month = 11; month >= 0; month--) {
-            let monthDiv = document.createElement('div');
-            monthDiv.className = 'month';
-            monthDiv.textContent = new Date(year, month).toLocaleString('default', { month: 'short' });
-            timeline.appendChild(monthDiv);
+        // Move to the previous month
+        currentMonth -= 1;
 
-            for (let subdivision = 4; subdivision >= 0; subdivision--) {
-                let startMonth = month * 5 + subdivision; // Calculate start month for subdivisions
-                let endMonth = startMonth + 1; // Calculate end month for subdivisions
-
-                let subdivisionDiv = document.createElement('div');
-                subdivisionDiv.className = "subdivision";
-                monthDiv.appendChild(subdivisionDiv);
-            }
+        // If the month is 0, move to the previous year and set month to December
+        if (currentMonth === 0) {
+            currentYear -= 1;
+            currentMonth = 12;
         }
+
+
     }
-    */
 
     let cvSectionRect = timelineElements.cvSection.getBoundingClientRect();
 
     timelineElements.cvSection.style.setProperty('--timeline-height', cvSectionRect.height + 'px');
-
-    console.log("cv height: " + cvSectionRect.height);
 
     window.addEventListener('scroll', () => {
         updateTimelineScroll();
@@ -117,52 +106,64 @@ function updateTimelineElements(value) {
 function updateTimelineScroll() {
     const halfScreenSize = window.innerHeight / 2;
     const timelineRect = timelineElements.timeline.getBoundingClientRect();
-    const timelineTop = timelineRect.top;
-    const timelineBottom = timelineRect.bottom;
+    const timelineTop = timelineRect.top - halfScreenSize;
+    const timelineBottom = timelineRect.bottom - halfScreenSize;
 
     // Calculate the monthsScrolled
-    let timeScrolledPercentage = 1 - ((timelineBottom - halfScreenSize) / (Math.abs((timelineBottom - halfScreenSize)) + Math.abs((timelineTop - halfScreenSize))));
-
-    updateTimelineElements(`50%`);
+    let timeScrolledPercentage = 1 - (timelineBottom / (timelineBottom + (-1 * (timelineTop))));
+    timeScrolledPercentage = Math.min(Math.max(timeScrolledPercentage, 0), 1);
 
     //handle window center is outside bounds of the timeline
-    if (window.innerHeight / 2 <= timelineTop) {
-        updateTimelineElements(`${timelineTop}px`);
-        timeScrolledPercentage = 0;
+    if (timeScrolledPercentage == 0) {
+        updateTimelineElements(`${timelineRect.top}px`);
     }
-    else if (window.innerHeight / 2 >= timelineBottom) {
-        updateTimelineElements(`${timelineBottom}px`);
-        timeScrolledPercentage = 0.99;
+    else if (timeScrolledPercentage == 1) {
+        updateTimelineElements(`${timelineRect.bottom}px`);
+    }
+    else {
+        updateTimelineElements(`50%`);
     }
 
+    //add one month to total months to adjust for size of last month
     let monthsScrolled = Math.floor((timeData.totalMonths + 1) * timeScrolledPercentage);
 
-    //console.log(timeScrolledPercentage + "   " + (timelineTop - halfScreenSize) + "   " + (timelineBottom - halfScreenSize) + "   " + monthsScrolled);
+    let newDate = new Date(timeData.maxYear, timeData.endMonth - Math.min(monthsScrolled, timeData.totalMonths));
 
-    let newDate = new Date(timeData.maxYear, timeData.maxMonth - monthsScrolled);
+    //get readable month and year string
     let newMonth = newDate.toLocaleString('default', { month: 'long' });
     let newYear = newDate.getFullYear();
+
+    //set current month text
     timelineElements.currentTime.textContent = `${newMonth} ${newYear}`;
 
-
-    // Parallax effect for projects
-    const parallaxFactor = 0.5; // Adjust for desired parallax intensity
 
     timelineElements.projects.forEach(project => {
         let [startYear, startMonth] = project.dataset.start.split('-').map(Number);
         let [endYear, endMonth] = project.dataset.end.split('-').map(Number);
 
-        let startDate = new Date(startYear, startMonth - 1);
-        let endDate = new Date(endYear, endMonth - 1);
+        let startDate = new Date(startYear, startMonth);
+        let endDate = new Date(endYear, endMonth);
 
-        project.style.opacity = newDate >= startDate && newDate <= endDate ? '1' : '0';
+        project.style.opacity = newDate >= startDate && newDate <= endDate ? '0.7' : '0';
+        project.style.opacity = timeScrolledPercentage == 0 || timeScrolledPercentage == 1 ? '0' : project.style.opacity;
 
         const projectRect = project.getBoundingClientRect();
         const projectCenterY = (projectRect.top + projectRect.bottom) / 2;
         const offsetFromCenter = projectCenterY - (window.innerHeight / 2);
 
         // Apply parallax offset (you might want to tweak this)
-        project.style.transform = `translateY(${offsetFromCenter * parallaxFactor}px)`;
+        //project.style.transform = `translateY(${offsetFromCenter * parallaxFactor}px)`;
+
+        if (window.innerWidth >= 1024) {
+            const video = project.querySelector('video');
+            const description = project.querySelector('p');
+            if (video) {
+                video.style.display = 'block';
+            }
+            if (description) {
+                description.style.display = 'block';
+            }
+        }
     });
 }
 
