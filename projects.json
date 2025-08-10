@@ -6,7 +6,7 @@
         "description": "A Virtual Reality Zombie Horde Mode Game Released on the Quest 2 Headset, developed in the Unity Engine.",
         "video": "assets/PortfolioVideoLowerRes.mp4",
         "poster": "assets/everslaught_invasion_splashart.webp",
-		"showInPortfolio": true,
+        "showInPortfolio": true,
         "showInTimeline": true,
         "startDate": "2018-05",
         "endDate": "2020-12",
@@ -38,7 +38,15 @@
             "technologies": {
                 "summary": "Technologies Used",
                 "content": [
-                    {"type": "list", "label": "Unity Engine", "items": ["Shader Graph", "Behaviour Designer", "Scriptable Objects for Channels, Triggers and Configs"]},
+                    {
+                        "type": "sub-list",
+                        "text": "Unity Engine",
+                        "items": [
+                            "Shader Graph",
+                            "Behaviour Designer",
+                            "Scriptable Objects for Channels, Triggers and Configs"
+                        ]
+                    },
                     "Photon Fusion P2P (Networking)",
                     "Oculus Quest 2"
                 ]
@@ -52,7 +60,7 @@
         "description": "An Agency management simulator with contracts and many mini-games released on steam, developed in the Unreal Engine 4.",
         "video": "assets/PortfolioVideoLowerRes.mp4",
         "poster": "assets/rough_justice_splashart.webp",
-		"showInPortfolio": true,
+        "showInPortfolio": true,
         "showInTimeline": true,
         "startDate": "2021-01",
         "endDate": "2022-06",
@@ -84,7 +92,15 @@
             "technologies": {
                 "summary": "Technologies Used",
                 "content": [
-                    {"type": "list", "label": "Unity Engine", "items": ["Shader Graph", "Behaviour Designer", "Scriptable Objects for Channels, Triggers and Configs"]},
+                    {
+                        "type": "sub-list",
+                        "text": "Unity Engine",
+                        "items": [
+                            "Shader Graph",
+                            "Behaviour Designer",
+                            "Scriptable Objects for Channels, Triggers and Configs"
+                        ]
+                    },
                     "Photon Fusion P2P (Networking)",
                     "Oculus Quest 2"
                 ]
@@ -92,3 +108,4 @@
         }
     }
 ]
+
