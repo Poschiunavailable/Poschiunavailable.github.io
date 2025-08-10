@@ -29,8 +29,8 @@
 }
 
 #currentTime {
-    position: sticky;
-    top: 20px;
+    position: fixed;
+    top: 50%;
     left: 50px;
     font-size: 1.2em;
     color: var(--primary-color);
@@ -38,31 +38,47 @@
     padding: 5px 10px;
     border-radius: 5px;
     transition: top 0.3s ease;
-}
-
-#timeline-marker-left,
-#timeline-marker-right {
-    position: fixed;
-    top: 50%;
     transform: translateY(-50%);
     z-index: 100;
-    color: var(--primary-color);
-    font-size: 2rem;
-    cursor: pointer;
-    transition: color 0.3s ease;
 }
 
 #timeline-marker-left {
+    position: fixed;
     left: 20px;
+    top: 50%;
+    width: 0;
+    height: 0;
+    border-top: 10px solid transparent;
+    border-bottom: 10px solid transparent;
+    border-left: 15px solid var(--primary-color);
+    margin-top: -10px;
+    cursor: pointer;
+    transition: top 0.3s ease, border-left-color 0.3s ease;
+    z-index: 100;
 }
 
-#timeline-marker-right {
-    right: 20px;
+#timeline-marker-left:hover {
+    border-left-color: var(--highlight-color);
 }
 
-#timeline-marker-left:hover,
-#timeline-marker-right:hover {
-    color: var(--highlight-color);
+/* Timeline tick markers */
+.timeline-month-marker,
+.timeline-subdivision-marker {
+    position: absolute;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: var(--highlight-color);
+}
+
+.timeline-month-marker {
+    width: 12px;
+    height: 2px;
+}
+
+.timeline-subdivision-marker {
+    width: 6px;
+    height: 1px;
+    opacity: 0.6;
 }
 
 /* Timeline Months and Subdivisions */
@@ -193,8 +209,7 @@
 #timeline { grid-column: 1; }
 #projects { grid-column: 2; }
 #currentTime,
-#timeline-marker-left,
-#timeline-marker-right { grid-column: 1; }
+#timeline-marker-left { grid-column: 1; }
 
 /* new month gutter */
 #timeline-months {

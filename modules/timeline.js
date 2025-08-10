@@ -40,7 +40,6 @@ const timelineElements = {
     currentTime: null,
     timeline: null,
     timelineMarkerLeft: null,
-    timelineMarkerRight: null,
     projects: null, // Will be updated after DOM generation
 };
 
@@ -63,7 +62,7 @@ function monthIndexFromDate(date) {
 function scrollToMonthIndex(index) {
   const cvTop = timelineElements.cvSection.getBoundingClientRect().top + window.pageYOffset;
   const cvHeight = timelineElements.cvSection.offsetHeight;
-  const total = Math.max(timeData.totalMonths, 1);
+  const total = Math.max(timeData.totalMonths - 1, 1);
   const pct = Math.min(Math.max(index / total, 0), 1);
   const target = cvTop + pct * cvHeight - window.innerHeight * 0.5; // center-ish
   window.scrollTo({ top: target, behavior: 'smooth' });
@@ -77,7 +76,6 @@ function setupTimelineElements() {
     timelineElements.currentTime = document.getElementById('currentTime');
     timelineElements.timeline = document.getElementById('timeline');
     timelineElements.timelineMarkerLeft = document.getElementById('timeline-marker-left');
-    timelineElements.timelineMarkerRight = document.getElementById('timeline-marker-right');
     timelineElements.projects = document.querySelectorAll('#projects .cv-project');
 }
 
@@ -197,14 +195,31 @@ function generateTimelineBar() {
     const endMonth = 11;
   
     let i = 0; // month index
+    const total = timeData.totalMonths - 1;
     while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
+      const pct = (i / total) * 100;
+
+      // Marker on the timeline
+      const monthMarker = document.createElement('div');
+      monthMarker.className = 'timeline-month-marker';
+      monthMarker.style.top = `${pct}%`;
+      timeline.appendChild(monthMarker);
+
+      for (let q = 1; q < 4; q++) {
+        const subPct = ((i + q / 4) / total) * 100;
+        const sub = document.createElement('div');
+        sub.className = 'timeline-subdivision-marker';
+        sub.style.top = `${subPct}%`;
+        timeline.appendChild(sub);
+      }
+
       // right-side label row
       const monthRow = document.createElement('div');
       monthRow.className = 'month';
       monthRow.dataset.index = String(i);
       monthRow.textContent = new Date(currentYear, currentMonth)
         .toLocaleString('default', { month: 'short' });
-  
+
       // 4 tiny quarter dots (purely decorative here)
       for (let q = 0; q < 4; q++) {
         const dot = document.createElement('div');
@@ -214,7 +229,7 @@ function generateTimelineBar() {
       // click scroll
       monthRow.addEventListener('click', () => scrollToMonthIndex(i));
       labelCol.appendChild(monthRow);
-  
+
       // advance month
       currentMonth += 1; i += 1;
       if (currentMonth > 11) { currentMonth = 0; currentYear += 1; }
@@ -236,7 +251,7 @@ function updateTimelineScroll() {
     const scrollPercentage = Math.min(Math.max(scrollPosition / cvSectionHeight, 0), 1);
 
     // Calculate current date based on scroll percentage
-    const totalMonths = timeData.totalMonths;
+    const totalMonths = timeData.totalMonths - 1;
     const monthsScrolled = Math.floor(totalMonths * scrollPercentage);
 
     const newDate = new Date(timeData.minYear, monthsScrolled);
@@ -254,8 +269,8 @@ function updateTimelineScroll() {
 
     // Update position of current time indicator
     const timelineRect = timelineElements.timeline.getBoundingClientRect();
-    const indicatorPosition = scrollPercentage * timelineRect.height;
-    updateTimelineElements(`${indicatorPosition}px`);
+    const indicatorPosition = timelineRect.top + scrollPercentage * timelineRect.height;
+    updateTimelineElements(indicatorPosition);
 
     // Update project visibility based on current date
     timelineElements.projects.forEach(project => {
@@ -278,7 +293,6 @@ function updateTimelineScroll() {
  * @param {string} value - The value to set for the top position.
  */
 function updateTimelineElements(value) {
-    timelineElements.currentTime.style.top = value;
-    timelineElements.timelineMarkerLeft.style.top = value;
-    timelineElements.timelineMarkerRight.style.top = value;
+    timelineElements.currentTime.style.top = `${value}px`;
+    timelineElements.timelineMarkerLeft.style.top = `${value}px`;
 }
