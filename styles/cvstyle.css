@@ -11,7 +11,7 @@
     overflow: hidden;
     width: 100%;
     padding: 50px 20px;
-    background-color: var(--background-color);
+    background: transparent; /* allow star background to shine through */
     font-family: var(--primary-font);
     color: var(--primary-color);
 }
@@ -21,30 +21,30 @@
 #timeline {
     position: sticky;
     top: 50px;
-    left: 20px;
     width: 4px;
     background-color: var(--highlight-color);
     height: calc(var(--timeline-height, 100vh) - 100px);
     transition: background 1s ease;
+    justify-self: center;
 }
 
 #currentTime {
     position: fixed;
     top: 50%;
-    left: 50px;
+    left: calc(var(--timeline-left, 0px) + 30px);
     font-size: 1.2em;
     color: var(--primary-color);
     background-color: rgba(0, 0, 0, 0.5);
     padding: 5px 10px;
     border-radius: 5px;
-    transition: top 0.3s ease;
     transform: translateY(-50%);
     z-index: 100;
+    transition: none;
 }
 
 #timeline-marker-left {
     position: fixed;
-    left: 20px;
+    left: calc(var(--timeline-left, 0px) - 15px);
     top: 50%;
     width: 0;
     height: 0;
@@ -53,8 +53,9 @@
     border-left: 15px solid var(--primary-color);
     margin-top: -10px;
     cursor: pointer;
-    transition: top 0.3s ease, border-left-color 0.3s ease;
+    transition: border-left-color 0.3s ease;
     z-index: 100;
+    transform: translateY(-50%);
 }
 
 #timeline-marker-left:hover {
@@ -83,53 +84,20 @@
 
 /* Timeline Months and Subdivisions */
 
-.month {
-    position: relative;
-    height: 50px;
-    width: 100%;
-    color: var(--text-color);
-    display: flex;
-    align-items: center;
-    justify-content: flex-start;
-    padding-left: 10px;
-    font-size: 0.9rem;
-    cursor: pointer;
-    transition: background 0.3s ease, transform 0.3s ease;
-}
-
-.month:hover {
-    background-color: rgba(234, 177, 128, 0.1);
-    transform: scale(1.02);
-}
-
-.subdivision {
-    height: 5px;
-    width: 5px;
-    background-color: var(--highlight-color);
-    border-radius: 50%;
-    margin-left: 10px;
-    transition: transform 0.3s ease, background-color 0.3s ease;
-}
-
-.subdivision:hover {
-    transform: scale(1.2);
-    background-color: var(--senary-color);
-}
-
 /* Projects within the Timeline */
 
 .cv-project {
     opacity: 0;
     transform: translateY(50px);
-    transition: opacity 0.5s ease, transform 0.5s ease;
+    transition: opacity 0.5s ease, transform 0.5s ease, filter 0.2s ease;
     position: relative;
-    margin-left: 100px;
     margin-bottom: 50px;
     padding: 20px;
-    background-color: var(--secondary-background-color);
+    background-color: var(--secondary-background-color-translucent);
+    backdrop-filter: blur(3px);
     border-radius: 10px;
     box-shadow: var(--box-shadow);
-    cursor: pointer;
+    filter: blur(var(--scroll-blur, 0px));
 }
 
 .cv-project:hover {
@@ -169,16 +137,11 @@
 /* Responsive Adjustments */
 
 @media screen and (max-width: 1024px) {
-    #timeline {
-        left: 10px;
-    }
-
     .cv-project {
         margin-left: 60px;
     }
 
     #currentTime {
-        left: 30px;
         font-size: 1rem;
     }
 }
@@ -200,20 +163,21 @@
 /* container layout */
 #container {
   display: grid;
-  grid-template-columns: 60px 1fr 160px; /* timeline | projects | months */
+  grid-template-columns: 160px 60px 1fr; /* months | timeline | projects */
   grid-column-gap: 20px;
   align-items: start;
 }
 
 /* place existing pieces */
-#timeline { grid-column: 1; }
-#projects { grid-column: 2; }
+#timeline { grid-column: 2; grid-row: 1; }
+#projects { grid-column: 3; grid-row: 1; }
 #currentTime,
-#timeline-marker-left { grid-column: 1; }
+#timeline-marker-left { grid-column: 2; grid-row: 1; }
 
 /* new month gutter */
 #timeline-months {
-  grid-column: 3;
+  grid-column: 1;
+  grid-row: 1;
   position: sticky;
   top: 50px;              /* align with #timeline’s top */
   max-height: calc(100vh - 100px);
@@ -231,9 +195,10 @@
   font-size: 0.9rem;
   color: var(--primary-color);
   cursor: pointer;
-  transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease;
+  transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease, filter 0.2s ease;
   padding-left: 8px;
   border-left: 3px solid transparent;
+  filter: blur(var(--scroll-blur, 0px));
 }
 
 #timeline-months .month:hover {
@@ -251,6 +216,12 @@
   width: 5px; height: 5px; border-radius: 50%;
   background: var(--highlight-color);
   opacity: 0.8;
+  transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+#timeline-months .subdivision:hover {
+  transform: scale(1.2);
+  background-color: var(--senary-color);
 }
 
 /* Responsive: hide label gutter on small screens */

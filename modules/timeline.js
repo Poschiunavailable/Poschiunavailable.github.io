@@ -8,8 +8,12 @@ document.addEventListener('DOMContentLoaded', () => {
             setupTimelineElements(); // Moved before generateCVTimeline
             generateCVTimeline(timelineProjects);
             setupTimelineObserver();
+            updateTimelinePosition();
             window.addEventListener('scroll', debounce(updateTimelineScroll, 20));
-            window.addEventListener('resize', debounce(updateTimelineScroll, 50));
+            window.addEventListener('resize', debounce(() => {
+                updateTimelineScroll();
+                updateTimelinePosition();
+            }, 50));
             updateTimelineScroll();
         })
         .catch(error => console.error('Error loading projects:', error));
@@ -42,6 +46,10 @@ const timelineElements = {
     timelineMarkerLeft: null,
     projects: null, // Will be updated after DOM generation
 };
+
+const PARALLAX_FACTOR = 1.5; // scroll speed multiplier
+let lastScrollY = 0;
+let lastTime = Date.now();
 
 function ensureMonthGutter() {
   let labelCol = document.getElementById('timeline-months');
@@ -77,6 +85,12 @@ function setupTimelineElements() {
     timelineElements.timeline = document.getElementById('timeline');
     timelineElements.timelineMarkerLeft = document.getElementById('timeline-marker-left');
     timelineElements.projects = document.querySelectorAll('#projects .cv-project');
+}
+
+function updateTimelinePosition() {
+    if (!timelineElements.timeline) return;
+    const rect = timelineElements.timeline.getBoundingClientRect();
+    document.documentElement.style.setProperty('--timeline-left', `${rect.left}px`);
 }
 
 /**
@@ -165,8 +179,20 @@ function generateCVTimeline(projects) {
         }
 
         const p = document.createElement('p');
-        p.textContent = project.description;
+        p.textContent = project.timelineDescription || project.description;
         contentDiv.appendChild(p);
+
+        if (project.details && project.details.work && Array.isArray(project.details.work.content)) {
+            const ul = document.createElement('ul');
+            project.details.work.content.slice(0, 3).forEach(item => {
+                if (typeof item === 'string') {
+                    const li = document.createElement('li');
+                    li.textContent = item;
+                    ul.appendChild(li);
+                }
+            });
+            contentDiv.appendChild(ul);
+        }
 
         article.appendChild(contentDiv);
 
@@ -248,7 +274,7 @@ function updateTimelineScroll() {
     const cvSectionTop = timelineElements.cvSection.getBoundingClientRect().top + window.pageYOffset;
     const cvSectionHeight = timelineElements.cvSection.offsetHeight;
     const scrollPosition = window.scrollY + halfWindowHeight - cvSectionTop;
-    const scrollPercentage = Math.min(Math.max(scrollPosition / cvSectionHeight, 0), 1);
+    const scrollPercentage = Math.min(Math.max((scrollPosition * PARALLAX_FACTOR) / cvSectionHeight, 0), 1);
 
     // Calculate current date based on scroll percentage
     const totalMonths = timeData.totalMonths - 1;
@@ -267,11 +293,6 @@ function updateTimelineScroll() {
         m.classList.toggle('active', i === idx);
     });
 
-    // Update position of current time indicator
-    const timelineRect = timelineElements.timeline.getBoundingClientRect();
-    const indicatorPosition = timelineRect.top + scrollPercentage * timelineRect.height;
-    updateTimelineElements(indicatorPosition);
-
     // Update project visibility based on current date
     timelineElements.projects.forEach(project => {
         const [startYear, startMonth] = project.dataset.start.split('-').map(Number);
@@ -286,13 +307,14 @@ function updateTimelineScroll() {
             project.classList.remove('active-project');
         }
     });
-}
 
-/**
- * Updates the position of timeline elements (currentTime and markers).
- * @param {string} value - The value to set for the top position.
- */
-function updateTimelineElements(value) {
-    timelineElements.currentTime.style.top = `${value}px`;
-    timelineElements.timelineMarkerLeft.style.top = `${value}px`;
+    // apply motion blur based on scroll speed
+    const now = Date.now();
+    const deltaY = Math.abs(window.scrollY - lastScrollY);
+    const deltaTime = now - lastTime;
+    const speed = deltaTime ? deltaY / deltaTime : 0;
+    const blur = Math.min(speed * 0.25, 3);
+    document.documentElement.style.setProperty('--scroll-blur', `${blur}px`);
+    lastScrollY = window.scrollY;
+    lastTime = now;
 }

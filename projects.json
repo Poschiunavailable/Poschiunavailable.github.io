@@ -1,111 +1,135 @@
 [
-    {
-        "id": "EverslaughtInvasion",
-        "title": "Everslaught Invasion",
-        "image": "assets/everslaught_invasion_splashart.webp",
-        "description": "A Virtual Reality Zombie Horde Mode Game Released on the Quest 2 Headset, developed in the Unity Engine.",
-        "video": "assets/PortfolioVideoLowerRes.mp4",
-        "poster": "assets/everslaught_invasion_splashart.webp",
-        "showInPortfolio": true,
-        "showInTimeline": true,
-        "startDate": "2018-05",
-        "endDate": "2020-12",
-        "details": {
-            "about": {
-                "summary": "About the Project",
-                "content": [
-                    "Fast-paced VR action game.",
-                    "Developed for Oculus Quest 2.",
-                    {
-                        "type": "link",
-                        "text": "Official Website",
-                        "href": "https://everslaughtinvasion.com"
-                    },
-                    {
-                        "type": "link",
-                        "text": "Steam Page",
-                        "href": "https://store.steampowered.com/app/everslaughtinvasion"
-                    }
-                ]
-            },
-            "work": {
-                "summary": "Work as the Enemy/AI Engineer and Generalist",
-                "content": [
-                    "Created entire P2P networked Enemy Architecture utilizing a Character/Controller approach...",
-                    "... more points ..."
-                ]
-            },
-            "technologies": {
-                "summary": "Technologies Used",
-                "content": [
-                    {
-                        "type": "sub-list",
-                        "text": "Unity Engine",
-                        "items": [
-                            "Shader Graph",
-                            "Behaviour Designer",
-                            "Scriptable Objects for Channels, Triggers and Configs"
-                        ]
-                    },
-                    "Photon Fusion P2P (Networking)",
-                    "Oculus Quest 2"
-                ]
-            }
-        }
-    },
-    {
-        "id": "RoughJustice",
-        "title": "Rough Justice: '84",
-        "image": "assets/rough_justice_splashart.webp",
-        "description": "An Agency management simulator with contracts and many mini-games released on steam, developed in the Unreal Engine 4.",
-        "video": "assets/PortfolioVideoLowerRes.mp4",
-        "poster": "assets/rough_justice_splashart.webp",
-        "showInPortfolio": true,
-        "showInTimeline": true,
-        "startDate": "2021-01",
-        "endDate": "2022-06",
-        "details": {
-            "about": {
-                "summary": "About the Project",
-                "content": [
-                    "Fast-paced VR action game.",
-                    "Developed for Oculus Quest 2.",
-                    {
-                        "type": "link",
-                        "text": "Official Website",
-                        "href": "https://everslaughtinvasion.com"
-                    },
-                    {
-                        "type": "link",
-                        "text": "Steam Page",
-                        "href": "https://store.steampowered.com/app/everslaughtinvasion"
-                    }
-                ]
-            },
-            "work": {
-                "summary": "Work as the Enemy/AI Engineer and Generalist",
-                "content": [
-                    "Created entire P2P networked Enemy Architecture utilizing a Character/Controller approach...",
-                    "... more points ..."
-                ]
-            },
-            "technologies": {
-                "summary": "Technologies Used",
-                "content": [
-                    {
-                        "type": "sub-list",
-                        "text": "Unity Engine",
-                        "items": [
-                            "Shader Graph",
-                            "Behaviour Designer",
-                            "Scriptable Objects for Channels, Triggers and Configs"
-                        ]
-                    },
-                    "Photon Fusion P2P (Networking)",
-                    "Oculus Quest 2"
-                ]
-            }
-        }
+  {
+    "id": "EverslaughtInvasion",
+    "title": "Everslaught Invasion",
+    "image": "assets/everslaught_invasion_splashart.webp",
+    "description": "A Virtual Reality zombie horde mode for the Quest 2 built with Unity.",
+    "timelineDescription": "Networked enemy AI and core gameplay systems for a fast-paced VR title.",
+    "video": "assets/PortfolioVideoLowerRes.mp4",
+    "poster": "assets/everslaught_invasion_splashart.webp",
+    "showInPortfolio": true,
+    "showInTimeline": true,
+    "startDate": "2018-05",
+    "endDate": "2020-12",
+    "details": {
+      "about": {
+        "summary": "About the Project",
+        "content": [
+          "Fast-paced VR action game.",
+          "Developed for Oculus Quest 2.",
+          {"type": "link", "text": "Official Website", "href": "https://everslaughtinvasion.com"},
+          {"type": "link", "text": "Steam Page", "href": "https://store.steampowered.com/app/everslaughtinvasion"}
+        ]
+      },
+      "work": {
+        "summary": "Work as the Enemy/AI Engineer and Generalist",
+        "content": [
+          "Created P2P networked enemy architecture using a Character/Controller approach",
+          "Implemented scalable AI behaviours and tooling",
+          "Optimised Quest 2 performance budgets"
+        ]
+      },
+      "technologies": {
+        "summary": "Technologies Used",
+        "content": [
+          {"type": "sub-list", "text": "Unity Engine", "items": ["Shader Graph", "Behaviour Designer", "Scriptable Objects"]},
+          "Photon Fusion P2P (Networking)",
+          "Oculus Quest 2"
+        ]
+      }
     }
+  },
+  {
+    "id": "RoughJustice",
+    "title": "Rough Justice: '84",
+    "image": "assets/rough_justice_splashart.webp",
+    "description": "An agency management simulator released on Steam and developed in Unreal Engine 4.",
+    "timelineDescription": "Designed and implemented tactical mini‑games and supporting tools.",
+    "video": "assets/PortfolioVideoLowerRes.mp4",
+    "poster": "assets/rough_justice_splashart.webp",
+    "showInPortfolio": true,
+    "showInTimeline": true,
+    "startDate": "2021-01",
+    "endDate": "2022-06",
+    "details": {
+      "about": {
+        "summary": "About the Project",
+        "content": [
+          "Retro‑inspired management game.",
+          "Released on Steam.",
+          {"type": "link", "text": "Steam Page", "href": "https://store.steampowered.com/app/roughjustice"}
+        ]
+      },
+      "work": {
+        "summary": "Gameplay Programmer",
+        "content": [
+          "Implemented multiple puzzle mini‑games",
+          "Created editor tooling for contract creation",
+          "Maintained build automation"
+        ]
+      },
+      "technologies": {
+        "summary": "Technologies Used",
+        "content": [
+          "Unreal Engine 4",
+          "Blueprints and C++",
+          "Steamworks"
+        ]
+      }
+    }
+  },
+  {
+    "id": "ColdComfort",
+    "title": "Cold Comfort",
+    "image": "assets/cold_comfort_splashart.webp",
+    "description": "Multiplayer survival horror prototype built in Unreal Engine 4.",
+    "timelineDescription": "Prototyped co‑op zombie survival with dynamic objectives.",
+    "video": "assets/PortfolioVideoLowerRes.mp4",
+    "poster": "assets/cold_comfort_splashart.webp",
+    "showInPortfolio": false,
+    "showInTimeline": true,
+    "startDate": "2016-03",
+    "endDate": "2017-04",
+    "details": {
+      "about": {"summary": "About the Project", "content": ["Co‑op survival gameplay."]},
+      "work": {"summary": "Gameplay Programmer", "content": ["Authored mission system", "Built enemy spawning", "Created debug UI"]},
+      "technologies": {"summary": "Technologies Used", "content": ["Unreal Engine 4", "C++"]}
+    }
+  },
+  {
+    "id": "EverslaughtShip",
+    "title": "Everslaught Ship Prototype",
+    "image": "assets/Everslaught_Ship.png",
+    "description": "A VR spaceship systems experiment for Unity.",
+    "timelineDescription": "Explored interactive cockpit systems and motion controls.",
+    "video": "assets/PortfolioVideoLowerRes.mp4",
+    "poster": "assets/Everslaught_Ship.png",
+    "showInPortfolio": false,
+    "showInTimeline": true,
+    "startDate": "2017-05",
+    "endDate": "2018-02",
+    "details": {
+      "about": {"summary": "About the Project", "content": ["Experimental VR cockpit"]},
+      "work": {"summary": "Prototype Developer", "content": ["Built interaction framework", "Simulated ship systems"]},
+      "technologies": {"summary": "Technologies Used", "content": ["Unity", "SteamVR"]}
+    }
+  },
+  {
+    "id": "PortfolioSite",
+    "title": "Portfolio Website",
+    "image": "assets/website_icon.png",
+    "description": "Personal website showcasing projects and an interactive timeline.",
+    "timelineDescription": "Designed and coded a lightweight portfolio site with animated timeline.",
+    "video": "assets/PortfolioVideoLowerRes.mp4",
+    "poster": "assets/website_icon.png",
+    "showInPortfolio": false,
+    "showInTimeline": true,
+    "startDate": "2022-07",
+    "endDate": "2023-05",
+    "details": {
+      "about": {"summary": "About the Project", "content": ["Responsive single‑page site"]},
+      "work": {"summary": "Web Developer", "content": ["Implemented Three.js starfield", "Created project data system", "Built scrolling timeline"]},
+      "technologies": {"summary": "Technologies Used", "content": ["HTML/CSS/JS", "Three.js"]}
+    }
+  }
 ]
-
