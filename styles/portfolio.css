@@ -1,10 +1,12 @@
 @import url("base.css");
+@import url("animation.css");
 
 /* Portfolio Section */
 #portfolio {
-    padding: 100px 0;
+    padding: 100px 20px;
     perspective: 1000px;
-    overflow: hidden;
+    background-color: var(--background-color);
+    color: var(--primary-color);
 }
 
 #portfolio h2 {
@@ -12,25 +14,33 @@
     margin-bottom: 1.5rem;
     color: var(--primary-color);
     text-align: center;
+    animation: fadeIn 1s forwards;
 }
 
 .portfolio-grid {
     display: grid;
     grid-template-columns: repeat(3, 1fr);
     grid-gap: 30px;
+    padding: 20px;
+    animation: fadeIn 1.5s forwards;
 }
 
 .portfolio-item {
-    background-image: linear-gradient(rgba(190, 137, 115, 0.658), rgba(100, 111, 154, 0.233));
+    background: linear-gradient(135deg, rgba(190, 137, 115, 0.658), rgba(100, 111, 154, 0.233));
     border-radius: 10px;
     padding: 20px;
     text-align: center;
     color: var(--secondary-color);
-    transition: transform 0.3s ease-out, background-image 0.3s ease-out;
+    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    transform: perspective(1000px) rotateY(0deg) rotateX(0deg);
+    transition: transform 0.5s ease, box-shadow 0.3s ease;
+    cursor: pointer;
+    position: relative;
 }
 
 .portfolio-item:hover {
-    z-index: 1;
+    transform: perspective(1000px) rotateY(10deg) rotateX(10deg);
+    box-shadow: 0 12px 24px rgba(0, 0, 0, 0.3);
 }
 
 .portfolio-item img {
@@ -38,10 +48,62 @@
     height: auto;
     border-radius: 10px;
     margin-bottom: 20px;
+    transition: transform 0.3s ease;
+}
+
+.portfolio-item img:hover {
+    transform: scale(1.05);
 }
 
 .portfolio-item h3 {
     font-size: 1.8rem;
     margin-bottom: 1rem;
     color: var(--tertiary-color);
+    transition: color 0.3s ease;
+}
+
+.portfolio-item h3:hover {
+    color: var(--senary-color);
+}
+
+.portfolio-item p {
+    font-size: 1rem;
+    color: var(--primary-color);
+    transition: color 0.3s ease;
+}
+
+.portfolio-item p:hover {
+    color: var(--secondary-color);
+}
+
+.click-indicator {
+    position: absolute;
+    bottom: 10px;
+    left: 50%;
+    transform: translateX(-50%);
+    background-color: rgba(0, 0, 0, 0.6);
+    color: #fff;
+    padding: 5px 10px;
+    border-radius: 5px;
+    font-size: 0.9rem;
+    opacity: 0;
+    transition: opacity 0.3s ease, background-color 0.3s ease;
+}
+
+.portfolio-item:hover .click-indicator {
+    opacity: 1;
+    background-color: rgba(234, 177, 128, 0.8);
+}
+
+/* Responsive Adjustments */
+@media screen and (max-width: 1024px) {
+    .portfolio-grid {
+        grid-template-columns: repeat(2, 1fr);
+    }
+}
+
+@media screen and (max-width: 768px) {
+    .portfolio-grid {
+        grid-template-columns: 1fr;
+    }
 }

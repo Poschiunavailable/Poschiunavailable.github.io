@@ -1,7 +1,9 @@
+/* about.css */
 @import url("base.css");
 
-
-/* About Section */
+/*--------------------------------
+    About Section
+----------------------------------*/
 #about {
     background-color: transparent;
     padding: 100px 0;
@@ -17,13 +19,13 @@
 }
 
 #about .container {
-    background-image: linear-gradient(#35253a81, rgba(72, 80, 112, 0.233));
+    background-image: linear-gradient(rgba(53, 37, 58, 0.5),
+            rgba(72, 80, 112, 0.3));
     border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.2);
+    box-shadow: var(--box-shadow);
     padding: 50px;
     display: flex;
     flex-direction: column;
-    z-index: -1;
 }
 
 .about-content {
@@ -36,17 +38,47 @@
 .about-image {
     flex: 1;
     max-width: 300px;
+    margin: 0 auto;
 }
 
 .about-image img {
     width: 100%;
     border-radius: 10px;
-    box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+    box-shadow: var(--box-shadow);
 }
 
 .about-text {
-    flex: 1;
+    flex: 2;
     font-size: 1.2rem;
     line-height: 1.6;
-    color: var(--secondary-color);
+    color: var(--primary-color);
+}
+
+.about-text h3 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    font-family: var(--secondary-font);
+    color: var(--highlight-color);
+}
+
+.about-text p {
+    margin-bottom: 1.5rem;
+}
+
+.about-text .cta-button {
+    margin-top: 20px;
+}
+
+/*--------------------------------
+    Media Queries
+----------------------------------*/
+@media (max-width: 768px) {
+    .about-content {
+        flex-direction: column;
+        align-items: center;
+    }
+
+    .about-text {
+        text-align: center;
+    }
 }

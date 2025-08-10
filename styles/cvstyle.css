@@ -1,88 +1,244 @@
+/* cvstyles.css */
 @import url("base.css");
+@import url("animation.css");
 
-
-/* CV Section */
+/*--------------------------------
+    CV Section
+----------------------------------*/
 
 .cv-section {
     position: relative;
     overflow: hidden;
     width: 100%;
-}
-
-.cv-section-wrapper {
-    position: relative;
-    overflow: hidden;
-    /* Set a specific height or min-height if needed */
-    min-height: 300px;
-    /* Adjust the value according to your layout */
+    padding: 50px 20px;
+    background-color: var(--background-color);
     font-family: var(--primary-font);
-    /* If --primary-font is defined and you want to use it */
-    color: #fff;
-    /* Or any color you prefer for the text in the CV section */
+    color: var(--primary-color);
 }
 
-.cv-section #container {
-    position: relative;
-    overflow: hidden;
-    position: relative;
+/* Timeline Styling */
+
+#timeline {
+    position: sticky;
+    top: 50px;
+    left: 20px;
+    width: 4px;
+    background-color: var(--highlight-color);
+    height: calc(var(--timeline-height, 100vh) - 100px);
+    transition: background 1s ease;
 }
 
-.cv-section #timeline-marker-left {
+#currentTime {
+    position: sticky;
+    top: 20px;
+    left: 50px;
+    font-size: 1.2em;
+    color: var(--primary-color);
+    background-color: rgba(0, 0, 0, 0.5);
+    padding: 5px 10px;
+    border-radius: 5px;
+    transition: top 0.3s ease;
+}
+
+#timeline-marker-left,
+#timeline-marker-right {
     position: fixed;
     top: 50%;
-    left: 3em;
     transform: translateY(-50%);
-    z-index: 0;
-    color: #F5F3F5;
+    z-index: 100;
+    color: var(--primary-color);
+    font-size: 2rem;
+    cursor: pointer;
+    transition: color 0.3s ease;
 }
 
-.cv-section #timeline-marker-right {
-    position: fixed;
-    top: 50%;
-    visibility: hidden;
-    left: 3em;
-    transform: translateY(-50%);
-    z-index: 0;
-    color: #F5F3F5;
+#timeline-marker-left {
+    left: 20px;
 }
 
-.cv-section #timeline {
+#timeline-marker-right {
+    right: 20px;
+}
+
+#timeline-marker-left:hover,
+#timeline-marker-right:hover {
+    color: var(--highlight-color);
+}
+
+/* Timeline Months and Subdivisions */
+
+.month {
     position: relative;
-    height: fit-content;
-    width: 2px;
-    top: 0;
-    bottom: 0;
-    left: 1em;
-    transform: translateX(-50%);
+    height: 50px;
+    width: 100%;
+    color: var(--text-color);
+    display: flex;
+    align-items: center;
+    justify-content: flex-start;
+    padding-left: 10px;
+    font-size: 0.9rem;
+    cursor: pointer;
+    transition: background 0.3s ease, transform 0.3s ease;
 }
 
-.cv-section #currentTime {
-    position: fixed;
-    top: 50%;
-    left: 4em;
-    /* Using em for responsive design */
-    transform: translateY(-50%);
-    z-index: 0;
-    text-align: right;
-    color: #F5F3F5;
-    /* To ensure it is above other elements */
+.month:hover {
+    background-color: rgba(234, 177, 128, 0.1);
+    transform: scale(1.02);
 }
+
+.subdivision {
+    height: 5px;
+    width: 5px;
+    background-color: var(--highlight-color);
+    border-radius: 50%;
+    margin-left: 10px;
+    transition: transform 0.3s ease, background-color 0.3s ease;
+}
+
+.subdivision:hover {
+    transform: scale(1.2);
+    background-color: var(--senary-color);
+}
+
+/* Projects within the Timeline */
 
 .cv-project {
-    position: fixed;
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 0.5s ease, transform 0.5s ease;
+    position: relative;
+    margin-left: 100px;
+    margin-bottom: 50px;
+    padding: 20px;
+    background-color: var(--secondary-background-color);
+    border-radius: 10px;
+    box-shadow: var(--box-shadow);
+    cursor: pointer;
+}
 
-    left: 15em;
-    top: 10em;
-    right: 5em;
-    bottom: 10em;
-    /* Using em for responsive design */
-    line-height: 3em;
-    /* Using em for responsive design */
-    text-align: center;
-    background-color: var(--primary-color);
-    color: var(--text-color);
-    opacity: 0.7;
-    /*transition: opacity 0.5s ease;*/
-    z-index: 1;
+.cv-project:hover {
+    transform: translateY(-10px) scale(1.02);
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
 
+.cv-project h3 {
+    margin-bottom: 0.5em;
+    color: var(--primary-color);
+}
+
+.cv-project p {
+    color: var(--secondary-color);
+}
+
+.cv-project.active-project {
+    border-left: 4px solid var(--highlight-color);
+    background-color: var(--secondary-background-color-translucent);
+    transform: translateY(0) scale(1);
+    opacity: 1;
+    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
+}
+
+/* Timeline Marker */
+
+.timeline-marker {
+    position: absolute;
+    left: -30px;
+    top: calc(50% - 5px);
+    width: 10px;
+    height: 10px;
+    background-color: var(--highlight-color);
+    border-radius: 50%;
+}
+
+/* Responsive Adjustments */
+
+@media screen and (max-width: 1024px) {
+    #timeline {
+        left: 10px;
+    }
+
+    .cv-project {
+        margin-left: 60px;
+    }
+
+    #currentTime {
+        left: 30px;
+        font-size: 1rem;
+    }
+}
+
+@media screen and (max-width: 768px) {
+    #timeline {
+        display: none;
+    }
+
+    #currentTime {
+        display: none;
+    }
+
+    .cv-project {
+        margin-left: 20px;
+    }
+}
+
+/* container layout */
+#container {
+  display: grid;
+  grid-template-columns: 60px 1fr 160px; /* timeline | projects | months */
+  grid-column-gap: 20px;
+  align-items: start;
+}
+
+/* place existing pieces */
+#timeline { grid-column: 1; }
+#projects { grid-column: 2; }
+#currentTime,
+#timeline-marker-left,
+#timeline-marker-right { grid-column: 1; }
+
+/* new month gutter */
+#timeline-months {
+  grid-column: 3;
+  position: sticky;
+  top: 50px;              /* align with #timeline’s top */
+  max-height: calc(100vh - 100px);
+  overflow: hidden;       /* we scroll the page, not the labels */
+  padding-left: 8px;
+  border-left: 1px dashed rgba(255,255,255,0.15);
+}
+
+/* month rows match your existing 50px rhythm */
+#timeline-months .month {
+  height: 50px;
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.9rem;
+  color: var(--primary-color);
+  cursor: pointer;
+  transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease;
+  padding-left: 8px;
+  border-left: 3px solid transparent;
+}
+
+#timeline-months .month:hover {
+  color: var(--highlight-color);
+  background: rgba(234,177,128,0.08);
+}
+
+#timeline-months .month.active {
+  border-left-color: var(--highlight-color);
+  font-weight: 700;
+}
+
+/* tiny quarter dots (your subdivisions) */
+#timeline-months .subdivision {
+  width: 5px; height: 5px; border-radius: 50%;
+  background: var(--highlight-color);
+  opacity: 0.8;
+}
+
+/* Responsive: hide label gutter on small screens */
+@media (max-width: 768px) {
+  #timeline-months { display: none; }
 }

@@ -1,0 +1,144 @@
+/* animation.css */
+@import url("base.css");
+
+/*--------------------------------
+    Animation Classes
+----------------------------------*/
+
+/* Initial state for elements to be animated */
+.animate {
+    opacity: 0;
+    transform: translateY(50px);
+    transition: opacity 1s ease-out, transform 1s ease-out;
+}
+
+/* State when the element is visible */
+.visible {
+    opacity: 1;
+    transform: translateY(0);
+}
+
+/*--------------------------------
+    Keyframes for Animations
+----------------------------------*/
+
+/* Fade In Animation */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateY(0);
+    }
+}
+
+/* Fade Out Animation */
+@keyframes fadeOut {
+    from {
+        opacity: 1;
+        transform: translateY(0);
+    }
+
+    to {
+        opacity: 0;
+        transform: translateY(20px);
+    }
+}
+
+/* Blink Caret Animation (for typing effect) */
+@keyframes blink-caret {
+
+    0%,
+    100% {
+        border-color: transparent;
+    }
+
+    50% {
+        border-color: var(--primary-color);
+    }
+}
+
+/* Typing Animation */
+@keyframes typing {
+    from {
+        width: 0;
+    }
+
+    to {
+        width: 100%;
+    }
+}
+
+/*--------------------------------
+    Animation Classes for Timeline Projects
+----------------------------------*/
+
+/* Apply fadeIn animation to timeline projects */
+.fadeInTimelineProject {
+    animation: fadeIn 1s forwards;
+}
+
+/* Apply fadeOut animation to timeline projects */
+.fadeOutTimelineProject {
+    animation: fadeOut 1s forwards;
+}
+
+/*--------------------------------
+    Typing Effect
+----------------------------------*/
+
+.typing-effect {
+    display: inline-block;
+    position: relative;
+    overflow: hidden;
+    white-space: nowrap;
+    text-align: left;
+}
+
+.typing-text {
+    display: inline-block;
+    overflow: hidden;
+    white-space: nowrap;
+}
+
+/*--------------------------------
+    Additional Animations
+----------------------------------*/
+
+/* Slide In from Left */
+@keyframes slideInFromLeft {
+    from {
+        opacity: 0;
+        transform: translateX(-100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Slide In from Right */
+@keyframes slideInFromRight {
+    from {
+        opacity: 0;
+        transform: translateX(100%);
+    }
+
+    to {
+        opacity: 1;
+        transform: translateX(0);
+    }
+}
+
+/* Usage Example */
+.slide-in-left {
+    animation: slideInFromLeft 1s ease-out forwards;
+}
+
+.slide-in-right {
+    animation: slideInFromRight 1s ease-out forwards;
+}

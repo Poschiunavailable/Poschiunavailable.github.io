@@ -1,14 +1,18 @@
+/* hero.css */
 @import url("base.css");
 
-/* Hero Section */
+/*--------------------------------
+    Hero Section
+----------------------------------*/
 .hero {
     position: relative;
     display: flex;
-    margin-top: 2.8rem;
+    flex-direction: column;
     justify-content: center;
     align-items: center;
+    padding-top: 100px;
+    padding-bottom: 100px;
     width: 100%;
-    height: fit-content;
     background-color: transparent;
     color: var(--primary-color);
     text-align: center;
@@ -17,9 +21,10 @@
 
 .hero-video-overlay {
     position: absolute;
+    top: 0;
+    left: 0;
     width: 100%;
-    height: 100%;
-    /* or 100% if it's inside a container */
+    height: var(--video-height, 100%);
     overflow: hidden;
     z-index: -1;
 }
@@ -29,9 +34,7 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: 80vh;
-    padding: 0;
-    margin: 0;
+    height: 100%;
     object-fit: cover;
     z-index: -2;
 }
@@ -41,31 +44,81 @@
     position: absolute;
     top: 0;
     left: 0;
-    right: 0;
-    height: var(--video-height);
-    /* Using the variable set by JavaScript */
-    background: linear-gradient(to bottom, var(--secondary-background-color-translucent), var(--secondary-background-color-translucent));
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(to bottom,
+            rgba(28, 33, 46, 0.7),
+            rgba(28, 33, 46, 0.9));
     pointer-events: none;
 }
 
-
 .hero-content {
-    height: fit-content;
+    position: relative;
+    z-index: 1;
+    max-width: 800px;
+    width: 90%;
+    margin: 0 auto;
 }
 
 .hero-image {
-    max-width: 400px;
-
-    margin-left: auto;
-    margin-right: auto;
-}
-
-.hero-image img {
-    border-radius: 50%;
+    max-width: 200px;
+    margin: 0 auto 20px auto;
 }
 
 .hero-image img {
     width: 100%;
-    margin-left: auto;
-    margin-right: auto;
+    border-radius: 50%;
+    border: 5px solid var(--highlight-color);
+    box-shadow: var(--box-shadow);
+}
+
+.hero h1 {
+    font-size: 3rem;
+    margin-bottom: 0.5rem;
+    color: var(--primary-color);
+}
+
+.hero h2 {
+    font-size: 2rem;
+    margin-bottom: 1rem;
+    color: var(--highlight-color);
+    font-family: var(--tertiary-font);
+}
+
+.hero p {
+    font-size: 1.2rem;
+    margin-bottom: 2rem;
+    color: var(--primary-color);
+    line-height: 1.6;
+}
+
+.hero .cta-button {
+    margin-top: 20px;
+}
+
+/*--------------------------------
+    Media Queries
+----------------------------------*/
+@media (max-width: 768px) {
+    .hero {
+        padding-top: 80px;
+        padding-bottom: 80px;
+    }
+
+    .hero h1 {
+        font-size: 2.5rem;
+    }
+
+    .hero h2 {
+        font-size: 1.8rem;
+    }
+
+    .hero p {
+        font-size: 1rem;
+    }
+
+    .hero-image {
+        max-width: 150px;
+        margin-bottom: 15px;
+    }
 }

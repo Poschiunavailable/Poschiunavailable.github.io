@@ -1,171 +1,284 @@
+// timeline.js
+
+document.addEventListener('DOMContentLoaded', () => {
+    fetch('projects.json')
+        .then(response => response.json())
+        .then(projects => {
+            const timelineProjects = projects.filter(project => project.showInTimeline);
+            setupTimelineElements(); // Moved before generateCVTimeline
+            generateCVTimeline(timelineProjects);
+            setupTimelineObserver();
+            window.addEventListener('scroll', debounce(updateTimelineScroll, 20));
+            window.addEventListener('resize', debounce(updateTimelineScroll, 50));
+            updateTimelineScroll();
+        })
+        .catch(error => console.error('Error loading projects:', error));
+});
+
+/**
+ * Debounce function to limit the rate at which a function can fire.
+ * @param {Function} func - The function to debounce.
+ * @param {number} wait - The delay in milliseconds.
+ * @returns {Function}
+ */
+function debounce(func, wait) {
+    let timeout;
+    return function (...args) {
+        clearTimeout(timeout);
+        timeout = setTimeout(() => func.apply(this, args), wait);
+    };
+}
+
 const timeData = {
-    currentMonth: null,
-    currentYear: null,
     minYear: null,
     maxYear: null,
-    startMonth: null,
-    endMonth: null,
     totalMonths: null,
-}
+};
 
 const timelineElements = {
-    cvSection: document.getElementById('cvSection'),
-    projects: document.querySelectorAll('.cv-project'),
-    currentTime: document.getElementById('currentTime'),
-    timeline: document.getElementById('timeline'),
-    timelineMarkerLeft: document.getElementById('timeline-marker-left'),
-    timelineMarkerRight: document.getElementById('timeline-marker-right'),
+    cvSection: null,
+    currentTime: null,
+    timeline: null,
+    timelineMarkerLeft: null,
+    timelineMarkerRight: null,
+    projects: null, // Will be updated after DOM generation
+};
+
+function ensureMonthGutter() {
+  let labelCol = document.getElementById('timeline-months');
+  if (!labelCol) {
+    labelCol = document.createElement('div');
+    labelCol.id = 'timeline-months';
+    // insert right after the #timeline node
+    timelineElements.timeline.parentElement.insertBefore(labelCol, timelineElements.timeline.nextSibling);
+  }
+  return labelCol;
 }
 
-const observer = new IntersectionObserver((entries) => {
-    entries.forEach(entry => {
-        if (entry.isIntersecting) {
-            entry.target.classList.add('fadeInTimeLineProject');
-            entry.target.classList.remove('fadeOutTimeLineProject');
-        } else {
-            entry.target.classList.add('fadeOutTimeLineProject');
-            entry.target.classList.remove('fadeInTimeLineProject');
-        }
-    });
-});
+function monthIndexFromDate(date) {
+  // months since minYear/Jan
+  return (date.getFullYear() - timeData.minYear) * 12 + date.getMonth();
+}
 
-document.querySelectorAll('.cv-project').forEach(project => {
-    observer.observe(project);
-});
+function scrollToMonthIndex(index) {
+  const cvTop = timelineElements.cvSection.getBoundingClientRect().top + window.pageYOffset;
+  const cvHeight = timelineElements.cvSection.offsetHeight;
+  const total = Math.max(timeData.totalMonths, 1);
+  const pct = Math.min(Math.max(index / total, 0), 1);
+  const target = cvTop + pct * cvHeight - window.innerHeight * 0.5; // center-ish
+  window.scrollTo({ top: target, behavior: 'smooth' });
+}
 
-function generateCVTimeline() {
+/**
+ * Updates the projects NodeList after projects are added to the DOM.
+ */
+function setupTimelineElements() {
+    timelineElements.cvSection = document.getElementById('cvSection');
+    timelineElements.currentTime = document.getElementById('currentTime');
+    timelineElements.timeline = document.getElementById('timeline');
+    timelineElements.timelineMarkerLeft = document.getElementById('timeline-marker-left');
+    timelineElements.timelineMarkerRight = document.getElementById('timeline-marker-right');
+    timelineElements.projects = document.querySelectorAll('#projects .cv-project');
+}
+
+/**
+ * Sets up the IntersectionObserver to handle fade-in and fade-out animations.
+ */
+function setupTimelineObserver() {
+    if (!timelineElements.projects) return;
+
+    const options = {
+        root: null,
+        rootMargin: '0px',
+        threshold: 0.1, // Trigger when 10% of the element is visible
+    };
+
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            if (entry.isIntersecting) {
+                entry.target.classList.add('fadeInTimelineProject');
+                entry.target.classList.remove('fadeOutTimelineProject');
+            } else {
+                entry.target.classList.add('fadeOutTimelineProject');
+                entry.target.classList.remove('fadeInTimelineProject');
+            }
+        });
+    }, options);
+
+    timelineElements.projects.forEach(project => observer.observe(project));
+}
+
+/**
+ * Generates the CV Timeline based on the filtered projects.
+ * @param {Array} projects - Array of project objects to include in the timeline.
+ */
+function generateCVTimeline(projects) {
+    const projectsContainer = document.getElementById('projects');
     timeData.minYear = Infinity;
     timeData.maxYear = -Infinity;
 
-    timeData.startMonth = timelineElements.projects[0].dataset.start.split('-').map(Number)[1];
-    timeData.endMonth = timelineElements.projects[timelineElements.projects.length - 1].dataset.end.split('-').map(Number)[1];
+    if (projects.length === 0) return;
 
-    timelineElements.projects.forEach(project => {
-        //parse project data into array with year [0] and month [1]
-        let startDate = project.dataset.start.split('-').map(Number);
-        let endDate = project.dataset.end.split('-').map(Number);
+    // Determine the range of years
+    projects.forEach(project => {
+        const [startYear, startMonth] = project.startDate.split('-').map(Number);
+        const [endYear, endMonth] = project.endDate.split('-').map(Number);
 
-        //define min and max year
-        timeData.minYear = Math.min(timeData.minYear, startDate[0]);
-        timeData.maxYear = Math.max(timeData.maxYear, endDate[0]);
+        timeData.minYear = Math.min(timeData.minYear, startYear);
+        timeData.maxYear = Math.max(timeData.maxYear, endYear);
     });
 
-    timeData.currentMonth = timeData.startMonth;
-    timeData.currentYear = timeData.minYear;
+    // Calculate total months
+    timeData.totalMonths = (timeData.maxYear - timeData.minYear + 1) * 12;
 
-    timeData.totalMonths = (timeData.maxYear - timeData.minYear + 1) * 12 - timeData.startMonth - (12 - timeData.endMonth);
+    // Generate month labels and subdivisions
+    generateTimelineBar();
 
-    // Start from the maximum year and month
-    let currentYear = timeData.maxYear;
-    let currentMonth = timeData.endMonth;
+    // Generate project elements
+    projects.forEach(project => {
+        const article = document.createElement('article');
+        article.className = 'cv-project';
+        article.dataset.start = project.startDate;
+        article.dataset.end = project.endDate;
 
-    // Loop until reaching the minimum year and month
-    while (currentYear > timeData.minYear || (currentYear === timeData.minYear && currentMonth >= timeData.startMonth)) {
+        const marker = document.createElement('div');
+        marker.className = 'timeline-marker';
+        article.appendChild(marker);
 
-        let monthDiv = document.createElement('div');
-        monthDiv.className = 'month';
-        monthDiv.textContent = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'short' });
-        timeline.appendChild(monthDiv);
+        const contentDiv = document.createElement('div');
+        contentDiv.className = 'cv-project-content';
 
-        for (let subdivision = 4; subdivision >= 0; subdivision--) {
-            let subdivisionDiv = document.createElement('div');
-            subdivisionDiv.className = "subdivision";
-            monthDiv.appendChild(subdivisionDiv);
+        const h3 = document.createElement('h3');
+        h3.textContent = project.title;
+        contentDiv.appendChild(h3);
+
+        if (project.video) {
+            const video = document.createElement('video');
+            video.src = project.video;
+            video.controls = true;
+            video.className = 'timeline-video';
+            contentDiv.appendChild(video);
+        } else if (project.image) {
+            const img = document.createElement('img');
+            img.src = project.image;
+            img.alt = `${project.title} Image`;
+            img.className = 'timeline-image';
+            contentDiv.appendChild(img);
         }
 
-        monthDiv.textContent = new Date(currentYear, currentMonth).toLocaleString('default', { month: 'short' });
-        timeline.appendChild(monthDiv);
+        const p = document.createElement('p');
+        p.textContent = project.description;
+        contentDiv.appendChild(p);
 
-        // Move to the previous month
-        currentMonth -= 1;
+        article.appendChild(contentDiv);
 
-        // If the month is 0, move to the previous year and set month to December
-        if (currentMonth === 0) {
-            currentYear -= 1;
-            currentMonth = 12;
-        }
+        projectsContainer.appendChild(article);
+    });
 
+    // Update projects NodeList after adding to DOM
+    timelineElements.projects = document.querySelectorAll('#projects .cv-project');
+}
 
+/**
+ * Generates the vertical track and the month label gutter.
+ */
+function generateTimelineBar() {
+    const timeline = timelineElements.timeline;
+    if (!timeline) { console.error('Timeline element not found'); return; }
+  
+    // Clear and prep
+    timeline.innerHTML = '';
+    const labelCol = ensureMonthGutter();
+    labelCol.innerHTML = '';
+  
+    let currentYear = timeData.minYear;
+    let currentMonth = 0;
+    const endYear = timeData.maxYear;
+    const endMonth = 11;
+  
+    let i = 0; // month index
+    while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
+      // right-side label row
+      const monthRow = document.createElement('div');
+      monthRow.className = 'month';
+      monthRow.dataset.index = String(i);
+      monthRow.textContent = new Date(currentYear, currentMonth)
+        .toLocaleString('default', { month: 'short' });
+  
+      // 4 tiny quarter dots (purely decorative here)
+      for (let q = 0; q < 4; q++) {
+        const dot = document.createElement('div');
+        dot.className = 'subdivision';
+        monthRow.appendChild(dot);
+      }
+      // click scroll
+      monthRow.addEventListener('click', () => scrollToMonthIndex(i));
+      labelCol.appendChild(monthRow);
+  
+      // advance month
+      currentMonth += 1; i += 1;
+      if (currentMonth > 11) { currentMonth = 0; currentYear += 1; }
     }
+  
+    // the track itself just needs height sync (you already do this)
+    const cvRect = timelineElements.cvSection.getBoundingClientRect();
+    timelineElements.cvSection.style.setProperty('--timeline-height', `${cvRect.height}px`);
+}
 
-    let cvSectionRect = timelineElements.cvSection.getBoundingClientRect();
+/**
+ * Updates the timeline based on the scroll position.
+ */
+function updateTimelineScroll() {
+    const halfWindowHeight = window.innerHeight / 2;
+    const cvSectionTop = timelineElements.cvSection.getBoundingClientRect().top + window.pageYOffset;
+    const cvSectionHeight = timelineElements.cvSection.offsetHeight;
+    const scrollPosition = window.scrollY + halfWindowHeight - cvSectionTop;
+    const scrollPercentage = Math.min(Math.max(scrollPosition / cvSectionHeight, 0), 1);
 
-    timelineElements.cvSection.style.setProperty('--timeline-height', cvSectionRect.height + 'px');
+    // Calculate current date based on scroll percentage
+    const totalMonths = timeData.totalMonths;
+    const monthsScrolled = Math.floor(totalMonths * scrollPercentage);
 
-    window.addEventListener('scroll', () => {
-        updateTimelineScroll();
+    const newDate = new Date(timeData.minYear, monthsScrolled);
+
+    const newMonth = newDate.toLocaleString('default', { month: 'long' });
+    const newYear = newDate.getFullYear();
+
+    timelineElements.currentTime.textContent = `${newMonth} ${newYear}`;
+
+    // highlight the month label that corresponds to newDate
+    const idx = monthIndexFromDate(newDate);
+    document.querySelectorAll('#timeline-months .month').forEach((m, i) => {
+        m.classList.toggle('active', i === idx);
+    });
+
+    // Update position of current time indicator
+    const timelineRect = timelineElements.timeline.getBoundingClientRect();
+    const indicatorPosition = scrollPercentage * timelineRect.height;
+    updateTimelineElements(`${indicatorPosition}px`);
+
+    // Update project visibility based on current date
+    timelineElements.projects.forEach(project => {
+        const [startYear, startMonth] = project.dataset.start.split('-').map(Number);
+        const [endYear, endMonth] = project.dataset.end.split('-').map(Number);
+
+        const projectStartDate = new Date(startYear, startMonth - 1);
+        const projectEndDate = new Date(endYear, endMonth - 1);
+
+        if (newDate >= projectStartDate && newDate <= projectEndDate) {
+            project.classList.add('active-project');
+        } else {
+            project.classList.remove('active-project');
+        }
     });
 }
 
+/**
+ * Updates the position of timeline elements (currentTime and markers).
+ * @param {string} value - The value to set for the top position.
+ */
 function updateTimelineElements(value) {
     timelineElements.currentTime.style.top = value;
     timelineElements.timelineMarkerLeft.style.top = value;
     timelineElements.timelineMarkerRight.style.top = value;
 }
-
-function updateTimelineScroll() {
-    const halfScreenSize = window.innerHeight / 2;
-    const timelineRect = timelineElements.timeline.getBoundingClientRect();
-    const timelineTop = timelineRect.top - halfScreenSize;
-    const timelineBottom = timelineRect.bottom - halfScreenSize;
-
-    // Calculate the monthsScrolled
-    let timeScrolledPercentage = 1 - (timelineBottom / (timelineBottom + (-1 * (timelineTop))));
-    timeScrolledPercentage = Math.min(Math.max(timeScrolledPercentage, 0), 1);
-
-    //handle window center is outside bounds of the timeline
-    if (timeScrolledPercentage == 0) {
-        updateTimelineElements(`${timelineRect.top}px`);
-    }
-    else if (timeScrolledPercentage == 1) {
-        updateTimelineElements(`${timelineRect.bottom}px`);
-    }
-    else {
-        updateTimelineElements(`50%`);
-    }
-
-    //add one month to total months to adjust for size of last month
-    let monthsScrolled = Math.floor((timeData.totalMonths + 1) * timeScrolledPercentage);
-
-    let newDate = new Date(timeData.maxYear, timeData.endMonth - Math.min(monthsScrolled, timeData.totalMonths));
-
-    //get readable month and year string
-    let newMonth = newDate.toLocaleString('default', { month: 'long' });
-    let newYear = newDate.getFullYear();
-
-    //set current month text
-    timelineElements.currentTime.textContent = `${newMonth} ${newYear}`;
-
-
-    timelineElements.projects.forEach(project => {
-        let [startYear, startMonth] = project.dataset.start.split('-').map(Number);
-        let [endYear, endMonth] = project.dataset.end.split('-').map(Number);
-
-        let startDate = new Date(startYear, startMonth);
-        let endDate = new Date(endYear, endMonth);
-
-        project.style.opacity = newDate >= startDate && newDate <= endDate ? '0.7' : '0';
-        project.style.opacity = timeScrolledPercentage == 0 || timeScrolledPercentage == 1 ? '0' : project.style.opacity;
-
-        const projectRect = project.getBoundingClientRect();
-        const projectCenterY = (projectRect.top + projectRect.bottom) / 2;
-        const offsetFromCenter = projectCenterY - (window.innerHeight / 2);
-
-        // Apply parallax offset (you might want to tweak this)
-        //project.style.transform = `translateY(${offsetFromCenter * parallaxFactor}px)`;
-
-        if (window.innerWidth >= 1024) {
-            const video = project.querySelector('video');
-            const description = project.querySelector('p');
-            if (video) {
-                video.style.display = 'block';
-            }
-            if (description) {
-                description.style.display = 'block';
-            }
-        }
-    });
-}
-
-generateCVTimeline();
-updateTimelineScroll();

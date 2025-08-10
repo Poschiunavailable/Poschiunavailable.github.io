@@ -2,29 +2,45 @@
 <html lang="en">
 
 <head>
+    <!-- Basic Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link rel="preload" as="style" href="styles/styles.css" />
     <title>Patrick Temborius</title>
+
+    <!-- CSS Stylesheets -->
+    <link rel="stylesheet" href="styles/base.css">
     <link rel="stylesheet" href="styles/styles.css">
-    <link rel="stylesheet" href="styles/animations.css">
-    <link href="https://vjs.zencdn.net/7.15.4/video-js.css" rel="stylesheet" />
+    <link rel="stylesheet" href="styles/animation.css">
+    <link rel="stylesheet" href="styles/navbar.css">
+    <link rel="stylesheet" href="styles/hero.css">
+    <link rel="stylesheet" href="styles/about.css">
+    <link rel="stylesheet" href="styles/portfolio.css">
+    <link rel="stylesheet" href="styles/portfoliodetails.css">
+    <link rel="stylesheet" href="styles/cvstyle.css">
+
+    <!-- External Libraries -->
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js" defer></script>
     <script src="https://vjs.zencdn.net/7.15.4/video.min.js"></script>
+    <script src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js" async></script>
 
-    <script async src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js"></script>
-
+    <!-- Import Map for Three.js -->
     <script type="importmap">
-    {
-        "imports": {
-            "three": "https://unpkg.com/three@v0.151.3/build/three.module.js"
+        {
+            "imports": {
+                "three": "https://unpkg.com/three@0.151.3/build/three.module.js"
+            }
         }
-    }
     </script>
 </head>
 
 <body>
+    <!-- Background Animation -->
     <script src="modules/background.js" type="module"></script>
     <div id="canvas-container"></div>
-    <link rel="stylesheet" href="styles/navbar.css">
+
+    <!-- Navigation Bar -->
     <header>
         <nav class="navbar" id="nonCVContent">
             <div class="brand">
@@ -38,8 +54,9 @@
             </ul>
         </nav>
     </header>
-    <link rel="stylesheet" href="styles/hero.css">
-    <section id="hero nonCVContent" class="hero">
+
+    <!-- Hero Section -->
+    <section id="hero" class="hero nonCVContent">
         <div class="hero-video-overlay" id="videoOverlay">
             <video class="hero-video" id="heroVideo" autoplay muted loop playsinline>
                 <source src="assets/PortfolioVideoLowerRes.mp4" type="video/mp4">
@@ -48,21 +65,19 @@
         <div class="hero-content">
             <div class="small-separator"></div>
             <div class="hero-image animate">
-                <img src="assets/profile_picture.jpg" alt="Website Logo">
+                <img src="assets/profile_picture.jpg" alt="Profile Picture">
             </div>
             <h1>Patrick Temborius</h1>
             <h2>&lt;software developer&gt;</h2>
-            <p>Working with <b>international</b> and <b>diverse
-                    teams</b>, specializing in developing maintainable and expandable
-                <b>game systems</b> and <b>tools</b>.
-            </p>
+            <p>Working with <b>international</b> and <b>diverse teams</b>, specializing in developing maintainable and
+                expandable <b>game systems</b> and <b>tools</b>.</p>
             <a href="#portfolio" class="cta-button">View My Work</a>
             <div class="small-separator"></div>
         </div>
     </section>
-    <div class="small-separator"></div>
-    <link rel="stylesheet" href="styles/about.css">
-    <section id="about nonCVContent">
+
+    <!-- About Section -->
+    <section id="about" class="nonCVContent">
         <div class="container animate">
             <div class="typing-effect">
                 <h2 class="typing-text typing-target">&lt;about me&gt;</h2>
@@ -72,263 +87,44 @@
                     <img src="assets/profile_picture.jpg" alt="Patrick Temborius">
                 </div>
                 <div class="about-text">
-                    <!-- Add your personal description -->
                     <h3 class="animate">Passionate Game Developer</h3>
-                    <p class="animate">Hello! My name is Patrick Temborius and I am a Game Programmer. I am
-                        passionate about physics, games, ai, procedural generation and cutting edge technology. I have
-                        experience in various Game Engines and programming languages. In my free time, I
-                        enjoy watching lectures, woodworking, enjoy oldschool lan-parties with my friends or go to the
-                        cinema.</p>
-                    <p class="animate"> With a strong background in programming, I am constantly learning and adapting
-                        to new
-                        technologies to stay on the cutting edge of the industry, always looking forward to new
-                        technologies and releases from both, Unity and Unreal Engine. I'm constantly trying out new
-                        workflows, tools and programming patterns and love learning from or teaching to colleagues.
-                        I consider myself an empathic person and have experience with distributing tasks to other team
-                        members and quickly figure out possible issues and problems that slow down production, trying to
-                        find solutions for those that everybody is satisfied with.</p>
+                    <p class="animate">Hello! My name is Patrick Temborius and I am a Game Programmer. I am passionate
+                        about physics, games, AI, procedural generation, and cutting-edge technology. I have experience
+                        in various game engines and programming languages. In my free time, I enjoy watching lectures,
+                        woodworking, attending old-school LAN parties with friends, or going to the cinema.</p>
+                    <p class="animate">With a strong background in programming, I am constantly learning and adapting to
+                        new technologies to stay on the cutting edge of the industry, always looking forward to new
+                        technologies and releases from both Unity and Unreal Engine. I'm constantly trying out new
+                        workflows, tools, and programming patterns and love learning from or teaching colleagues. I
+                        consider myself an empathetic person and have experience distributing tasks to team members,
+                        quickly identifying issues that slow down production, and finding solutions that satisfy
+                        everyone.</p>
                     <a href="#portfolio" class="cta-button animate" onclick="scrollToSection(event, 'portfolio')">View
-                        My
-                        Work</a>
+                        My Work</a>
                 </div>
             </div>
         </div>
     </section>
-    <link rel="stylesheet" href="styles/portfolio.css">
-    <section id="portfolio nonCVContent">
+
+    <!-- Portfolio Section -->
+    <section id="portfolio" class="nonCVContent">
         <div class="container animate">
-            <div class="typing-effect animate">
+            <div class="typing-effect">
                 <h2 class="typing-text typing-target">&lt;portfolio&gt;</h2>
             </div>
             <div class="tiny-separator"></div>
-            <div class="portfolio-grid animate">
-                <div class="portfolio-item" id="item-EverslaughtInvasion">
-                    <img src="assets/everslaught_invasion_splashart.webp" alt="Everslaught Invasion Splashart">
-                    <h3>Everslaught Invasion</h3>
-                    <p>A Virtual Reality Zombie Horde Mode Game Released on the Quest 2 Headset, developed in the
-                        Unity Engine.</p>
-                    <div class="click-indicator">Click to show more</div>
-                </div>
-                <div class="portfolio-item" id="item-RoughJustice">
-                    <img src="assets/rough_justice_splashart.webp" alt="Rough Justice: '84 Splashart">
-                    <h3>Rough Justice: '84</h3>
-                    <p>An Agency management simulator with contracts and many mini-games released on steam,
-                        developed in the Unreal Engine 4.</p>
-                    <div class="click-indicator">Click to show more</div>
-                </div>
-                <div class="portfolio-item" id="item-ColdComfort">
-                    <img src="assets/cold_comfort_splashart.webp" alt="Cold Comfort Splashart">
-                    <h3>Cold Comfort</h3>
-                    <p>An asymmetric multiplayer zombie game prototype done in the Unreal Engine 4.</p>
-                    <div class="click-indicator">Click to show more</div>
-                </div>
-            </div>
-    </section>
-    <link rel="stylesheet" href="styles/liststyles.css">
-    <link rel="stylesheet" href="styles/portfoliodetails.css">
-    <script src="modules/projectdetails.js" type="module"></script>
-    <section id="Everslaught-Invastion Detail nonCVContent">
-        <div class="portfolio-detail animate" id="detail-EverslaughtInvasion">
-            <div class="detail-content">
-                <div class="project-detail-video-section">
-                    <video id="new-video-EverslaughtInvasion" controls preload="none"
-                        poster="assets/everslaught_invasion_splashart.webp">
-                        <source src="assets/PortfolioVideoLowerRes.mp4" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    <div class="play-overlay" onclick="playVideo('new-video-EverslaughtInvasion')">
-                        ▷
-                    </div>
-                    <div class="expand-arrow" onclick="toggleVideoSize('new-video-EverslaughtInvasion')">
-                        »
-                    </div>
-                </div>
-                <div class="text-section">
-                    <details class="project-detail project-detail-everslaught2">
-                        <summary><span class="arrow">➔</span> About the Project</summary>
-                        <div>
-                            <ul class="list-container">
-                                <li class="list-item">Published Game: <a
-                                        href="https://www.oculus.com/experiences/quest/5219488324783789"
-                                        target="_blank">Everslaught Invasion</a></li>
-                                <li class="list-item">Website: <a href="https://everslaught.com/?p=invasion"
-                                        target="_blank">Everslaught Invasion</a></li>
-                                <li class="list-item">Framework <ul class="sub-list">
-                                        <li class="sub-list-item">Oculus Quest 2</li>
-                                        <li class="sub-list-item">Published in Oculus Quest store</li>
-                                    </ul>
-                                </li>
-                                <li class="list-item">Setting <ul class="sub-list">
-                                        <li class="sub-list-item">VR Coop Zombie Hack and Slay game</li>
-                                        <li class="sub-list-item">Steam Punk, low fantasy with arabic influences</li>
-                                    </ul>
-                                </li>
-                            </ul>
-                        </div>
-                    </details>
-                    <details class="project-detail project-detail-everslaught1">
-                        <summary><span class=" arrow">➔</span>Work as the <strong>Enemy/AI Engineer</strong> and
-                            <strong>Generalist</strong>
-                        </summary>
-                        <div>
-                            <ul class="list-container">
-                                <li class="list-item">Created entire <b>P2P networked Enemy
-                                        Architecture</b>
-                                    utilizing a <b>Character/Controller</b> approach and an
-                                    autonomous locomotion
-                                    and behaviour implementation in an expandable and designer adjustable way </li>
-                                <li class="list-item">Implemented <b>Ragdoll system</b> suited
-                                    for mobile platforms
-                                    and non humanoid enemies</li>
-                                <li class="list-item"><b>Behaviour Tree</b> Task creation and
-                                    setup of Behaviour
-                                    Trees</li>
-                                <li class="list-item">Setup <b>multi layer NavMesh System</b>
-                                    for different
-                                    movement types (flying and walking)</li>
-                                <li class="list-item"><b>Tool development</b> for enemy setup
-                                    (hitboxes, damage zones
-                                    and ragdolls)</li>
-                                <li class="list-item">Created advanced enemy movement, <b>fleeing</b> behaviour,
-                                    <b>circling</b> behaviour, and <b>tether zone</b> behaviour that enables f.e. ranged
-                                    enemies to
-                                    select a position at the <b>high ground</b> with vision on the target player
-                                    (implemented
-                                    by probing the environment and rating different possible paths)
-                                </li>
-                                <li class="list-item">created sophisticated <b>aggro system for multiplayer</b> target
-                                    selection</li>
-                                <li class="list-item">implemented <b>advanced enemy spawn system</b> that enables to
-                                    spawn
-                                    enemies at various distances to the players while spawning always out of sight</li>
-                                <li class="list-item">Setup <b>multi layer NavMesh System</b> for different
-                                    movement types (flying and walking)</li>
-                                <li class="list-item"> Creating <b>action system</b> that can be integrated dynamically
-                                    with the behaviour tree (Create a Dynamic and flexible action system for
-                                    Attacks, taunts and other Enemy Abilities) </li>
-                                <li class="list-item">(Re-)implementing <b>multiplayer and singleplayer Network and
-                                        lobby management</b></li>
-                                <li class="list-item"><b>Performance analysis and optimization</b></li>
-                                <li class="list-item">Implementing <b>weapon rack</b> and <b>airship minimap</b></li>
-                            </ul>
-                        </div>
-                    </details>
-                    <details class="project-detail project-detail-everslaught2">
-                        <summary><span class=" arrow">➔</span> Technologies Used</summary>
-                        <div>
-                            <ul class="list-container">
-                                <li class="list-item">Unity Engine<ul class="sub-list">
-                                        <li class="sub-list-item">Shader Graph</li>
-                                        <li class="sub-list-item">Behaviour Designer</li>
-                                        <li class="sub-list-item">Scriptable Objects for Channels, Triggers and Configs
-                                        </li>
-                                    </ul>
-                                </li>
-
-                                <li class="list-item">Photon Fusion P2P (Networking)</li>
-                                <li class="list-item">Oculus Quest 2</li>
-                            </ul>
-                        </div>
-                    </details>
-                </div>
+            <div class="portfolio-grid animate" id="portfolioGrid">
+                <!-- Portfolio items will be injected here -->
             </div>
         </div>
     </section>
-    <section id="Rough-Justice Detail nonCVContent">
-        <div class="portfolio-detail animate" id="detail-RoughJustice">
-            <div class="detail-content">
-                <div class="project-detail-video-section">
-                    <video id="new-video-RoughJustice" controls preload="none"
-                        poster="assets/rough_justice_splashart.webp">
-                        <source src="assets/PortfolioVideoLowerRes.mp4" type="video/mp4">
-                        Your browser does not support the video tag.
-                    </video>
-                    <div class="play-overlay" onclick="playVideo('new-video-RoughJustice')">
-                        ▷
-                    </div>
-                    <div class="expand-arrow" onclick="toggleVideoSize('new-video-RoughJustice')">
-                        »
-                    </div>
-                </div>
-                <div class="text-section">
-                    <details class="project-detail project-detail-everslaught2">
-                        <summary><span class=" arrow">➔</span> About the Project</summary>
-                        <div>
-                            <ul class="list-container">
-                                <li class="list-item">Published Game: <a
-                                        href="https://store.steampowered.com/app/1291860/Rough_Justice_84/"
-                                        target="_blank">Rough Justice: '84</a></li>
-                                <li class="list-item">Website: <a href="https://rough-justice.com/"
-                                        target="_blank">Rough
-                                        Justice: '84</a></li>
-                                <li class="list-item">Framework <ul class="sub-list">
-                                        <li class="sub-list-item">PC Game</li>
-                                        <li class="sub-list-item">Published on Steam</li>
-                                    </ul>
-                                </li>
-                                <li class="list-item">Setting <ul class="sub-list">
-                                        <li class="sub-list-item">Agency Management Game with Mini-Games</li>
-                                        <li class="sub-list-item">Neon Noir Style with animated Story sequences</li>
-                                    </ul>
-                                </li>
-                            </ul>
-                        </div>
-                    </details>
-                    <details class="project-detail project-detail-everslaught1">
-                        <summary><span class=" arrow">➔</span>Work as the <strong>Lead Developer</strong></summary>
-                        <div>
-                            <ul class="list-container">
-                                <li class="list-item">Accompanied the project from <b>prototype to funding and
-                                        release</b> as the <b>Lead Developer</b>
-                                </li>
-                                <li class="list-item">Managing up to 3 Developers, managing the <b>application
-                                        process</b> for devs, <b>distributing tasks</b>, <b>onboarding</b>, code /
-                                    blueprint <b>review</b>, <b>QA</b></li>
-                                <li class="list-item">Created most of the <b>C++ backend</b> for various <b>game
-                                        mechanics</b>, <b>tools</b>, <b>dialogues</b> and <b>mini-games</b></li>
-                                <li class="list-item">Implemented <b>tools for City Building Generation</b> utilizing
-                                    Mesh
-                                    Instancing, road detection etc.</li>
-                                <li class="list-item">Implemented <b>NavMesh path finding</b> navigation of the agents
-                                    with line-trail rendering</li>
-                                <li class="list-item">Created custom <b>time manager</b>, for independent pauseable game
-                                    time (game can be paused while mini-games are played etc)</li>
-                                <li class="list-item">Worked on <b>tools for user and dev generated content</b>
-                                    "contract maker" (not included in released game)</li>
-                                <li class="list-item">Implemented <b>custom node system</b> for creating dialogue
-                                    sequences</li>
-                                <li class="list-item">Implemented functionality of many of the <b>UI elements</b></li>
-                                <li class="list-item">Implemented controls for <b>keyboard, mouse and
-                                        controller game play</b> with input hints that adjust to the used controller
-                                    types</li>
-                                <li class="list-item"><b>Save and load</b> system implementation</li>
-                                <li class="list-item"><b>Dev ops</b> for the Game managing the VCS and steamworks build
-                                    deployments
-                                </li>
-                            </ul>
-                        </div>
-                    </details>
-                    <details class="project-detail project-detail-everslaught2">
-                        <summary><span class=" arrow">➔</span> Technologies Used</summary>
-                        <div>
-                            <ul class="list-container">
-                                <li class="list-item">Unreal Engine 4<ul class="sub-list">
-                                        <li class="sub-list-item">C++ and Blueprint implementations</li>
-                                        <li class="sub-list-item">Custom Shader Development</li>
-                                        <li class="sub-list-item">Various Overrides of Engine Functionalities (f.e. for
-                                            UI element focus and Subtitles)</li>
-                                    </ul>
-                                </li>
 
-                                <li class="list-item">Steamworks integration</li>
-                            </ul>
-                        </div>
-                    </details>
-                </div>
-            </div>
-        </div>
-    </section>
-    <link rel="stylesheet" href="styles/cvstyle.css">
+    <!-- Portfolio Details Container -->
+    <div id="portfolioDetailsContainer">
+        <!-- Portfolio details will be injected here -->
+    </div>
+
+    <!-- CV Section -->
     <section id="cv">
         <div class="small-separator"></div>
         <div class="cv-section" id="cvSection">
@@ -338,39 +134,28 @@
                 <div id="timeline-marker-left">◁</div>
                 <div id="timeline-marker-right">◁</div>
                 <div id="projects">
-                    <article class="cv-project" data-start="2018-5" data-end="2023-5">
-                        <h3>Projekt A</h3>
-                        <video src="assets/PortfolioVideoLowerRes.mp4"></video>
-                        <p>Beschreibung von Projekt A</p>
-                    </article>
-                    <article class="cv-project" data-start="2023-6" data-end="2025-5">
-                        <h3>Projekt B</h3>
-                        <video src="assets/PortfolioVideoLowerRes.mp4"></video>
-                        <p>Beschreibung von Projekt B</p>
-                    </article>
-                    <!-- Add more projects as needed -->
+                    <!-- Projects will be dynamically added here -->
                 </div>
             </div>
         </div>
     </section>
-    <script src="modules/timeline.js"></script>
+
+    <!-- Contact Section -->
     <section id="contact">
         <div class="small-separator"></div>
+        <!-- Add contact form or contact information here -->
     </section>
+
+    <!-- Footer -->
     <footer>
         <div class="small-separator"></div>
-        <div class="small-separator"></div>
-        <div class="small-separator"></div>
-        <div class="small-separator"></div>
-        <div class="small-separator"></div>
-        <div class="small-separator"></div>
-        <div class="small-separator"></div>
-        <div class="small-separator"></div>
-        <div class="small-separator"></div>
-        <!-- Add your footer here -->
+        <!-- Add your footer content here -->
     </footer>
-    <script src="modules/scripts.js"></script>
 
+    <!-- JavaScript Files -->
+    <script src="modules/portfolio.js"></script>
+    <script src="modules/timeline.js"></script>
+    <script src="modules/scripts.js"></script>
 </body>
 
 </html>
