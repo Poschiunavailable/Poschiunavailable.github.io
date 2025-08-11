@@ -1,320 +1,216 @@
-// timeline.js
+// timeline.js — v5.3
+// Fixes based on your console:
+//  - 404 for /projects.json -> always load JSON relative to the HTML using document.baseURI
+//  - getBoundingClientRect() on null -> robust lookup for the CV section + guards
+//  - Keeps rAF + LERP smooth day wheel and exclusive active project
 
-document.addEventListener('DOMContentLoaded', () => {
-    fetch('projects.json')
-        .then(response => response.json())
-        .then(projects => {
-            const timelineProjects = projects.filter(project => project.showInTimeline);
-            setupTimelineElements(); // Moved before generateCVTimeline
-            generateCVTimeline(timelineProjects);
-            setupTimelineObserver();
-            updateTimelinePosition();
-            window.addEventListener('scroll', debounce(updateTimelineScroll, 20));
-            window.addEventListener('resize', debounce(() => {
-                updateTimelineScroll();
-                updateTimelinePosition();
-            }, 50));
-            updateTimelineScroll();
-        })
-        .catch(error => console.error('Error loading projects:', error));
-});
+(function () {
+    'use strict';
 
-/**
- * Debounce function to limit the rate at which a function can fire.
- * @param {Function} func - The function to debounce.
- * @param {number} wait - The delay in milliseconds.
- * @returns {Function}
- */
-function debounce(func, wait) {
-    let timeout;
-    return function (...args) {
-        clearTimeout(timeout);
-        timeout = setTimeout(() => func.apply(this, args), wait);
-    };
-}
+    const ROW_H = 42;
+    const DATE_LABEL_FMT = { day: '2-digit', month: 'short', year: 'numeric' };
+    const STICKY_TOP_VH = 12;
+    const FADE_MS = 240;
+    const SMOOTHNESS = 0.18;
 
-const timeData = {
-    minYear: null,
-    maxYear: null,
-    totalMonths: null,
-};
-
-const timelineElements = {
-    cvSection: null,
-    currentTime: null,
-    timeline: null,
-    timelineMarkerLeft: null,
-    projects: null, // Will be updated after DOM generation
-};
-
-const PARALLAX_FACTOR = 1.5; // scroll speed multiplier
-let lastScrollY = 0;
-let lastTime = Date.now();
-
-function ensureMonthGutter() {
-  let labelCol = document.getElementById('timeline-months');
-  if (!labelCol) {
-    labelCol = document.createElement('div');
-    labelCol.id = 'timeline-months';
-    // insert right after the #timeline node
-    timelineElements.timeline.parentElement.insertBefore(labelCol, timelineElements.timeline.nextSibling);
-  }
-  return labelCol;
-}
-
-function monthIndexFromDate(date) {
-  // months since minYear/Jan
-  return (date.getFullYear() - timeData.minYear) * 12 + date.getMonth();
-}
-
-function scrollToMonthIndex(index) {
-  const cvTop = timelineElements.cvSection.getBoundingClientRect().top + window.pageYOffset;
-  const cvHeight = timelineElements.cvSection.offsetHeight;
-  const total = Math.max(timeData.totalMonths - 1, 1);
-  const pct = Math.min(Math.max(index / total, 0), 1);
-  const target = cvTop + pct * cvHeight - window.innerHeight * 0.5; // center-ish
-  window.scrollTo({ top: target, behavior: 'smooth' });
-}
-
-/**
- * Updates the projects NodeList after projects are added to the DOM.
- */
-function setupTimelineElements() {
-    timelineElements.cvSection = document.getElementById('cvSection');
-    timelineElements.currentTime = document.getElementById('currentTime');
-    timelineElements.timeline = document.getElementById('timeline');
-    timelineElements.timelineMarkerLeft = document.getElementById('timeline-marker-left');
-    timelineElements.projects = document.querySelectorAll('#projects .cv-project');
-}
-
-function updateTimelinePosition() {
-    if (!timelineElements.timeline) return;
-    const rect = timelineElements.timeline.getBoundingClientRect();
-    document.documentElement.style.setProperty('--timeline-left', `${rect.left}px`);
-}
-
-/**
- * Sets up the IntersectionObserver to handle fade-in and fade-out animations.
- */
-function setupTimelineObserver() {
-    if (!timelineElements.projects) return;
-
-    const options = {
-        root: null,
-        rootMargin: '0px',
-        threshold: 0.1, // Trigger when 10% of the element is visible
+    const S = {
+        minDate: new Date(8640000000000000),
+        maxDate: new Date(-8640000000000000),
+        totalDays: 0,
+        els: { cv: null, projects: null, timewheel: null, label: null },
+        projects: [],
+        activeIdx: -1,
+        animFloat: 0,
+        targetFloat: 0,
+        rafId: 0,
+        lastTs: 0
     };
 
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            if (entry.isIntersecting) {
-                entry.target.classList.add('fadeInTimelineProject');
-                entry.target.classList.remove('fadeOutTimelineProject');
-            } else {
-                entry.target.classList.add('fadeOutTimelineProject');
-                entry.target.classList.remove('fadeInTimelineProject');
-            }
-        });
-    }, options);
+    const pad2 = n => String(n).padStart(2, '0');
+    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
+    const ymToDate = (ym) => { const [y, m] = ym.split('-').map(Number); return new Date(y, (m || 1) - 1, 1); };
+    const endOfMonth = (y, m) => new Date(y, m, 0);
+    const daysBetween = (a, b) => Math.floor((b - a) / 86400000);
+    const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 
-    timelineElements.projects.forEach(project => observer.observe(project));
-}
+    document.addEventListener('DOMContentLoaded', init);
 
-/**
- * Generates the CV Timeline based on the filtered projects.
- * @param {Array} projects - Array of project objects to include in the timeline.
- */
-function generateCVTimeline(projects) {
-    const projectsContainer = document.getElementById('projects');
-    timeData.minYear = Infinity;
-    timeData.maxYear = -Infinity;
-
-    if (projects.length === 0) return;
-
-    // Determine the range of years
-    projects.forEach(project => {
-        const [startYear, startMonth] = project.startDate.split('-').map(Number);
-        const [endYear, endMonth] = project.endDate.split('-').map(Number);
-
-        timeData.minYear = Math.min(timeData.minYear, startYear);
-        timeData.maxYear = Math.max(timeData.maxYear, endYear);
-    });
-
-    // Calculate total months
-    timeData.totalMonths = (timeData.maxYear - timeData.minYear + 1) * 12;
-
-    // Generate month labels and subdivisions
-    generateTimelineBar();
-
-    // Generate project elements
-    projects.forEach(project => {
-        const article = document.createElement('article');
-        article.className = 'cv-project';
-        article.dataset.start = project.startDate;
-        article.dataset.end = project.endDate;
-
-        const marker = document.createElement('div');
-        marker.className = 'timeline-marker';
-        article.appendChild(marker);
-
-        const contentDiv = document.createElement('div');
-        contentDiv.className = 'cv-project-content';
-
-        const h3 = document.createElement('h3');
-        h3.textContent = project.title;
-        contentDiv.appendChild(h3);
-
-        if (project.video) {
-            const video = document.createElement('video');
-            video.src = project.video;
-            video.controls = true;
-            video.className = 'timeline-video';
-            contentDiv.appendChild(video);
-        } else if (project.image) {
-            const img = document.createElement('img');
-            img.src = project.image;
-            img.alt = `${project.title} Image`;
-            img.className = 'timeline-image';
-            contentDiv.appendChild(img);
+    async function init() {
+        wireEls();
+        if (!S.els.cv) {
+            console.error('[timeline] #cvSection not found. Falling back to .cv-section.');
+            S.els.cv = document.querySelector('.cv-section');
+        }
+        if (!S.els.cv) {
+            console.error('[timeline] No CV section found; aborting timeline init.');
+            return;
         }
 
-        const p = document.createElement('p');
-        p.textContent = project.timelineDescription || project.description;
-        contentDiv.appendChild(p);
+        ensureDayWheel();
+        ensureMonthSeparators();
 
-        if (project.details && project.details.work && Array.isArray(project.details.work.content)) {
-            const ul = document.createElement('ul');
-            project.details.work.content.slice(0, 3).forEach(item => {
-                if (typeof item === 'string') {
-                    const li = document.createElement('li');
-                    li.textContent = item;
-                    ul.appendChild(li);
-                }
-            });
-            contentDiv.appendChild(ul);
+        try {
+            const projects = await loadProjectsJSON();
+            buildFromData(projects.filter(p => p.showInTimeline === true));
+            initFloats();
+            startRAF();
+        } catch (e) {
+            console.error('[timeline] Failed to load projects.json', e);
         }
-
-        article.appendChild(contentDiv);
-
-        projectsContainer.appendChild(article);
-    });
-
-    // Update projects NodeList after adding to DOM
-    timelineElements.projects = document.querySelectorAll('#projects .cv-project');
-}
-
-/**
- * Generates the vertical track and the month label gutter.
- */
-function generateTimelineBar() {
-    const timeline = timelineElements.timeline;
-    if (!timeline) { console.error('Timeline element not found'); return; }
-  
-    // Clear and prep
-    timeline.innerHTML = '';
-    const labelCol = ensureMonthGutter();
-    labelCol.innerHTML = '';
-  
-    let currentYear = timeData.minYear;
-    let currentMonth = 0;
-    const endYear = timeData.maxYear;
-    const endMonth = 11;
-  
-    let i = 0; // month index
-    const total = timeData.totalMonths - 1;
-    while (currentYear < endYear || (currentYear === endYear && currentMonth <= endMonth)) {
-      const pct = (i / total) * 100;
-
-      // Marker on the timeline
-      const monthMarker = document.createElement('div');
-      monthMarker.className = 'timeline-month-marker';
-      monthMarker.style.top = `${pct}%`;
-      timeline.appendChild(monthMarker);
-
-      for (let q = 1; q < 4; q++) {
-        const subPct = ((i + q / 4) / total) * 100;
-        const sub = document.createElement('div');
-        sub.className = 'timeline-subdivision-marker';
-        sub.style.top = `${subPct}%`;
-        timeline.appendChild(sub);
-      }
-
-      // right-side label row
-      const monthRow = document.createElement('div');
-      monthRow.className = 'month';
-      monthRow.dataset.index = String(i);
-      monthRow.textContent = new Date(currentYear, currentMonth)
-        .toLocaleString('default', { month: 'short' });
-
-      // 4 tiny quarter dots (purely decorative here)
-      for (let q = 0; q < 4; q++) {
-        const dot = document.createElement('div');
-        dot.className = 'subdivision';
-        monthRow.appendChild(dot);
-      }
-      // click scroll
-      monthRow.addEventListener('click', () => scrollToMonthIndex(i));
-      labelCol.appendChild(monthRow);
-
-      // advance month
-      currentMonth += 1; i += 1;
-      if (currentMonth > 11) { currentMonth = 0; currentYear += 1; }
     }
-  
-    // the track itself just needs height sync (you already do this)
-    const cvRect = timelineElements.cvSection.getBoundingClientRect();
-    timelineElements.cvSection.style.setProperty('--timeline-height', `${cvRect.height}px`);
-}
 
-/**
- * Updates the timeline based on the scroll position.
- */
-function updateTimelineScroll() {
-    const halfWindowHeight = window.innerHeight / 2;
-    const cvSectionTop = timelineElements.cvSection.getBoundingClientRect().top + window.pageYOffset;
-    const cvSectionHeight = timelineElements.cvSection.offsetHeight;
-    const scrollPosition = window.scrollY + halfWindowHeight - cvSectionTop;
-    const scrollPercentage = Math.min(Math.max((scrollPosition * PARALLAX_FACTOR) / cvSectionHeight, 0), 1);
+    function wireEls() {
+        S.els.cv = document.getElementById('cvSection');
+        S.els.projects = document.getElementById('projects');
+        S.els.timewheel = document.getElementById('timewheel');
+        S.els.label = document.getElementById('currentTime');
+    }
 
-    // Calculate current date based on scroll percentage
-    const totalMonths = timeData.totalMonths - 1;
-    const monthsScrolled = Math.floor(totalMonths * scrollPercentage);
+    async function loadProjectsJSON() {
+        // Always resolve relative to the HTML document, not the server root or script folder
+        const url = new URL('projects.json', document.baseURI).href;
+        const res = await fetch(url, { cache: 'no-store' });
+        if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
+        return await res.json();
+    }
 
-    const newDate = new Date(timeData.minYear, monthsScrolled);
+    function buildFromData(projects) {
+        projects.forEach(p => {
+            const s = ymToDate(p.startDate);
+            const [ey, em] = p.endDate.split('-').map(Number);
+            const e = endOfMonth(ey, em);
+            if (s < S.minDate) S.minDate = s;
+            if (e > S.maxDate) S.maxDate = e;
+        });
+        S.totalDays = daysBetween(S.minDate, S.maxDate) + 1;
 
-    const newMonth = newDate.toLocaleString('default', { month: 'long' });
-    const newYear = newDate.getFullYear();
+        if (!S.els.projects) { console.warn('[timeline] #projects not found'); return; }
+        S.els.projects.innerHTML = '';
+        projects.forEach(p => {
+            const a = document.createElement('article'); a.className = 'cv-project';
+            a.dataset.start = p.startDate; a.dataset.end = p.endDate;
+            const head = document.createElement('header'); head.className = 'project-header';
+            const h = document.createElement('h3'); h.textContent = p.title || p.id || 'Project'; head.appendChild(h);
+            const when = document.createElement('div'); when.className = 'project-dates'; when.textContent = `${p.startDate} – ${p.endDate}`; head.appendChild(when);
+            a.appendChild(head);
+            if (p.video) { const v = document.createElement('video'); v.className = 'project-video'; v.src = p.video; v.muted = true; v.loop = true; v.playsInline = true; if (p.poster) v.poster = p.poster; a.appendChild(v); }
+            if (p.timelineDescription || p.description) { const b = document.createElement('p'); b.className = 'project-desc'; b.textContent = p.timelineDescription || p.description; a.appendChild(b); }
+            S.els.projects.appendChild(a);
+            const sDate = ymToDate(p.startDate);
+            const [ey, em] = p.endDate.split('-').map(Number);
+            const eDate = endOfMonth(ey, em);
+            S.projects.push({ el: a, s: sDate, e: eDate });
+        });
+    }
 
-    timelineElements.currentTime.textContent = `${newMonth} ${newYear}`;
+    function ensureMonthSeparators() {
+        const wheel = document.querySelector('#timewheel .wheel.day');
+        if (!wheel) return null;
 
-    // highlight the month label that corresponds to newDate
-    const idx = monthIndexFromDate(newDate);
-    document.querySelectorAll('#timeline-months .month').forEach((m, i) => {
-        m.classList.toggle('active', i === idx);
-    });
+        let sepTrack = wheel.querySelector('.sep-track');
+        if (!sepTrack) {
+            sepTrack = document.createElement('div');
+            sepTrack.className = 'sep-track';
+            wheel.appendChild(sepTrack);
 
-    // Update project visibility based on current date
-    timelineElements.projects.forEach(project => {
-        const [startYear, startMonth] = project.dataset.start.split('-').map(Number);
-        const [endYear, endMonth] = project.dataset.end.split('-').map(Number);
-
-        const projectStartDate = new Date(startYear, startMonth - 1);
-        const projectEndDate = new Date(endYear, endMonth - 1);
-
-        if (newDate >= projectStartDate && newDate <= projectEndDate) {
-            project.classList.add('active-project');
-        } else {
-            project.classList.remove('active-project');
+            // Our wheel repeats 01..31 three times for smooth looping.
+            const totalRows = 31 * 3;
+            for (let i = 0; i < totalRows; i++) {
+                const day = (i % 31) + 1;
+                if (day === 1) {
+                    const line = document.createElement('div');
+                    line.className = 'sep-line';
+                    line.style.top = `${i * ROW_H}px`;
+                    sepTrack.appendChild(line);
+                }
+            }
         }
-    });
+        return sepTrack;
+    }
 
-    // apply motion blur based on scroll speed
-    const now = Date.now();
-    const deltaY = Math.abs(window.scrollY - lastScrollY);
-    const deltaTime = now - lastTime;
-    const speed = deltaTime ? deltaY / deltaTime : 0;
-    const blur = Math.min(speed * 0.25, 3);
-    document.documentElement.style.setProperty('--scroll-blur', `${blur}px`);
-    lastScrollY = window.scrollY;
-    lastTime = now;
-}
+    function ensureDayWheel() {
+        const tw = S.els.timewheel; if (!tw) return;
+        let dayWheel = tw.querySelector('.wheel.day');
+        if (!dayWheel) { dayWheel = document.createElement('div'); dayWheel.className = 'wheel day'; tw.prepend(dayWheel); }
+        if (!dayWheel.querySelector('.track')) {
+            const track = document.createElement('div'); track.className = 'track';
+            const vals = Array.from({ length: 31 }, (_, i) => pad2(i + 1));
+            const loop = vals.concat(vals, vals);
+            loop.forEach(v => { const d = document.createElement('div'); d.className = 'digit'; d.textContent = v; track.appendChild(d); });
+            dayWheel.appendChild(track);
+        }
+        if (!tw.querySelector('.wheel-center-marker')) { const c = document.createElement('div'); c.className = 'wheel-center-marker'; tw.appendChild(c); }
+    }
+
+    function initFloats() {
+        S.targetFloat = mapScrollToFloat();
+        S.animFloat = S.targetFloat;
+        updateForFloat(S.animFloat);
+    }
+
+    function startRAF() {
+        if (S.rafId) cancelAnimationFrame(S.rafId);
+        S.lastTs = performance.now();
+        const tick = (ts) => {
+            const dt = ts - S.lastTs; S.lastTs = ts;
+            S.targetFloat = mapScrollToFloat();
+            const alpha = 1 - Math.pow(1 - SMOOTHNESS, dt / 16.667);
+            S.animFloat += (S.targetFloat - S.animFloat) * alpha;
+            updateForFloat(S.animFloat);
+            S.rafId = requestAnimationFrame(tick);
+        };
+        S.rafId = requestAnimationFrame(tick);
+    }
+
+    function mapScrollToFloat() {
+        const cv = S.els.cv; if (!cv) return 0;
+        const mid = window.innerHeight / 2;
+        const rect = cv.getBoundingClientRect();
+        const startY = window.scrollY + rect.top;
+        const endY = startY + cv.scrollHeight; // robust against sticky
+        const centerY = window.scrollY + mid;
+        const pos = clamp(centerY - startY, 0, Math.max(1, endY - startY));
+        const pct = pos / Math.max(1, endY - startY);
+        return clamp((S.totalDays - 1) * pct, 0, S.totalDays - 1);
+    }
+
+    function setWheelByFloat(dayFloat) {
+        if (!S.els.timewheel) return;
+        const baseIndex = Math.floor(dayFloat);
+        const frac = dayFloat - baseIndex;
+        const baseDate = addDays(S.minDate, baseIndex);
+        const domIndex = baseDate.getDate() - 1;
+        const iFloat = domIndex + frac;
+        const offset = (31 + iFloat) * -ROW_H;
+        const track = S.els.timewheel.querySelector('.wheel.day .track');
+        if (track) track.style.transform = `translate3d(0, ${offset}px, 0)`;
+        const activeIdx = Math.round(iFloat) % 31;
+        const digits = S.els.timewheel.querySelectorAll('.wheel.day .digit');
+        digits.forEach((el, i) => el.classList.toggle('active', i % 31 === activeIdx));
+    }
+
+    function updateForFloat(dayFloat) {
+        setWheelByFloat(dayFloat);
+        const labelIndex = Math.round(dayFloat);
+        const labelDate = addDays(S.minDate, labelIndex);
+        if (S.els.label) { S.els.label.textContent = labelDate.toLocaleDateString(undefined, DATE_LABEL_FMT); }
+
+        let idx = -1;
+        for (let i = 0; i < S.projects.length; i++) {
+            const p = S.projects[i]; if (labelDate >= p.s && labelDate <= p.e) { idx = i; break; }
+        }
+        if (idx !== S.activeIdx) {
+            const prev = S.activeIdx >= 0 ? S.projects[S.activeIdx].el : null;
+            const next = idx >= 0 ? S.projects[idx].el : null;
+            if (prev) { prev.classList.remove('active-project'); prev.classList.add('fading-out'); setTimeout(() => prev.classList.remove('fading-out'), FADE_MS); }
+            if (next) { next.classList.add('active-project'); next.style.setProperty('--sticky-top', STICKY_TOP_VH + 'vh'); }
+            S.activeIdx = idx;
+        }
+
+        S.projects.forEach((p, i) => {
+            const on = (i === S.activeIdx);
+            p.el.style.pointerEvents = on ? 'auto' : 'none';
+            const v = p.el.querySelector('video'); if (v) { try { on ? v.play() : v.pause(); } catch { } }
+        });
+    }
+})();

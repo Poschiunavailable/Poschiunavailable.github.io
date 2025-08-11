@@ -129,13 +129,20 @@
         <div class="small-separator"></div>
         <div class="cv-section" id="cvSection">
             <div id="container">
-                <div id="timeline"></div>
-                <div id="currentTime">January 2023</div>
-                <div id="timeline-marker-left"></div>
-                <div id="projects">
-                    <!-- Projects will be dynamically added here -->
+                <!-- Timewheel (single column) -->
+                <div id="timewheel" aria-label="Timeline time selector" role="region">
+                    <div class="wheel day" aria-hidden="true"></div>
+                    <div class="wheel-center-marker" aria-hidden="true"></div>
                 </div>
+                <div id="tw-link" aria-hidden="true"></div>
+
+                <!-- Date label shown beside the wheel -->
+                <div id="currentTime">Jan 01, 2019</div>
+
+                <!-- Projects -->
+                <div id="projects"></div>
             </div>
+        </div>
         </div>
     </section>
 

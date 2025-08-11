@@ -1,230 +1,80 @@
-/* cvstyles.css */
-@import url("base.css");
-@import url("animation.css");
+/* cvstyle.css — v4 (timewheel-only) */
 
-/*--------------------------------
-    CV Section
-----------------------------------*/
+/* Layout: 2 columns — [ timewheel | projects ] */
+#cvSection { position: relative; padding: 50px 0; }
+#container { display: grid; grid-template-columns: 90px 1fr; gap: 20px; align-items: start; }
 
-.cv-section {
-    position: relative;
-    overflow: hidden;
-    width: 100%;
-    padding: 50px 20px;
-    background: transparent; /* allow star background to shine through */
-    font-family: var(--primary-font);
-    color: var(--primary-color);
+/* Timewheel (single day column only) */
+#timewheel { grid-column: 1; grid-row: 1; position: sticky; top: 50px; height: calc(100vh - 100px); display: grid; grid-template-columns: 70px; align-items: center; justify-content: start; filter: blur(var(--scroll-blur, 0px)); }
+#timewheel .wheel { position: relative; width: 70px; height: 100%; overflow: hidden; border-radius: 12px; outline: 2px solid rgba(77,255,100,0.35); background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.2)); box-shadow: inset 0 0 18px rgba(0,0,0,0.35); }
+#timewheel .track { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
+#timewheel .digit { height: 42px; display: flex; align-items: center; justify-content: center; font: 700 18px var(--tertiary-font); color: rgba(255,255,255,0.75); text-shadow: 0 1px 1px rgba(0,0,0,0.4); }
+#timewheel .digit.active { color: #fff; }
+#timewheel .wheel-center-marker { position: absolute; left: 0; right: 0; margin: 0 auto; width: calc(70px + 8px); height: 46px; border: 2px solid #4dff64; border-radius: 14px; pointer-events: none; z-index: 2; }
+
+/* Date label next to wheel */
+#currentTime { position: sticky; top: calc(50px + 50vh - 18px); /* align with wheel center */ margin-left: 8px; grid-column: 1; justify-self: start; font: 700 0.95rem var(--tertiary-font); color: var(--primary-color); background: rgba(0,0,0,0.45); padding: 4px 8px; border-radius: 6px; z-index: 10; height: fit-content; }
+
+/* Projects column */
+#projects { grid-column: 2; display: grid; gap: 48px; justify-items: start; }
+.cv-project { position: relative; top: 0; width: clamp(560px, 60vw, 1040px); padding: 18px; border-radius: 16px; background: rgba(20,24,32,0.35); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transform: translateY(8px) scale(0.995); transition: opacity 260ms ease, transform 260ms ease, border-color 200ms ease; }
+.cv-project.active-project { position: sticky; top: var(--sticky-top, 12vh); opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); border-color: var(--highlight-color); z-index: 2; }
+.cv-project.fading-out { opacity: 0; pointer-events: none; position: relative; z-index: 1; }
+.project-header h3 { margin: 0; font-size: clamp(1.25rem, 1.1rem + 0.6vw, 1.6rem); color: var(--portfolio-title-color); }
+.project-dates { margin-top: 4px; font-size: 0.95rem; opacity: 0.75; }
+.project-video { width: 100%; margin-top: 12px; border-radius: 12px; display: block; }
+.project-desc { margin-top: 12px; line-height: 1.6; }
+
+/* Responsive */
+@media (max-width: 1024px){ #container { grid-template-columns: 70px 1fr; } .cv-project{ width: min(92vw, 980px);} }
+@media (max-width: 768px){ #currentTime { display:none; } .cv-project.active-project { position: relative; top: 0; } }
+
+/* --- Day-wheel month separators --- */
+#timewheel .sep-track {
+  position: absolute;
+  left: 0; top: 0;
+  width: 100%; height: 100%;
+  pointer-events: none;
+  overflow: visible;
+}
+#timewheel .sep-line {
+  position: absolute;
+  left: 8px; right: 8px;
+  height: 0;
+  border-top: 1px dashed rgba(77,255,100,0.35);
+  opacity: .7;
 }
 
-/* Timeline Styling */
-
-#timeline {
-    position: sticky;
-    top: 50px;
-    width: 4px;
-    background-color: var(--highlight-color);
-    height: calc(var(--timeline-height, 100vh) - 100px);
-    transition: background 1s ease;
-    justify-self: center;
+/* --- Connection from wheel -> active project --- */
+#tw-link {
+  position: fixed;
+  top: 50%;                 /* aligns with wheel’s center marker */
+  height: 2px;
+  left: 0; width: 0;
+  border-bottom: 2px dashed rgba(77,255,100,0.45);
+  transform: translateY(-50%);
+  z-index: 90;
+  pointer-events: none;
+  transition: width 240ms ease;
 }
 
-#currentTime {
-    position: fixed;
-    top: 50%;
-    left: calc(var(--timeline-left, 0px) + 30px);
-    font-size: 1.2em;
-    color: var(--primary-color);
-    background-color: rgba(0, 0, 0, 0.5);
-    padding: 5px 10px;
-    border-radius: 5px;
-    transform: translateY(-50%);
-    z-index: 100;
-    transition: none;
+/* Small pulse when project changes */
+#tw-link.pulse {
+  box-shadow: 0 0 8px rgba(77,255,100,0.7);
+  animation: twPulse .35s ease;
+}
+@keyframes twPulse {
+  from { box-shadow: 0 0 0 rgba(77,255,100,0.0); }
+  to   { box-shadow: 0 0 8px rgba(77,255,100,0.7); }
 }
 
-#timeline-marker-left {
-    position: fixed;
-    left: calc(var(--timeline-left, 0px) - 15px);
-    top: 50%;
-    width: 0;
-    height: 0;
-    border-top: 10px solid transparent;
-    border-bottom: 10px solid transparent;
-    border-left: 15px solid var(--primary-color);
-    margin-top: -10px;
-    cursor: pointer;
-    transition: border-left-color 0.3s ease;
-    z-index: 100;
-    transform: translateY(-50%);
+/* Optional: draw a short “stub” from the active card back to the line */
+.cv-project.active-project::before {
+  content: "";
+  position: absolute;
+  left: -18px; top: 50%;
+  width: 14px; height: 2px;
+  background: rgba(77,255,100,0.55);
+  transform: translateY(-50%);
 }
 
-#timeline-marker-left:hover {
-    border-left-color: var(--highlight-color);
-}
-
-/* Timeline tick markers */
-.timeline-month-marker,
-.timeline-subdivision-marker {
-    position: absolute;
-    left: 50%;
-    transform: translateX(-50%);
-    background-color: var(--highlight-color);
-}
-
-.timeline-month-marker {
-    width: 12px;
-    height: 2px;
-}
-
-.timeline-subdivision-marker {
-    width: 6px;
-    height: 1px;
-    opacity: 0.6;
-}
-
-/* Timeline Months and Subdivisions */
-
-/* Projects within the Timeline */
-
-.cv-project {
-    opacity: 0;
-    transform: translateY(50px);
-    transition: opacity 0.5s ease, transform 0.5s ease, filter 0.2s ease;
-    position: relative;
-    margin-bottom: 50px;
-    padding: 20px;
-    background-color: var(--secondary-background-color-translucent);
-    backdrop-filter: blur(3px);
-    border-radius: 10px;
-    box-shadow: var(--box-shadow);
-    filter: blur(var(--scroll-blur, 0px));
-}
-
-.cv-project:hover {
-    transform: translateY(-10px) scale(1.02);
-    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
-}
-
-.cv-project h3 {
-    margin-bottom: 0.5em;
-    color: var(--primary-color);
-}
-
-.cv-project p {
-    color: var(--secondary-color);
-}
-
-.cv-project.active-project {
-    border-left: 4px solid var(--highlight-color);
-    background-color: var(--secondary-background-color-translucent);
-    transform: translateY(0) scale(1);
-    opacity: 1;
-    box-shadow: 0 8px 12px rgba(0, 0, 0, 0.2);
-}
-
-/* Timeline Marker */
-
-.timeline-marker {
-    position: absolute;
-    left: -30px;
-    top: calc(50% - 5px);
-    width: 10px;
-    height: 10px;
-    background-color: var(--highlight-color);
-    border-radius: 50%;
-}
-
-/* Responsive Adjustments */
-
-@media screen and (max-width: 1024px) {
-    .cv-project {
-        margin-left: 60px;
-    }
-
-    #currentTime {
-        font-size: 1rem;
-    }
-}
-
-@media screen and (max-width: 768px) {
-    #timeline {
-        display: none;
-    }
-
-    #currentTime {
-        display: none;
-    }
-
-    .cv-project {
-        margin-left: 20px;
-    }
-}
-
-/* container layout */
-#container {
-  display: grid;
-  grid-template-columns: 160px 60px 1fr; /* months | timeline | projects */
-  grid-column-gap: 20px;
-  align-items: start;
-}
-
-/* place existing pieces */
-#timeline { grid-column: 2; grid-row: 1; }
-#projects { grid-column: 3; grid-row: 1; }
-#currentTime,
-#timeline-marker-left { grid-column: 2; grid-row: 1; }
-
-/* new month gutter */
-#timeline-months {
-  grid-column: 1;
-  grid-row: 1;
-  position: sticky;
-  top: 50px;              /* align with #timeline’s top */
-  max-height: calc(100vh - 100px);
-  overflow: hidden;       /* we scroll the page, not the labels */
-  padding-left: 8px;
-  border-left: 1px dashed rgba(255,255,255,0.15);
-}
-
-/* month rows match your existing 50px rhythm */
-#timeline-months .month {
-  height: 50px;
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.9rem;
-  color: var(--primary-color);
-  cursor: pointer;
-  transition: transform 0.2s ease, color 0.2s ease, background 0.2s ease, filter 0.2s ease;
-  padding-left: 8px;
-  border-left: 3px solid transparent;
-  filter: blur(var(--scroll-blur, 0px));
-}
-
-#timeline-months .month:hover {
-  color: var(--highlight-color);
-  background: rgba(234,177,128,0.08);
-}
-
-#timeline-months .month.active {
-  border-left-color: var(--highlight-color);
-  font-weight: 700;
-}
-
-/* tiny quarter dots (your subdivisions) */
-#timeline-months .subdivision {
-  width: 5px; height: 5px; border-radius: 50%;
-  background: var(--highlight-color);
-  opacity: 0.8;
-  transition: transform 0.3s ease, background-color 0.3s ease;
-}
-
-#timeline-months .subdivision:hover {
-  transform: scale(1.2);
-  background-color: var(--senary-color);
-}
-
-/* Responsive: hide label gutter on small screens */
-@media (max-width: 768px) {
-  #timeline-months { display: none; }
-}
