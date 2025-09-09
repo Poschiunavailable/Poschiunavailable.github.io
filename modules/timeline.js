@@ -145,9 +145,36 @@
     }
 
     function positionLabel() {
-        if (!S.els.timewheel || !S.els.label) return;
+        if (!S.els.timewheel) return;
         const rect = S.els.timewheel.getBoundingClientRect();
-        S.els.label.style.left = `${rect.right + 8}px`;
+
+        // Position the date label (#currentTime) horizontally to the right of the wheel
+        if (S.els.label) {
+            S.els.label.style.left = `${rect.right + 8}px`;
+
+            // Align the label's vertical center with the wheel's center marker
+            const marker = S.els.timewheel.querySelector('.wheel-center-marker');
+            if (marker) {
+                const m = marker.getBoundingClientRect();
+                const markerCenterY = m.top + m.height / 2;
+                S.els.label.style.top = `${markerCenterY}px`;
+                S.els.label.style.transform = 'translateY(-50%)';
+            }
+        }
+
+        // If the link line exists, align it with the same Y as the center marker
+        const linkEl = document.getElementById('tw-link');
+        if (linkEl) {
+            const marker = S.els.timewheel.querySelector('.wheel-center-marker');
+            if (marker) {
+                const m = marker.getBoundingClientRect();
+                const markerCenterY = m.top + m.height / 2;
+                linkEl.style.top = `${markerCenterY}px`;
+                linkEl.style.transform = 'translateY(-50%)';
+            }
+            // Keep its left starting point aligned with the wheel's right edge
+            linkEl.style.left = `${rect.right}px`;
+        }
     }
 
     function initFloats() {
