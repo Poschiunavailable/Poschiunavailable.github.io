@@ -13,7 +13,19 @@
 #timewheel .wheel-center-marker { position: absolute; left: 0; right: 0; margin: 0 auto; width: calc(70px + 8px); height: 46px; border: 2px solid #4dff64; border-radius: 14px; pointer-events: none; z-index: 2; }
 
 /* Date label next to wheel */
-#currentTime { position: sticky; top: calc(50px + 50vh - 18px); /* align with wheel center */ margin-left: 8px; grid-column: 1; justify-self: start; font: 700 0.95rem var(--tertiary-font); color: var(--primary-color); background: rgba(0,0,0,0.45); padding: 4px 8px; border-radius: 6px; z-index: 10; height: fit-content; }
+#currentTime {
+  position: fixed;
+  top: 50%;
+  transform: translateY(-50%);
+  left: 0;
+  font: 700 0.95rem var(--tertiary-font);
+  color: var(--primary-color);
+  background: rgba(0,0,0,0.45);
+  padding: 4px 8px;
+  border-radius: 6px;
+  z-index: 10;
+  height: fit-content;
+}
 
 /* Projects column */
 #projects { grid-column: 2; display: grid; gap: 48px; justify-items: start; }
