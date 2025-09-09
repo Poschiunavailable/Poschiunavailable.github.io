@@ -12,6 +12,7 @@ body {
     margin: 0;
     padding: 0;
     position: relative;
+    transition: background-color 280ms ease, background-image 280ms ease;
 }
 
 /* Canvas Container */
@@ -29,6 +30,13 @@ body {
     width: 100%;
     height: 100%;
 }
+
+/* Darken background slightly while immersive. Keep stars visible but subdued */
+body.timeline-immersive {
+    background-image: linear-gradient(#0a0d12, #06080c);
+}
+body.timeline-immersive #canvas-container { opacity: 0.35; transition: opacity 260ms ease; }
+body:not(.timeline-immersive) #canvas-container { opacity: 1; transition: opacity 260ms ease; }
 
 /* Global Styles */
 h1,

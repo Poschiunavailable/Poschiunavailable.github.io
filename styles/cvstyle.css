@@ -5,19 +5,67 @@
 #container { display: grid; grid-template-columns: 90px 1fr; gap: 20px; align-items: start; }
 
 /* Timewheel (single day column only) */
-#timewheel { grid-column: 1; grid-row: 1; position: sticky; top: 50px; height: calc(100vh - 100px); display: grid; grid-template-columns: 70px; align-items: center; justify-content: start; filter: blur(var(--scroll-blur, 0px)); }
-#timewheel .wheel { position: relative; width: 70px; height: 100%; overflow: hidden; border-radius: 12px; background:
+#timewheel { grid-column: 1; grid-row: 1; position: sticky; top: 50px; height: calc(100vh - 100px); display: grid; grid-template-columns: 40px; align-items: center; justify-content: start; filter: blur(var(--scroll-blur, 0px)); cursor: grab; cursor: -webkit-grab; transition: opacity 280ms ease, transform 320ms ease; }
+#timewheel.dragging { cursor: grabbing; cursor: -webkit-grabbing; }
+#timewheel .wheel, #timewheel .track, #timewheel .digit, #timewheel .gap { cursor: inherit; }
+#tw-drag-surface { display: none; }
+#timewheel .wheel { position: relative; width: 40px; height: 100%; overflow: hidden; border-radius: 12px; background:
   /* Apple-like soft bevel */ linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.10)) ,
   /* IDE-like panel gradient */ linear-gradient(180deg, rgba(53,37,58,0.35), rgba(72,80,112,0.25));
  box-shadow:
    inset 0 1px 2px rgba(255,255,255,0.06),
    inset 0 -1px 2px rgba(0,0,0,0.25),
-   0 8px 24px rgba(0,0,0,0.35);
+  0 8px 24px rgba(0,0,0,0.35);
 }
+
+/* Immersive mode: the wheel becomes a fixed full-height rail with a soft enter/exit */
+body.timeline-immersive #timewheel {
+  position: fixed;
+  top: 0;
+  height: 100vh;
+  z-index: 0;
+  transform: translateY(0);
+  opacity: 1;
+}
+body.timeline-immersive-enter #timewheel { opacity: 0; transform: translateY(10px); }
+/* Hide projects column while immersive to avoid duplicates (stage renders instead) */
+body.timeline-immersive #projects { visibility: hidden; pointer-events: none; }
+body:not(.timeline-immersive) #timewheel.is-immersive-enter { opacity: 0; }
+body.timeline-immersive #projects { visibility: hidden; pointer-events: none; }
+body.timeline-immersive #currentTime { opacity: 1; }
+
+/* Right-side immersive stage for project details */
+#timelineStage {
+  position: fixed;
+  top: 8vh;
+  bottom: 6vh;
+  left: 150px;  /* leaves room for the wheel */
+  right: 5vw;
+  z-index: 1;
+  display: none;
+  pointer-events: auto;
+  overflow: hidden;
+}
+#timelineStage .stage-card {
+  width: clamp(560px, 60vw, 1040px);
+  height: 100%;
+  overflow: auto;
+  padding: 18px;
+  border-radius: 16px;
+  background: rgba(20,24,32,0.35);
+  border: 1px solid rgba(255,255,255,0.08);
+  backdrop-filter: blur(6px);
+  box-shadow: 0 10px 32px rgba(0,0,0,0.35);
+}
+body.timeline-immersive #timelineStage { display: block; }
+#timelineStage .cv-project { position: relative !important; top: 0 !important; opacity: 1 !important; transform: none !important; pointer-events: auto !important; }
+
+/* Background dim for immersive mode */
+#timelineBackdrop { display: none; }
 #timewheel .track { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
-#timewheel .digit { height: 42px; display: flex; align-items: center; justify-content: center; font: 700 18px var(--tertiary-font); color: rgba(221,231,246,0.86); text-shadow: 0 1px 1px rgba(0,0,0,0.35); }
+#timewheel .digit { height: 12px; display: flex; align-items: center; justify-content: center; font: 700 12px var(--tertiary-font); color: rgba(221,231,246,0.86); text-shadow: 0 1px 1px rgba(0,0,0,0.35); }
 #timewheel .digit.active { color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.45); }
-#timewheel .wheel-center-marker { position: absolute; left: 0; right: 0; margin: 0 auto; width: 100%; height: 46px; border: 2px solid rgba(129,168,209,0.9); border-radius: 14px; pointer-events: none; z-index: 2; box-sizing: border-box; box-shadow: 0 0 0 2px rgba(129,168,209,0.15), inset 0 0 12px rgba(129,168,209,0.10); }
+#timewheel .wheel-center-marker { position: absolute; }
 
 /* Date label next to wheel */
 #currentTime {
@@ -25,10 +73,10 @@
   top: 50%;
   transform: translateY(-50%);
   left: 0;
-  font: 700 0.95rem var(--tertiary-font);
+  font: 700 1.25rem var(--tertiary-font);
   color: var(--primary-color);
-  background: linear-gradient(180deg, rgba(16,21,30,0.85), rgba(29,32,45,0.65));
-  border: 1px solid rgba(129,168,209,0.35);
+  background: linear-gradient(180deg, rgba(16,21,30,1), rgba(29,32,45,1));
+  border: 2px solid rgba(129,168,209,0.35);
   padding: 4px 10px;
   border-radius: 8px;
   box-shadow: 0 2px 8px rgba(0,0,0,0.35);
@@ -37,7 +85,7 @@
 }
 
 /* Projects column */
-#projects { grid-column: 2; display: grid; gap: 48px; justify-items: start; }
+#projects { grid-column: 2; display: grid; gap: px; justify-items: start; }
 .cv-project { position: relative; top: 0; width: clamp(560px, 60vw, 1040px); padding: 18px; border-radius: 16px; background: rgba(20,24,32,0.35); border: 1px solid rgba(255,255,255,0.08); backdrop-filter: blur(6px); opacity: 0; pointer-events: none; transform: translateY(8px) scale(0.995); transition: opacity 260ms ease, transform 260ms ease, border-color 200ms ease; }
 .cv-project.active-project { position: sticky; top: var(--sticky-top, 12vh); opacity: 1; pointer-events: auto; transform: translateY(0) scale(1); border-color: var(--highlight-color); z-index: 2; }
 .cv-project.fading-out { opacity: 0; pointer-events: none; position: relative; z-index: 1; }
@@ -51,11 +99,14 @@
 @media (max-width: 768px){ #currentTime { display:none; } .cv-project.active-project { position: relative; top: 0; } }
 
 /* --- Physical gaps for month/year transitions --- */
-#timewheel .gap { position: relative; width: 100%; }
-#timewheel .gap-line { position: absolute; left: 8px; right: 8px; top: 0; height: 0; border-top: 1px dashed rgba(129,168,209,0.40); opacity: .9; }
-#timewheel .gap-label { position: absolute; left: 50%; top: 6px; transform: translateX(-50%); font: 700 12px var(--tertiary-font); letter-spacing: 0.04em; color: rgba(171,201,241,0.95); text-shadow: 0 1px 1px rgba(0,0,0,0.25); }
-#timewheel .gap.year .gap-line { border-top: 2px solid rgba(129,168,209,0.65); }
-#timewheel .gap-year { position: absolute; left: 50%; top: 22px; transform: translateX(-50%); font: 600 11px var(--tertiary-font); color: rgba(171,201,241,0.95); }
+#timewheel .gap { position: relative; width: 100%; top:2px; }
+#timewheel .gap { background: linear-gradient(180deg, rgba(18,24,36,0.18), rgba(18,24,36,0.0)); }
+#timewheel .gap-line { position: absolute; left: 8px; right: 8px; top: 0; height: 0; border-top: 1px dashed rgba(171,201,241,0.75); opacity: 1; }
+#timewheel .gap::before { content: ""; position: absolute; left: 8px; right: 8px; top: -1px; height: 10px; pointer-events: none; background: linear-gradient(180deg, rgba(171,201,241,0.14), rgba(171,201,241,0.02)); filter: blur(0.2px); }
+#timewheel .gap-label { position: absolute; left: 50%; top: 4px; transform: translateX(-50%); font: 700 12px var(--tertiary-font); letter-spacing: 0.04em; color: rgba(221,231,246,0.98); text-shadow: 0 1px 1px rgba(0,0,0,0.35); background: rgba(16,21,30,0.88); border: 1px solid rgba(171,201,241,0.55); padding: 2px 6px; border-radius: 9999px; }
+#timewheel .gap.year .gap-line { border-top: 2px solid rgba(171,201,241,0.95); }
+#timewheel .gap.year::before { background: linear-gradient(180deg, rgba(171,201,241,0.22), rgba(171,201,241,0.03)); }
+#timewheel .gap-year { position: absolute; left: 50%; top: 24px; transform: translateX(-50%); font: 700 11px var(--tertiary-font); color: rgba(221,231,246,0.98); }
 
 /* --- Connection from wheel -> active project --- */
 #tw-link {
@@ -88,5 +139,7 @@
   width: 14px; height: 2px;
   background: rgba(129,168,209,0.55);
   transform: translateY(-50%);
+/* Hide the wheel preview until immersive; we'll fade it in */
+body:not(.timeline-immersive) #timewheel { opacity: 0; pointer-events: none; transform: translateY(10px); }
 }
 

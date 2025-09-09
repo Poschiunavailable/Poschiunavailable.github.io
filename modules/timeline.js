@@ -7,15 +7,24 @@
 (function () {
     'use strict';
 
-    const ROW_H = 42;
-    const MONTH_GAP = 22; // physical gap (px) between months
+    const ROW_H = 12; // per‑day row height (reduced for faster travel)
+    const MONTH_GAP = 30; // adjusted with smaller row height
     const DATE_LABEL_FMT = { day: '2-digit', month: 'short', year: 'numeric' };
-    const YEAR_GAP = 44;  // larger gap (px) at year boundaries
+    const YEAR_GAP = 40;  // adjusted with smaller row height
     const STICKY_TOP_VH = 12;
     const FADE_MS = 240;
     const SMOOTHNESS = 0.18;
     const SNAP_SMOOTHNESS = 0.35;   // faster easing when snapping to a day
     const SNAP_IDLE_MS = 140;       // after this idle time, snap to nearest day
+    const SCROLL_SLOWDOWN = 1.6;    // >1 increases scroll distance for same date range
+    const ENTER_THRESHOLD_VH = 0.28; // when CV center near viewport center, enter immersive
+    const EXIT_OVERSCROLL_DAYS = 1.0; // overscroll beyond range before exiting immersive
+    const WHEEL_PX_PER_DAY = 90;    // wheel/trackpad: smaller = faster
+    const TOUCH_PX_PER_DAY = 28;    // touch drag: smaller = faster
+    const REENTER_GUARD_VH = 0.3;  // smaller band to unlock re‑entry after exit
+    const ENTER_RATIO = 0.5;        // section must cover 50% of viewport to auto-enter
+    const EXIT_MARGIN_PX = 180;     // margin outside entry band after exit
+    const REENTER_COOLDOWN_MS = 500; // grace period before re-entering
 
     const S = {
         minDate: new Date(8640000000000000),
@@ -37,7 +46,20 @@
         trackEl: null,       // the .track element inside day wheel
         trackHeightPx: 0,
         idleMs: 0,
-        lastScrollY: 0
+        lastScrollY: 0,
+        dragging: false,
+        spacerEl: null,
+        immersive: false,
+        virtualFloat: 0,
+        stageEl: null,
+        snapTo: null,
+        snapFrom: 0,
+        snapT: 0,
+        lastExitTs: 0,
+        enterObserver: null,
+        afterSpacer: null,
+        reentryLockDir: null,
+        reentryUnlockY: 0
     };
 
     const pad2 = n => String(n).padStart(2, '0');
@@ -61,17 +83,40 @@
         }
 
         ensureDayWheel();
+        enableDragScroll();
         positionLabel();
         window.addEventListener('resize', positionLabel);
+        installEnterObserver();
+        window.addEventListener('mousemove', handleHoverCursor, { passive: true });
 
         try {
             const projects = await loadProjectsJSON();
             buildFromData(projects.filter(p => p.showInTimeline === true));
+            ensureScrollSlowdown();
             initFloats();
             startRAF();
+            // observer will handle entering immersive automatically
         } catch (e) {
             console.error('[timeline] Failed to load projects.json', e);
         }
+    }
+
+    function ensureScrollSlowdown() {
+        const cv = S.els.cv; if (!cv) return;
+        let spacer = document.getElementById('cvScrollSpacer');
+        if (!spacer) {
+            spacer = document.createElement('div');
+            spacer.id = 'cvScrollSpacer';
+            cv.appendChild(spacer);
+        }
+        S.spacerEl = spacer;
+        const baseHeight = cv.scrollHeight - (spacer.offsetHeight || 0);
+        const extra = Math.max(0, Math.round(baseHeight * (SCROLL_SLOWDOWN - 1)));
+        spacer.style.height = extra + 'px';
+        window.addEventListener('resize', () => {
+            const base = cv.scrollHeight - (spacer.offsetHeight || 0);
+            spacer.style.height = Math.max(0, Math.round(base * (SCROLL_SLOWDOWN - 1))) + 'px';
+        });
     }
 
     function wireEls() {
@@ -138,6 +183,247 @@
         }
     }
 
+    function enableDragScroll() {
+        const el = S.els.timewheel; if (!el) return;
+        let dragging = false;
+        let startY = 0;
+        let startScroll = 0;
+        let startVirtual = 0;
+
+        const onMouseMove = (e) => {
+            if (!dragging) return;
+            const dy = e.clientY - startY;
+            if (S.immersive) {
+                S.virtualFloat = startVirtual - dy / TOUCH_PX_PER_DAY;
+                S.targetFloat = S.virtualFloat;
+                if (S.virtualFloat < -EXIT_OVERSCROLL_DAYS) exitImmersive('top');
+                if (S.virtualFloat > (S.totalDays - 1) + EXIT_OVERSCROLL_DAYS) exitImmersive('bottom');
+            } else {
+                window.scrollTo({ top: startScroll - dy, behavior: 'auto' });
+            }
+            e.preventDefault();
+        };
+        const onMouseUp = () => {
+            if (!dragging) return;
+            dragging = false;
+            S.dragging = false;
+            el.classList.remove('dragging');
+            document.removeEventListener('mousemove', onMouseMove, true);
+            document.removeEventListener('mouseup', onMouseUp, true);
+            document.body.style.userSelect = '';
+            // reset body cursor if we set it
+            if (document.body.style.cursor === 'grabbing') document.body.style.cursor = '';
+            // Trigger fast snap to nearest day on release
+            S.snapFrom = S.animFloat;
+            S.snapTo = clamp(Math.round(S.targetFloat), 0, S.totalDays - 1);
+            S.snapT = 0;
+        };
+
+        // Start drag only if mousedown occurs within the timewheel's bounding box
+        document.addEventListener('mousedown', (e) => {
+            if (e.button !== 0) return; // left button only
+            const r = el.getBoundingClientRect();
+            const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+            if (!inside) return;
+            dragging = true;
+            S.dragging = true;
+            startY = e.clientY;
+            startScroll = window.scrollY;
+            startVirtual = S.virtualFloat;
+            el.classList.add('dragging');
+            document.body.style.userSelect = 'none';
+            document.body.style.cursor = 'grabbing';
+            document.addEventListener('mousemove', onMouseMove, true);
+            document.addEventListener('mouseup', onMouseUp, true);
+            e.preventDefault();
+        }, { passive: false });
+
+        window.addEventListener('blur', onMouseUp);
+    }
+
+    function handleHoverCursor(e) {
+        const el = S.els.timewheel; if (!el || S.dragging) return;
+        const r = el.getBoundingClientRect();
+        const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
+        if (inside) {
+            document.body.style.cursor = 'grab';
+        } else if (document.body.style.cursor === 'grab') {
+            document.body.style.cursor = '';
+        }
+    }
+
+    function installEnterObserver() {
+        if (!('IntersectionObserver' in window)) return;
+        if (S.enterObserver) { S.enterObserver.disconnect(); }
+        const cv = S.els.cv; if (!cv) return;
+        S.enterObserver = new IntersectionObserver(([entry]) => {
+            if (!entry) return;
+            if (S.immersive) return;
+            const now = performance.now();
+            if (now - S.lastExitTs < REENTER_COOLDOWN_MS) return;
+            const r = entry.boundingClientRect;
+            const vh = window.innerHeight || document.documentElement.clientHeight;
+            const vis = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
+            const coverRatio = vis / vh; // portion of viewport covered
+            if (S.reentryLockDir) {
+                const { top, bottom } = getCVPageBounds();
+                const bandTop = top + vh * REENTER_GUARD_VH;
+                const bandBottom = bottom - vh * REENTER_GUARD_VH;
+                const viewCenter = window.scrollY + vh * 0.5;
+                let unlock = false;
+                if (S.reentryLockDir === 'down') unlock = (viewCenter >= bandTop);
+                if (S.reentryLockDir === 'up') unlock = (viewCenter <= bandBottom);
+                if (!unlock) return; else S.reentryLockDir = null;
+            }
+            if (coverRatio >= ENTER_RATIO) enterImmersive();
+        }, { threshold: Array.from({length: 11}, (_,i)=>i/10) });
+        S.enterObserver.observe(cv);
+    }
+
+    function enterImmersive() {
+        if (S.immersive) return;
+        S.immersive = true;
+        document.body.classList.add('timeline-immersive','timeline-immersive-enter');
+        // Anchor the page so the CV center aligns with the viewport center
+        const { top: cvTop, bottom: cvBottom } = getCVPageBounds();
+        const anchor = (cvTop + cvBottom) * 0.5 - window.innerHeight * 0.5;
+        window.scrollTo({ top: Math.max(0, Math.round(anchor)), behavior: 'auto' });
+        const enterFloat = pageScrollToFloat();
+        // Reset to boundary: if we're nearer the top half, snap to start; else snap to end
+        const half = (S.totalDays - 1) * 0.5;
+        const atStart = enterFloat <= half;
+        S.virtualFloat = atStart ? 0 : (S.totalDays - 1);
+        S.targetFloat = S.virtualFloat;
+        document.documentElement.style.overflow = 'hidden';
+        document.body.style.overflow = 'hidden';
+        bindVirtualScroll();
+        ensureStage();
+        setTimeout(() => document.body.classList.remove('timeline-immersive-enter'), 320);
+    }
+
+    function exitImmersive(direction) {
+        if (!S.immersive) return;
+        S.immersive = false;
+        document.body.classList.remove('timeline-immersive');
+        unbindVirtualScroll();
+        document.documentElement.style.overflow = '';
+        document.body.style.overflow = '';
+        const { top: cvTop, bottom: cvBottom } = getCVPageBounds();
+        const vh = window.innerHeight;
+        // Jump outside the entry band so we don't immediately re-enter
+        const above = Math.max(0, Math.round(cvTop - vh * ENTER_THRESHOLD_VH - EXIT_MARGIN_PX));
+        let below = Math.round(cvBottom - (1 - ENTER_THRESHOLD_VH) * vh + EXIT_MARGIN_PX);
+        // Ensure we have enough room below; add a temporary spacer if not
+        ensureAfterSpacer(below);
+        const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
+        below = Math.min(maxScroll, Math.max(0, below));
+        const dest = direction === 'top' ? above : below;
+        window.scrollTo({ top: dest, behavior: 'auto' });
+        if (S.stageEl) S.stageEl.style.display = 'none';
+        S.lastExitTs = performance.now();
+        // Set re-entry gate: require scrolling back across the band in the opposite direction
+        S.reentryLockDir = direction === 'top' ? 'down' : 'up';
+    }
+
+    function bindVirtualScroll() {
+        window.addEventListener('wheel', onWheelVirtual, { passive: false });
+        window.addEventListener('touchstart', onTouchStart, { passive: false });
+        window.addEventListener('touchmove', onTouchMove, { passive: false });
+    }
+    function unbindVirtualScroll() {
+        window.removeEventListener('wheel', onWheelVirtual, { passive: false });
+        window.removeEventListener('touchstart', onTouchStart, { passive: false });
+        window.removeEventListener('touchmove', onTouchMove, { passive: false });
+    }
+
+    function onWheelVirtual(e) {
+        if (!S.immersive) return;
+        e.preventDefault();
+        const d = e.deltaY; // positive when scrolling down
+        const atTop = S.virtualFloat <= 0 + 1e-3;
+        const atBottom = S.virtualFloat >= (S.totalDays - 1) - 1e-3;
+        if (d < 0 && atTop) { exitImmersive('top'); return; }
+        if (d > 0 && atBottom) { exitImmersive('bottom'); return; }
+        S.virtualFloat += d / WHEEL_PX_PER_DAY;
+        S.targetFloat = S.virtualFloat;
+        if (S.virtualFloat < -EXIT_OVERSCROLL_DAYS) exitImmersive('top');
+        if (S.virtualFloat > (S.totalDays - 1) + EXIT_OVERSCROLL_DAYS) exitImmersive('bottom');
+    }
+
+    let touchStartY = 0;
+    function onTouchStart(e) {
+        if (!S.immersive) return;
+        if (e.touches && e.touches.length) touchStartY = e.touches[0].clientY;
+    }
+    function onTouchMove(e) {
+        if (!S.immersive) return;
+        if (!(e.touches && e.touches.length)) return;
+        e.preventDefault();
+        const y = e.touches[0].clientY;
+        const dy = y - touchStartY;
+        touchStartY = y;
+        const atTop = S.virtualFloat <= 0 + 1e-3;
+        const atBottom = S.virtualFloat >= (S.totalDays - 1) - 1e-3;
+        // If dragging down (dy>0) and atTop -> exit top; if dragging up (dy<0) and atBottom -> exit bottom
+        if (dy > 0 && atTop) { exitImmersive('top'); return; }
+        if (dy < 0 && atBottom) { exitImmersive('bottom'); return; }
+        S.virtualFloat -= dy / TOUCH_PX_PER_DAY; // drag up advances days
+        S.targetFloat = S.virtualFloat;
+        if (S.virtualFloat < -EXIT_OVERSCROLL_DAYS) exitImmersive('top');
+        if (S.virtualFloat > (S.totalDays - 1) + EXIT_OVERSCROLL_DAYS) exitImmersive('bottom');
+    }
+
+    function ensureStage() {
+        if (!S.stageEl) {
+            const stage = document.createElement('div');
+            stage.id = 'timelineStage';
+            document.body.appendChild(stage);
+            S.stageEl = stage;
+        }
+        S.stageEl.style.display = 'block';
+        renderStageForActive();
+    }
+
+    function getCVPageBounds() {
+        const cv = S.els.cv; const r = cv.getBoundingClientRect();
+        const top = window.scrollY + r.top;
+        const bottom = top + r.height;
+        return { top, bottom };
+    }
+
+    function ensureAfterSpacer(targetBottomScrollTop) {
+        // Ensure the document has enough height to scroll to 'targetBottomScrollTop'
+        const vh = window.innerHeight;
+        const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
+        if (targetBottomScrollTop <= maxScroll) return; // already enough room
+        const needed = targetBottomScrollTop - maxScroll + EXIT_MARGIN_PX;
+        let spacer = S.afterSpacer || document.getElementById('cvAfterSpacer');
+        if (!spacer) {
+            spacer = document.createElement('div');
+            spacer.id = 'cvAfterSpacer';
+            spacer.style.width = '1px';
+            spacer.style.height = '0px';
+            spacer.style.pointerEvents = 'none';
+            // Insert after the CV section
+            const parent = S.els.cv && S.els.cv.parentElement ? S.els.cv.parentElement : document.body;
+            parent.appendChild(spacer);
+        }
+        spacer.style.height = Math.max(needed, EXIT_MARGIN_PX) + 'px';
+        S.afterSpacer = spacer;
+    }
+
+    function renderStageForActive() {
+        if (!S.stageEl) return;
+        const idx = S.activeIdx;
+        S.stageEl.innerHTML = '';
+        if (idx == null || idx < 0 || idx >= S.projects.length) return;
+        const clone = S.projects[idx].el.cloneNode(true);
+        clone.classList.add('stage-card');
+        S.stageEl.appendChild(clone);
+    }
+
+    // Backdrop overlay removed in favor of background color fade
+
     function buildDayTrack() {
         const monthsAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
         const tw = S.els.timewheel; if (!tw) return;
@@ -196,7 +482,7 @@
 
         // Position the date label (#currentTime) horizontally to the right of the wheel
         if (S.els.label) {
-            S.els.label.style.left = `${rect.right + 8}px`;
+            S.els.label.style.left = `${rect.center}px`;
 
             // Align the label's vertical center with the wheel's center marker
             const marker = S.els.timewheel.querySelector('.wheel-center-marker');
@@ -243,20 +529,34 @@
                 S.idleMs = 0;
             }
 
-            S.targetFloat = mapScrollToFloat();
+            // Freeze timeline until immersive view is active
+            S.targetFloat = S.immersive ? mapScrollToFloat() : S.animFloat;
 
-            // If idle for a short time, gently pull to the nearest full day
+            // If idle and not interacting, pull to nearest day
             let lerpSmooth = SMOOTHNESS;
-            if (S.idleMs > SNAP_IDLE_MS) {
+            if (!S.dragging && !S.immersive && S.snapTo == null && S.idleMs > SNAP_IDLE_MS) {
                 S.targetFloat = clamp(Math.round(S.targetFloat), 0, S.totalDays - 1);
                 lerpSmooth = SNAP_SMOOTHNESS;
             }
 
-            const alpha = 1 - Math.pow(1 - lerpSmooth, dt / 16.667);
-            S.animFloat += (S.targetFloat - S.animFloat) * alpha;
+            if (S.dragging || S.immersive) {
+                // 1:1 tracking during drag
+                S.animFloat = S.targetFloat;
+            } else if (S.snapTo != null) {
+                // Quick, responsive snap after release
+                S.snapT += dt / 180; // 180ms duration
+                const t = Math.min(1, S.snapT);
+                const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
+                const k = easeOutCubic(t);
+                S.animFloat = S.snapFrom + (S.snapTo - S.snapFrom) * k;
+                if (t >= 1) { S.animFloat = S.snapTo; S.snapTo = null; }
+            } else {
+                const alpha = 1 - Math.pow(1 - lerpSmooth, dt / 16.667);
+                S.animFloat += (S.targetFloat - S.animFloat) * alpha;
+            }
 
-            // When snapping and close enough, land exactly on the integer to avoid asymptotic drift
-            if (S.idleMs > SNAP_IDLE_MS && Math.abs(S.animFloat - S.targetFloat) < 0.001) {
+            // Land exactly if close after idle pull
+            if (!S.dragging && !S.immersive && S.snapTo == null && S.idleMs > SNAP_IDLE_MS && Math.abs(S.animFloat - S.targetFloat) < 0.001) {
                 S.animFloat = S.targetFloat;
             }
             updateForFloat(S.animFloat);
@@ -265,16 +565,23 @@
         S.rafId = requestAnimationFrame(tick);
     }
 
-    function mapScrollToFloat() {
+    function pageScrollToFloat() {
         const cv = S.els.cv; if (!cv) return 0;
         const mid = window.innerHeight / 2;
         const rect = cv.getBoundingClientRect();
         const startY = window.scrollY + rect.top;
-        const endY = startY + cv.scrollHeight; // robust against sticky
+        const endY = startY + cv.scrollHeight;
         const centerY = window.scrollY + mid;
         const pos = clamp(centerY - startY, 0, Math.max(1, endY - startY));
         const pct = pos / Math.max(1, endY - startY);
         return clamp((S.totalDays - 1) * pct, 0, S.totalDays - 1);
+    }
+
+    function mapScrollToFloat() {
+        if (S.immersive) {
+            return clamp(S.virtualFloat, -EXIT_OVERSCROLL_DAYS, (S.totalDays - 1) + EXIT_OVERSCROLL_DAYS);
+        }
+        return pageScrollToFloat();
     }
 
     function setWheelByFloat(dayFloat) {
@@ -303,8 +610,10 @@
     }
 
     function updateForFloat(dayFloat) {
-        setWheelByFloat(dayFloat);
-        const labelIndex = clamp(Math.round(dayFloat), 0, S.totalDays - 1);
+        // Clamp for display so overscroll (used only for exit detection) never distorts the wheel
+        const disp = clamp(dayFloat, 0, S.totalDays - 1);
+        setWheelByFloat(disp);
+        const labelIndex = clamp(Math.round(disp), 0, S.totalDays - 1);
         const labelDate = addDays(S.scrollMin, labelIndex);
         if (S.els.label) {
             S.els.label.textContent = labelDate.toLocaleDateString(undefined, DATE_LABEL_FMT);
@@ -321,6 +630,7 @@
             if (prev) { prev.classList.remove('active-project'); prev.classList.add('fading-out'); setTimeout(() => prev.classList.remove('fading-out'), FADE_MS); }
             if (next) { next.classList.add('active-project'); next.style.setProperty('--sticky-top', STICKY_TOP_VH + 'vh'); }
             S.activeIdx = idx;
+            if (S.immersive) renderStageForActive();
         }
 
         S.projects.forEach((p, i) => {
