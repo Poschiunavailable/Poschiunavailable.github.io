@@ -6,11 +6,18 @@
 
 /* Timewheel (single day column only) */
 #timewheel { grid-column: 1; grid-row: 1; position: sticky; top: 50px; height: calc(100vh - 100px); display: grid; grid-template-columns: 70px; align-items: center; justify-content: start; filter: blur(var(--scroll-blur, 0px)); }
-#timewheel .wheel { position: relative; width: 70px; height: 100%; overflow: hidden; border-radius: 12px; outline: 2px solid rgba(77,255,100,0.35); background: linear-gradient(180deg, rgba(0,0,0,0.35), rgba(0,0,0,0.2)); box-shadow: inset 0 0 18px rgba(0,0,0,0.35); }
+#timewheel .wheel { position: relative; width: 70px; height: 100%; overflow: hidden; border-radius: 12px; background:
+  /* Apple-like soft bevel */ linear-gradient(180deg, rgba(255,255,255,0.05), rgba(0,0,0,0.10)) ,
+  /* IDE-like panel gradient */ linear-gradient(180deg, rgba(53,37,58,0.35), rgba(72,80,112,0.25));
+ box-shadow:
+   inset 0 1px 2px rgba(255,255,255,0.06),
+   inset 0 -1px 2px rgba(0,0,0,0.25),
+   0 8px 24px rgba(0,0,0,0.35);
+}
 #timewheel .track { position: absolute; left: 0; top: 0; width: 100%; will-change: transform; }
-#timewheel .digit { height: 42px; display: flex; align-items: center; justify-content: center; font: 700 18px var(--tertiary-font); color: rgba(255,255,255,0.75); text-shadow: 0 1px 1px rgba(0,0,0,0.4); }
-#timewheel .digit.active { color: #fff; }
-#timewheel .wheel-center-marker { position: absolute; left: 0; right: 0; margin: 0 auto; width: calc(70px + 8px); height: 46px; border: 2px solid #4dff64; border-radius: 14px; pointer-events: none; z-index: 2; }
+#timewheel .digit { height: 42px; display: flex; align-items: center; justify-content: center; font: 700 18px var(--tertiary-font); color: rgba(221,231,246,0.86); text-shadow: 0 1px 1px rgba(0,0,0,0.35); }
+#timewheel .digit.active { color: #ffffff; text-shadow: 0 1px 2px rgba(0,0,0,0.45); }
+#timewheel .wheel-center-marker { position: absolute; left: 0; right: 0; margin: 0 auto; width: 100%; height: 46px; border: 2px solid rgba(129,168,209,0.9); border-radius: 14px; pointer-events: none; z-index: 2; box-sizing: border-box; box-shadow: 0 0 0 2px rgba(129,168,209,0.15), inset 0 0 12px rgba(129,168,209,0.10); }
 
 /* Date label next to wheel */
 #currentTime {
@@ -20,9 +27,11 @@
   left: 0;
   font: 700 0.95rem var(--tertiary-font);
   color: var(--primary-color);
-  background: rgba(0,0,0,0.45);
-  padding: 4px 8px;
-  border-radius: 6px;
+  background: linear-gradient(180deg, rgba(16,21,30,0.85), rgba(29,32,45,0.65));
+  border: 1px solid rgba(129,168,209,0.35);
+  padding: 4px 10px;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0,0,0,0.35);
   z-index: 10;
   height: fit-content;
 }
@@ -41,29 +50,20 @@
 @media (max-width: 1024px){ #container { grid-template-columns: 70px 1fr; } .cv-project{ width: min(92vw, 980px);} }
 @media (max-width: 768px){ #currentTime { display:none; } .cv-project.active-project { position: relative; top: 0; } }
 
-/* --- Day-wheel month separators --- */
-#timewheel .sep-track {
-  position: absolute;
-  left: 0; top: 0;
-  width: 100%; height: 100%;
-  pointer-events: none;
-  overflow: visible;
-}
-#timewheel .sep-line {
-  position: absolute;
-  left: 8px; right: 8px;
-  height: 0;
-  border-top: 1px dashed rgba(77,255,100,0.35);
-  opacity: .7;
-}
+/* --- Physical gaps for month/year transitions --- */
+#timewheel .gap { position: relative; width: 100%; }
+#timewheel .gap-line { position: absolute; left: 8px; right: 8px; top: 0; height: 0; border-top: 1px dashed rgba(129,168,209,0.40); opacity: .9; }
+#timewheel .gap-label { position: absolute; left: 50%; top: 6px; transform: translateX(-50%); font: 700 12px var(--tertiary-font); letter-spacing: 0.04em; color: rgba(171,201,241,0.95); text-shadow: 0 1px 1px rgba(0,0,0,0.25); }
+#timewheel .gap.year .gap-line { border-top: 2px solid rgba(129,168,209,0.65); }
+#timewheel .gap-year { position: absolute; left: 50%; top: 22px; transform: translateX(-50%); font: 600 11px var(--tertiary-font); color: rgba(171,201,241,0.95); }
 
 /* --- Connection from wheel -> active project --- */
 #tw-link {
   position: fixed;
-  top: 50%;                 /* aligns with wheel’s center marker */
+  top: 50%;                 /* aligns with wheel's center marker */
   height: 2px;
   left: 0; width: 0;
-  border-bottom: 2px dashed rgba(77,255,100,0.45);
+  border-bottom: 2px dashed rgba(129,168,209,0.45);
   transform: translateY(-50%);
   z-index: 90;
   pointer-events: none;
@@ -72,12 +72,12 @@
 
 /* Small pulse when project changes */
 #tw-link.pulse {
-  box-shadow: 0 0 8px rgba(77,255,100,0.7);
+  box-shadow: 0 0 8px rgba(129,168,209,0.6);
   animation: twPulse .35s ease;
 }
 @keyframes twPulse {
-  from { box-shadow: 0 0 0 rgba(77,255,100,0.0); }
-  to   { box-shadow: 0 0 8px rgba(77,255,100,0.7); }
+  from { box-shadow: 0 0 0 rgba(129,168,209,0.0); }
+  to   { box-shadow: 0 0 8px rgba(129,168,209,0.6); }
 }
 
 /* Optional: draw a short “stub” from the active card back to the line */
@@ -86,7 +86,7 @@
   position: absolute;
   left: -18px; top: 50%;
   width: 14px; height: 2px;
-  background: rgba(77,255,100,0.55);
+  background: rgba(129,168,209,0.55);
   transform: translateY(-50%);
 }
 
