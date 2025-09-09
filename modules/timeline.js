@@ -48,6 +48,8 @@
 
         ensureDayWheel();
         ensureMonthSeparators();
+        positionLabel();
+        window.addEventListener('resize', positionLabel);
 
         try {
             const projects = await loadProjectsJSON();
@@ -142,6 +144,12 @@
         if (!tw.querySelector('.wheel-center-marker')) { const c = document.createElement('div'); c.className = 'wheel-center-marker'; tw.appendChild(c); }
     }
 
+    function positionLabel() {
+        if (!S.els.timewheel || !S.els.label) return;
+        const rect = S.els.timewheel.getBoundingClientRect();
+        S.els.label.style.left = `${rect.right + 8}px`;
+    }
+
     function initFloats() {
         S.targetFloat = mapScrollToFloat();
         S.animFloat = S.targetFloat;
@@ -193,7 +201,10 @@
         setWheelByFloat(dayFloat);
         const labelIndex = Math.round(dayFloat);
         const labelDate = addDays(S.minDate, labelIndex);
-        if (S.els.label) { S.els.label.textContent = labelDate.toLocaleDateString(undefined, DATE_LABEL_FMT); }
+        if (S.els.label) {
+            S.els.label.textContent = labelDate.toLocaleDateString(undefined, DATE_LABEL_FMT);
+        }
+        positionLabel();
 
         let idx = -1;
         for (let i = 0; i < S.projects.length; i++) {
