@@ -99,11 +99,11 @@
   {
     "id": "EverslaughtShip",
     "title": "Everslaught Ship Prototype",
-    "image": "assets/Everslaught_Ship.png",
+    "image": "assets/everslaught_invasion_enemies.webp",
     "description": "A VR spaceship systems experiment for Unity.",
     "timelineDescription": "Explored interactive cockpit systems and motion controls.",
     "video": "assets/PortfolioVideoLowerRes.mp4",
-    "poster": "assets/Everslaught_Ship.png",
+    "poster": "assets/everslaught_invasion_enemies.webp",
     "showInPortfolio": false,
     "showInTimeline": true,
     "startDate": "2017-05",

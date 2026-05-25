@@ -4,7 +4,7 @@
 //  - getBoundingClientRect() on null -> robust lookup for the CV section + guards
 //  - Keeps rAF + LERP smooth day wheel and exclusive active project
 
-(function () {
+export function initTimeline(projectsData) {
     'use strict';
 
     const ROW_H = 12; // per‑day row height (reduced for faster travel)
@@ -69,36 +69,27 @@
     const daysBetween = (a, b) => Math.floor((b - a) / 86400000);
     const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
 
-    document.addEventListener('DOMContentLoaded', init);
+    wireEls();
+    if (!S.els.cv) {
+        console.error('[timeline] #cvSection not found. Falling back to .cv-section.');
+        S.els.cv = document.querySelector('.cv-section');
+    }
 
-    async function init() {
-        wireEls();
-        if (!S.els.cv) {
-            console.error('[timeline] #cvSection not found. Falling back to .cv-section.');
-            S.els.cv = document.querySelector('.cv-section');
-        }
-        if (!S.els.cv) {
-            console.error('[timeline] No CV section found; aborting timeline init.');
-            return;
-        }
+    ensureDayWheel();
+    enableDragScroll();
+    positionLabel();
+    window.addEventListener('resize', positionLabel);
+    installEnterObserver();
+    window.addEventListener('mousemove', handleHoverCursor, { passive: true });
 
-        ensureDayWheel();
-        enableDragScroll();
-        positionLabel();
-        window.addEventListener('resize', positionLabel);
-        installEnterObserver();
-        window.addEventListener('mousemove', handleHoverCursor, { passive: true });
-
-        try {
-            const projects = await loadProjectsJSON();
-            buildFromData(projects.filter(p => p.showInTimeline === true));
-            ensureScrollSlowdown();
-            initFloats();
-            startRAF();
-            // observer will handle entering immersive automatically
-        } catch (e) {
-            console.error('[timeline] Failed to load projects.json', e);
-        }
+    try {
+        const timelineProjects = projectsData.filter(p => p.showInTimeline === true);
+        buildFromData(timelineProjects);
+        ensureScrollSlowdown();
+        initFloats();
+        startRAF();
+    } catch (e) {
+        console.error('[timeline] Failed to init', e);
     }
 
     function ensureScrollSlowdown() {
@@ -124,14 +115,6 @@
         S.els.projects = document.getElementById('projects');
         S.els.timewheel = document.getElementById('timewheel');
         S.els.label = document.getElementById('currentTime');
-    }
-
-    async function loadProjectsJSON() {
-        // Always resolve relative to the HTML document, not the server root or script folder
-        const url = new URL('projects.json', document.baseURI).href;
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-        return await res.json();
     }
 
     function buildFromData(projects) {
@@ -276,14 +259,14 @@
                 if (!unlock) return; else S.reentryLockDir = null;
             }
             if (coverRatio >= ENTER_RATIO) enterImmersive();
-        }, { threshold: Array.from({length: 11}, (_,i)=>i/10) });
+        }, { threshold: Array.from({ length: 11 }, (_, i) => i / 10) });
         S.enterObserver.observe(cv);
     }
 
     function enterImmersive() {
         if (S.immersive) return;
         S.immersive = true;
-        document.body.classList.add('timeline-immersive','timeline-immersive-enter');
+        document.body.classList.add('timeline-immersive', 'timeline-immersive-enter');
         // Anchor the page so the CV center aligns with the viewport center
         const { top: cvTop, bottom: cvBottom } = getCVPageBounds();
         const anchor = (cvTop + cvBottom) * 0.5 - window.innerHeight * 0.5;
@@ -481,14 +464,12 @@
         const rect = S.els.timewheel.getBoundingClientRect();
 
         // Position the date label (#currentTime) horizontally to the right of the wheel
-        if (S.els.label) {
-            S.els.label.style.left = `${rect.center}px`;
+        const marker = S.els.timewheel.querySelector('.wheel-center-marker');
+        const markerCenterY = marker ? marker.getBoundingClientRect().top + marker.getBoundingClientRect().height / 2 : 0;
 
-            // Align the label's vertical center with the wheel's center marker
-            const marker = S.els.timewheel.querySelector('.wheel-center-marker');
+        if (S.els.label) {
+            S.els.label.style.left = `${rect.right}px`;
             if (marker) {
-                const m = marker.getBoundingClientRect();
-                const markerCenterY = m.top + m.height / 2;
                 S.els.label.style.top = `${markerCenterY}px`;
                 S.els.label.style.transform = 'translateY(-50%)';
             }
@@ -497,15 +478,21 @@
         // If the link line exists, align it with the same Y as the center marker
         const linkEl = document.getElementById('tw-link');
         if (linkEl) {
-            const marker = S.els.timewheel.querySelector('.wheel-center-marker');
             if (marker) {
-                const m = marker.getBoundingClientRect();
-                const markerCenterY = m.top + m.height / 2;
                 linkEl.style.top = `${markerCenterY}px`;
                 linkEl.style.transform = 'translateY(-50%)';
             }
-            // Keep its left starting point aligned with the wheel's right edge
             linkEl.style.left = `${rect.right}px`;
+
+            // Stretch the link to the left edge of the active project card
+            const activeCard = document.querySelector('.cv-project.active-project');
+            if (activeCard) {
+                const cardRect = activeCard.getBoundingClientRect();
+                const linkWidth = Math.max(0, cardRect.left - rect.right);
+                linkEl.style.width = `${linkWidth}px`;
+            } else {
+                linkEl.style.width = '0px';
+            }
         }
     }
 
@@ -639,4 +626,4 @@
             const v = p.el.querySelector('video'); if (v) { try { on ? v.play() : v.pause(); } catch { } }
         });
     }
-})();
+}
