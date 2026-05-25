@@ -114,25 +114,25 @@
         </div>
     </section>
 
-    <!-- CV Section -->
+    <!-- CV / Timeline Section -->
     <section id="cv">
-        <div class="small-separator"></div>
-        <div class="cv-section" id="cvSection">
-            <div id="container">
-                <!-- Timewheel (single column) -->
-                <div id="timewheel" aria-label="Timeline time selector" role="region">
-                    <div class="wheel day" aria-hidden="true"></div>
-                    <div class="wheel-center-marker" aria-hidden="true"></div>
+        <div id="cvSection">
+            <div id="cvSectionLabel">
+                <div class="typing-effect">
+                    <h2 class="typing-text typing-target">&lt;cv&gt;</h2>
                 </div>
-                <div id="tw-link" aria-hidden="true"></div>
-
-                <!-- Date label shown beside the wheel -->
-                <div id="currentTime">Jan 01, 2019</div>
-
-                <!-- Projects -->
-                <div id="projects"></div>
             </div>
-        </div>
+            <div id="cvScrollHint"><span>scroll to enter the time machine</span></div>
+            <div id="projectStage"></div>
+            <div id="timeMachine" aria-label="Current timeline date" aria-hidden="true">
+                <div id="tmLabel">TIME MACHINE</div>
+                <div id="tmDateDisplay">
+                    <span id="tmMonth">JAN</span>
+                    <span id="tmYear">2019</span>
+                </div>
+                <div id="tmProgressTrack"><div id="tmProgressFill"></div></div>
+            </div>
+            <nav id="cvProjectNav" aria-label="Timeline projects"></nav>
         </div>
     </section>
 
@@ -169,6 +169,7 @@
         </div>
     </footer>
 
+    <div id="timelineBackdrop" aria-hidden="true"></div>
     <script type="module" src="modules/main.js"></script>
 </body>
 

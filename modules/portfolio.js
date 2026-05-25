@@ -55,14 +55,7 @@ function observeItems(elements) {
 // ─── Click: Scroll to CV ──────────────────────────────────────────────────────
 
 function scrollToCVAndHighlight(projectId) {
-    const cvSection = document.getElementById('cv');
-    const nav = document.querySelector('.navbar');
-    const offset = nav ? nav.offsetHeight : 0;
-    if (cvSection) {
-        const targetY = cvSection.getBoundingClientRect().top + window.scrollY - offset;
-        window.scrollTo({ top: targetY, behavior: 'smooth' });
-    }
-    // Timeline can listen for this to snap to the relevant project
+    // Timeline enters immersive and scrolls to the CV section itself
     window.dispatchEvent(new CustomEvent('portfolio:selectProject', { detail: { id: projectId } }));
 }
 

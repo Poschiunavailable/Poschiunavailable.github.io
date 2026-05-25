@@ -13,6 +13,26 @@
     "showInTimeline": true,
     "startDate": "2018-05",
     "endDate": "2020-12",
+    "workTopics": [
+      {
+        "title": "Networked Enemy AI Architecture",
+        "description": "Architected a P2P networked enemy system using a Character/Controller pattern, enabling authoritative host logic across up to 4 simultaneous players.",
+        "highlights": [
+          "Photon Fusion P2P state synchronisation across concurrent player sessions",
+          "Behaviour tree AI (Behaviour Designer) supporting 8+ distinct enemy archetypes",
+          "Scalable spawner system managing 50+ enemies simultaneously with minimal overhead"
+        ]
+      },
+      {
+        "title": "Quest 2 Performance Optimization",
+        "description": "Profiled and optimised the game to meet Oculus Quest 2's strict 72fps budget through systemic, data-driven improvements.",
+        "highlights": [
+          "Enemy pooling and per-type LOD system reducing draw calls by ~40%",
+          "Custom low-complexity VR shaders replacing expensive stock materials",
+          "Fixed-timestep AI tick budgeting to prevent frame spikes during combat peaks"
+        ]
+      }
+    ],
     "details": {
       "about": {
         "summary": "About the Project",
@@ -55,6 +75,26 @@
     "showInTimeline": true,
     "startDate": "2021-01",
     "endDate": "2022-06",
+    "workTopics": [
+      {
+        "title": "Mini-game Systems",
+        "description": "Designed and built multiple self-contained tactical mini-games integrated into the game's contract mission flow.",
+        "highlights": [
+          "Lock-picking, safe-cracking, and surveillance interception mini-games",
+          "Shared mini-game framework with designer-configurable difficulty parameters",
+          "Clean integration with the narrative contract and consequence system"
+        ]
+      },
+      {
+        "title": "Editor Tooling & Pipeline",
+        "description": "Built a custom Unreal Editor tool allowing designers to author, configure, and validate game contracts without engineering support.",
+        "highlights": [
+          "Blueprint-based contract editor with live in-editor preview",
+          "Automated build and packaging pipeline cutting deploy time by ~30%",
+          "Data validation layer surfacing configuration errors at edit time, not runtime"
+        ]
+      }
+    ],
     "details": {
       "about": {
         "summary": "About the Project",
@@ -85,6 +125,7 @@
   {
     "id": "ColdComfort",
     "title": "Cold Comfort",
+    "subtitle": "Gameplay Programmer",
     "image": "assets/cold_comfort_splashart.webp",
     "description": "Multiplayer survival horror prototype built in Unreal Engine 4.",
     "timelineDescription": "Prototyped co‑op zombie survival with dynamic objectives.",
@@ -94,6 +135,17 @@
     "showInTimeline": true,
     "startDate": "2016-03",
     "endDate": "2017-04",
+    "workTopics": [
+      {
+        "title": "Mission & Objective System",
+        "description": "Designed and implemented a dynamic mission system driving co-operative objectives for up to 4 players.",
+        "highlights": [
+          "Event-driven mission state machine with branching objective conditions",
+          "Dynamic enemy spawner tied to mission phase and player count",
+          "In-game debug HUD for rapid iteration without full recompile cycles"
+        ]
+      }
+    ],
     "details": {
       "about": {"summary": "About the Project", "content": ["Co‑op survival gameplay."]},
       "work": {"summary": "Gameplay Programmer", "content": ["Authored mission system", "Built enemy spawning", "Created debug UI"]},
@@ -102,7 +154,8 @@
   },
   {
     "id": "EverslaughtShip",
-    "title": "Everslaught Ship Prototype",
+    "title": "Everslaught: Ship",
+    "subtitle": "Prototype Developer",
     "image": "assets/everslaught_invasion_enemies.webp",
     "description": "A VR spaceship systems experiment for Unity.",
     "timelineDescription": "Explored interactive cockpit systems and motion controls.",
@@ -112,6 +165,17 @@
     "showInTimeline": true,
     "startDate": "2017-05",
     "endDate": "2018-02",
+    "workTopics": [
+      {
+        "title": "VR Cockpit Interaction",
+        "description": "Prototyped an immersive VR cockpit with physical button, lever, and throttle interaction systems using SteamVR.",
+        "highlights": [
+          "Physics-based grab and manipulation with SteamVR SDK",
+          "Simulated ship subsystems — power routing, shields, weapon targeting",
+          "Comfort-focused seated locomotion with configurable comfort settings"
+        ]
+      }
+    ],
     "details": {
       "about": {"summary": "About the Project", "content": ["Experimental VR cockpit"]},
       "work": {"summary": "Prototype Developer", "content": ["Built interaction framework", "Simulated ship systems"]},
@@ -121,6 +185,7 @@
   {
     "id": "PortfolioSite",
     "title": "Portfolio Website",
+    "subtitle": "Solo Developer",
     "image": "assets/website_icon.png",
     "description": "Personal website showcasing projects and an interactive timeline.",
     "timelineDescription": "Designed and coded a lightweight portfolio site with animated timeline.",
@@ -130,6 +195,26 @@
     "showInTimeline": true,
     "startDate": "2022-07",
     "endDate": "2023-05",
+    "workTopics": [
+      {
+        "title": "Interactive Starfield & Animation",
+        "description": "Built a Three.js WebGL starfield background that responds to mouse movement, device orientation, and page scroll position.",
+        "highlights": [
+          "5,000-particle point cloud with vertex colours rendered via WebGL",
+          "Smooth LERP camera sway driven by mouse input and device gyroscope",
+          "Visibility API integration to pause rendering when the tab is hidden"
+        ]
+      },
+      {
+        "title": "Data-driven Architecture",
+        "description": "Designed a single-JSON data model that powers both the portfolio grid and the interactive CV timeline from one source of truth.",
+        "highlights": [
+          "projects.json as the single source of truth for all project content",
+          "Dynamic portfolio card generation with 3D hover effects and tag chips",
+          "Custom ES module system — no build tools, no bundler, just the browser"
+        ]
+      }
+    ],
     "details": {
       "about": {"summary": "About the Project", "content": ["Responsive single‑page site"]},
       "work": {"summary": "Web Developer", "content": ["Implemented Three.js starfield", "Created project data system", "Built scrolling timeline"]},

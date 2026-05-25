@@ -57,6 +57,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const clock = new THREE.Clock();
   let elapsedTime = 0;
   const swaySpeedX = 0.48, swaySpeedY = 0.67, swayDistance = 1;
+  let warpFactor = 1.0;
+  let warpTarget = 1.0;
+  window.addEventListener('timeline:warpSpeed', e => { warpTarget = e.detail?.factor ?? 1.0; });
 
   let targetRotationX = 0, targetRotationY = 0;
   const rotationSpeedX = 0.1, rotationSpeedY = -0.1;
@@ -146,9 +149,11 @@ document.addEventListener('DOMContentLoaded', () => {
     const dt = currentElapsed - elapsedTime;
     elapsedTime = currentElapsed;
 
-    // sway
-    camera.position.x = Math.sin(elapsedTime * swaySpeedX) * swayDistance;
-    camera.position.y = Math.cos(elapsedTime * swaySpeedY) * swayDistance;
+    // warp factor lerp
+    warpFactor += (warpTarget - warpFactor) * Math.min(1, dt * 2.5);
+    // sway (faster during warp)
+    camera.position.x = Math.sin(elapsedTime * swaySpeedX * warpFactor) * swayDistance;
+    camera.position.y = Math.cos(elapsedTime * swaySpeedY * warpFactor) * swayDistance;
 
     // smooth rotation
     camera.rotation.x += (targetRotationY - camera.rotation.x) * 5 * dt;
