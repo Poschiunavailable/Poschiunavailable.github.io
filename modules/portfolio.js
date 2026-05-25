@@ -1,171 +1,138 @@
 export function initPortfolio(projects) {
     generatePortfolioItems(projects);
-    generatePortfolioDetails(projects);
-    handlePortfolioDetails();
     handlePortfolioItems();
 }
 
-function handlePortfolioItems() {
-    const portfolioItems = document.querySelectorAll(".portfolio-item");
-    const rotationStrength = 30;
-
-    portfolioItems.forEach((item) => {
-        item.style.position = "relative";
-        const handleMove = (e) => {
-            const rect = item.getBoundingClientRect();
-            const relX = e.clientX - (rect.left + rect.width / 2);
-            const relY = e.clientY - (rect.top + rect.height / 2);
-            let rotateY = (relX / rect.width) * rotationStrength;
-            let rotateX = (-relY / rect.height) * rotationStrength;
-            item.style.transform = `perspective(1000px) rotateY(${rotateY}deg) rotateX(${rotateX}deg)`;
-        };
-        item.addEventListener("mousemove", handleMove);
-        item.addEventListener("mouseleave", () => {
-            item.style.transform = "";
-        });
-    });
-}
-
-// Make these functions available to window scope only for inline HTML onClick handlers if you keep them, 
-// BUT it is better to attach listeners in JS. 
-// For this refactor, I will attach listeners dynamically to avoid window pollution.
-
-function handlePortfolioDetails() {
-    // Logic moved to generation functions for cleaner binding
-    
-    // ESC closes
-    document.addEventListener('keydown', (e) => {
-        if (e.key === 'Escape') {
-            document.querySelectorAll('.portfolio-detail.active').forEach(detail => {
-                closeDetail(detail.parentElement.id);
-            });
-        }
-    });
-}
-
-function openDetail(itemId) {
-    const detailId = itemId.replace('item-', 'detail-');
-    const container = document.getElementById(detailId);
-    if (container) {
-        container.style.display = 'block';
-        const detail = container.querySelector('.portfolio-detail');
-        if(detail) detail.classList.add('active');
-        document.body.style.overflow = 'hidden';
-    }
-}
-
-function closeDetail(sectionId) {
-    const section = document.getElementById(sectionId);
-    if (section) {
-        section.querySelector('.portfolio-detail')?.classList.remove('active');
-        section.style.display = 'none';
-        
-        // Stop video if playing
-        const video = section.querySelector('video');
-        if(video) video.pause();
-        
-        document.body.style.overflow = 'auto';
-    }
-}
+// ─── Card Generation ──────────────────────────────────────────────────────────
 
 function generatePortfolioItems(projects) {
-    const portfolioGrid = document.getElementById('portfolioGrid');
-    if (!portfolioGrid) return;
-    
-    portfolioGrid.innerHTML = ''; 
+    const grid = document.getElementById('portfolioGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
 
     projects.filter(p => p.showInPortfolio).forEach(project => {
+        const tagsHtml = (project.tags || [])
+            .map(t => `<span class="portfolio-tag">${t}</span>`)
+            .join('');
+
         const item = document.createElement('div');
-        item.className = 'portfolio-item animate';
+        item.className = 'portfolio-item';
         item.id = `item-${project.id}`;
         item.innerHTML = `
-            <img src="${project.image}" alt="${project.title} Image">
-            <h3>${project.title}</h3>
-            <p>${project.description}</p>
-            <div class="click-indicator">Click to show more</div>
-        `;
-        // Add listener directly
-        item.addEventListener('click', () => openDetail(item.id));
-        portfolioGrid.appendChild(item);
-    });
-}
-
-function generatePortfolioDetails(projects) {
-    const detailsContainer = document.getElementById('portfolioDetailsContainer');
-    if(!detailsContainer) return;
-    detailsContainer.innerHTML = '';
-
-    projects.filter(p => p.showInPortfolio).forEach(project => {
-        const section = document.createElement('section');
-        section.id = `detail-${project.id}`;
-        
-        // Structure
-        section.innerHTML = `
-            <div class="portfolio-detail animate">
-                <button class="close-button">×</button>
-                <div class="detail-content">
-                    <div class="project-detail-video-section">
-                        <video id="video-${project.id}" preload="none" poster="${project.poster}">
-                            <source src="${project.video}" type="video/mp4">
-                        </video>
-                        <div class="play-overlay">▶</div>
-                        <div class="expand-arrow">»</div>
-                    </div>
-                    <div class="text-section">
-                        ${generateProjectDetails(project.details)}
-                    </div>
-                </div>
+            <div class="portfolio-item-image-wrap">
+                <img src="${project.image}" alt="${project.title}">
             </div>
+            <div class="portfolio-item-body">
+                <h3>${project.title}</h3>
+                ${project.subtitle ? `<p class="portfolio-subtitle">${project.subtitle}</p>` : ''}
+                <p class="portfolio-description">${project.description}</p>
+                ${tagsHtml ? `<div class="portfolio-tags">${tagsHtml}</div>` : ''}
+            </div>
+            <div class="click-indicator">View in CV &#8594;</div>
         `;
+        item.addEventListener('click', () => scrollToCVAndHighlight(project.id));
+        grid.appendChild(item);
+    });
 
-        // Event Listeners for this specific modal
-        const closeBtn = section.querySelector('.close-button');
-        closeBtn.addEventListener('click', () => closeDetail(section.id));
+    // Observe newly added items for scroll-in animation
+    observeItems(grid.querySelectorAll('.portfolio-item'));
+}
 
-        const videoSection = section.querySelector('.project-detail-video-section');
-        const video = section.querySelector('video');
-        const playOverlay = section.querySelector('.play-overlay');
-        const expandArrow = section.querySelector('.expand-arrow');
-
-        // Video Play Toggle
-        const togglePlay = () => {
-             if (video.paused) { video.play(); playOverlay.style.display = 'none'; } 
-             else { video.pause(); playOverlay.style.display = 'block'; }
-        };
-        playOverlay.addEventListener('click', togglePlay);
-        video.addEventListener('click', togglePlay);
-
-        // Expand Toggle
-        expandArrow.addEventListener('click', (e) => {
-            e.stopPropagation(); // prevent video play
-            videoSection.classList.toggle('expanded');
-            expandArrow.textContent = videoSection.classList.contains('expanded') ? '«' : '»';
+function observeItems(elements) {
+    const observer = new IntersectionObserver((entries) => {
+        entries.forEach(entry => {
+            entry.target.classList.toggle('visible', entry.isIntersecting);
         });
+    }, { threshold: 0.1 });
 
-        // Click outside to close
-        section.querySelector('.portfolio-detail').addEventListener('click', (e) => {
-            if (e.target === e.currentTarget) closeDetail(section.id);
-        });
-
-        detailsContainer.appendChild(section);
+    elements.forEach(el => {
+        el.classList.add('animate');
+        el.style.transitionDelay = `${Math.random() * 0.25}s`;
+        observer.observe(el);
     });
 }
 
-function generateProjectDetails(details) {
-    let html = '';
-    for (const key in details) {
-        html += `<details class="project-detail"><summary><span class="arrow">➔</span> ${details[key].summary}</summary><div>${generateDetailContent(details[key].content)}</div></details>`;
+// ─── Click: Scroll to CV ──────────────────────────────────────────────────────
+
+function scrollToCVAndHighlight(projectId) {
+    const cvSection = document.getElementById('cv');
+    const nav = document.querySelector('.navbar');
+    const offset = nav ? nav.offsetHeight : 0;
+    if (cvSection) {
+        const targetY = cvSection.getBoundingClientRect().top + window.scrollY - offset;
+        window.scrollTo({ top: targetY, behavior: 'smooth' });
     }
-    return html;
+    // Timeline can listen for this to snap to the relevant project
+    window.dispatchEvent(new CustomEvent('portfolio:selectProject', { detail: { id: projectId } }));
 }
 
-function generateDetailContent(content) {
-    if (Array.isArray(content)) {
-        return `<ul class="list-container">${content.map(item => {
-            if (typeof item === 'object' && item.type === 'link') return `<li class="list-item"><a href="${item.href}" target="_blank">${item.text}</a></li>`;
-            if (typeof item === 'object' && item.type === 'sub-list') return `<li class="list-item">${item.text}<ul class="sub-list">${item.items.map(sub => `<li class="sub-list-item">${sub}</li>`).join('')}</ul></li>`;
-            return `<li class="list-item">${typeof item === 'string' ? item : item.text}</li>`;
-        }).join('')}</ul>`;
-    }
-    return `<p>${content}</p>`;
+// ─── 3D Hover Effect ──────────────────────────────────────────────────────────
+
+function handlePortfolioItems() {
+    const ROTATION = 25;   // max degrees of tilt
+    const SCALE    = 1.35; // zoom on hover
+
+    document.querySelectorAll('.portfolio-item').forEach(item => {
+        let hovered = false;
+        let resetTimer = null;
+
+        const enter = () => {
+            hovered = true;
+            clearTimeout(resetTimer);
+            // Disable the scroll-in transition while hovering so movement is 1:1
+            item.style.transition = 'box-shadow 0.2s ease';
+            item.style.boxShadow = '0 24px 48px rgba(0, 0, 0, 0.55)';
+            item.style.zIndex = '10';
+        };
+
+        const move = (clientX, clientY) => {
+            const rect = item.getBoundingClientRect();
+            const relX = clientX - (rect.left + rect.width  / 2);
+            const relY = clientY - (rect.top  + rect.height / 2);
+            const rotateY = ( relX / rect.width)  * ROTATION;
+            const rotateX = (-relY / rect.height) * ROTATION;
+
+            // Prevent the scaled card from clipping off the viewport edges
+            const extra = (rect.width * SCALE - rect.width) / 2;
+            let tx = 0;
+            if (rect.left < extra)                         tx =  extra - rect.left;
+            else if (window.innerWidth - rect.right < extra) tx = -(extra - (window.innerWidth - rect.right));
+
+            item.style.transform =
+                `perspective(1000px) scale(${SCALE}) translateX(${tx}px) rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+        };
+
+        const leave = () => {
+            hovered = false;
+            item.style.transition =
+                'transform 0.45s cubic-bezier(0.23, 1, 0.32, 1), box-shadow 0.3s ease';
+            item.style.transform = '';
+            item.style.boxShadow = '';
+            // Clear inline overrides once the spring-back finishes
+            resetTimer = setTimeout(() => {
+                if (!hovered) {
+                    item.style.transition = '';
+                    item.style.zIndex = '';
+                }
+            }, 500);
+        };
+
+        // Mouse
+        item.addEventListener('mouseenter', enter);
+        item.addEventListener('mousemove',  e => move(e.clientX, e.clientY));
+        item.addEventListener('mouseleave', leave);
+
+        // Press feedback on the click indicator
+        const pressIn  = () => { const ind = item.querySelector('.click-indicator'); if (ind) ind.style.transform = 'translateX(-50%) scale(0.92)'; };
+        const pressOut = () => { const ind = item.querySelector('.click-indicator'); if (ind) ind.style.transform = 'translateX(-50%) scale(1)'; };
+        item.addEventListener('mousedown',  pressIn);
+        item.addEventListener('mouseup',    pressOut);
+        item.addEventListener('touchstart', pressIn,  { passive: true });
+        item.addEventListener('touchend',   pressOut, { passive: true });
+
+        // Touch tilt
+        item.addEventListener('touchmove', e => {
+            if (e.touches.length) move(e.touches[0].clientX, e.touches[0].clientY);
+        }, { passive: true });
+    });
 }
