@@ -29,32 +29,39 @@ export function initTimeline(projects) {
     const N = slideData.length;
 
     // Tunables
-    const WHEEL_SENS       = 0.0035;
-    const TOUCH_SENS       = 0.007;
-    const LERP_RATE        = 0.11;
-    const SNAP_IDLE_MS     = 900;
-    const SNAP_COMMIT      = 0.25;   // Directional snap: ≥25% movement commits forward/back
-    const SNAP_STRENGTH    = 0.06;
-    const FADE             = 0.32;   // Crossfade fraction on each side of a slide boundary
-    const EXIT_OVER        = 0.55;
-    const ENTER_RATIO      = 0.5;
-    const REENTER_COOLDOWN = 700;
+    const TOUCH_SENS              = 0.0055;
+    const LERP_RATE               = 0.18;  // ~95% catch-up in ~280ms — snappy but readable
+    const WHEEL_SESSION_GAP_MS    = 90;    // Events closer than this = same physical input
+    const WHEEL_COOLDOWN_MS       = 320;   // Min interval between committed steps
+    const WHEEL_MIN_DELTA         = 4;     // Filter noise events smaller than this
+    const TOUCH_RELEASE_BIAS      = 0.18;  // Directional commit threshold on touch release
+    const FADE                    = 0.32;  // Crossfade fraction on each side of a slide boundary
+    const EXIT_OVER               = 0.55;
+    const ENTER_RATIO             = 0.5;
+    const REENTER_COOLDOWN        = 700;
+    const REVEAL_START_MS         = 120;   // Wait after slide arrival before first bullet
+    const REVEAL_STAGGER_MS       = 130;   // Stagger between consecutive bullets
 
     const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
     const S = {
-        immersive:      false,
-        virtualPos:     0,
-        targetPos:      0,
-        activeProjIdx:  -1,
-        lastScrollDir:  0,
-        idleMs:         0,
-        lastTs:         0,
-        lastExitTs:     0,
-        touchStartY:    0,
-        rafId:          0,
-        slides:         [],
-        dots:           [],
+        immersive:        false,
+        virtualPos:       0,
+        targetPos:        0,
+        activeProjIdx:    -1,
+        focusSlideIdx:    -1,
+        focusArrivedTs:   0,
+        lastScrollDir:    0,
+        lastTs:           0,
+        lastExitTs:       0,
+        lastWheelStepTs:  0,
+        lastWheelEventTs: 0,
+        touchActive:      false,
+        touchStartY:      0,
+        touchStartPos:    0,
+        rafId:            0,
+        slides:           [],
+        dots:             [],
     };
 
     const els = {
@@ -174,7 +181,6 @@ export function initTimeline(projects) {
                 if (heroIdx < 0) return;
                 S.targetPos     = heroIdx;
                 S.lastScrollDir = heroIdx > S.virtualPos ? 1 : -1;
-                S.idleMs        = 0;
                 if (!S.immersive) enterImmersive();
             });
             els.navEl.appendChild(dot);
@@ -212,7 +218,6 @@ export function initTimeline(projects) {
 
         S.virtualPos = Math.max(0, Math.min(N - 1, Math.round(S.virtualPos)));
         S.targetPos  = S.virtualPos;
-        S.idleMs     = 0;
 
         bindVirtualScroll();
         window.dispatchEvent(new CustomEvent('timeline:warpSpeed', { detail: { factor: 1.8 } }));
@@ -252,40 +257,86 @@ export function initTimeline(projects) {
     // ── Virtual Scroll ─────────────────────────────────────────────────────────
 
     function bindVirtualScroll() {
-        window.addEventListener('wheel',      onWheel,      { passive: false });
-        window.addEventListener('touchstart', onTouchStart, { passive: false });
-        window.addEventListener('touchmove',  onTouchMove,  { passive: false });
+        window.addEventListener('wheel',       onWheel,      { passive: false });
+        window.addEventListener('touchstart',  onTouchStart, { passive: false });
+        window.addEventListener('touchmove',   onTouchMove,  { passive: false });
+        window.addEventListener('touchend',    onTouchEnd);
+        window.addEventListener('touchcancel', onTouchEnd);
     }
 
     function unbindVirtualScroll() {
-        window.removeEventListener('wheel',      onWheel,      { passive: false });
-        window.removeEventListener('touchstart', onTouchStart, { passive: false });
-        window.removeEventListener('touchmove',  onTouchMove,  { passive: false });
+        window.removeEventListener('wheel',       onWheel,      { passive: false });
+        window.removeEventListener('touchstart',  onTouchStart, { passive: false });
+        window.removeEventListener('touchmove',   onTouchMove,  { passive: false });
+        window.removeEventListener('touchend',    onTouchEnd);
+        window.removeEventListener('touchcancel', onTouchEnd);
     }
 
+    // Wheel: each gesture commits ONE discrete slide step.
+    //
+    // Two defences against multi-step skips per physical click:
+    //   1. Session gap — Chrome/Edge often decompose a single wheel click into
+    //      multiple smaller events spanning 100–300ms (smooth-scroll); we only
+    //      commit on the first event of a burst and ignore the rest.
+    //   2. Hard cooldown — even if a "new session" sneaks past, a min interval
+    //      between commits caps the rate.
+    // Target is always an integer — no fractional drift after release.
     function onWheel(e) {
         if (!S.immersive) return;
         e.preventDefault();
-        S.targetPos += e.deltaY * WHEEL_SENS;
-        if (Math.abs(e.deltaY) > 1) S.lastScrollDir = Math.sign(e.deltaY);
-        S.idleMs = 0;
+        if (Math.abs(e.deltaY) < WHEEL_MIN_DELTA) return;
+
+        const now = performance.now();
+        const gapSinceLastEvent = now - S.lastWheelEventTs;
+        S.lastWheelEventTs = now;
+
+        // Continuous input (smooth-scroll fragments, inertia) — already counted
+        if (gapSinceLastEvent < WHEEL_SESSION_GAP_MS) return;
+        // Hard floor between distinct commits
+        if (now - S.lastWheelStepTs < WHEEL_COOLDOWN_MS)  return;
+
+        const dir = Math.sign(e.deltaY);
+        // Step from the LOGICAL position (current target), not visual position —
+        // chained clicks during the lerp animation cleanly stack.
+        S.targetPos       = Math.round(S.targetPos) + dir;
+        S.lastScrollDir   = dir;
+        S.lastWheelStepTs = now;
         checkBoundaryExit();
     }
 
+    // Touch: continuous drag follows the finger, snap on release.
     function onTouchStart(e) {
         if (!S.immersive || !e.touches?.length) return;
-        S.touchStartY = e.touches[0].clientY;
+        S.touchStartY   = e.touches[0].clientY;
+        S.touchStartPos = S.virtualPos;
+        S.touchActive   = true;
     }
 
     function onTouchMove(e) {
-        if (!S.immersive || !e.touches?.length) return;
+        if (!S.immersive || !S.touchActive || !e.touches?.length) return;
         e.preventDefault();
         const dy = S.touchStartY - e.touches[0].clientY;
-        S.touchStartY = e.touches[0].clientY;
-        S.targetPos += dy * TOUCH_SENS;
-        if (Math.abs(dy) > 1) S.lastScrollDir = Math.sign(dy);
-        S.idleMs = 0;
+        S.targetPos = S.touchStartPos + dy * TOUCH_SENS;
+        if (Math.abs(dy) > 5) S.lastScrollDir = Math.sign(dy);
         checkBoundaryExit();
+    }
+
+    function onTouchEnd() {
+        if (!S.touchActive) return;
+        S.touchActive = false;
+
+        // Directional snap: if you've dragged past the bias threshold in a
+        // direction, commit to the next slide that way. Otherwise round.
+        const floor = Math.floor(S.virtualPos);
+        const frac  = S.virtualPos - floor;
+        let snapped;
+        if (S.lastScrollDir > 0 && frac >= TOUCH_RELEASE_BIAS)
+            snapped = floor + 1;
+        else if (S.lastScrollDir < 0 && frac <= 1 - TOUCH_RELEASE_BIAS)
+            snapped = floor;
+        else
+            snapped = Math.round(S.virtualPos);
+        S.targetPos = Math.max(0, Math.min(N - 1, snapped));
     }
 
     function checkBoundaryExit() {
@@ -300,20 +351,18 @@ export function initTimeline(projects) {
             if (!S.immersive) return;
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
                 e.preventDefault();
-                S.targetPos     = Math.min(N - 1, Math.round(S.virtualPos) + 1);
+                S.targetPos     = Math.min(N - 1, Math.round(S.targetPos) + 1);
                 S.lastScrollDir = 1;
-                S.idleMs        = 0;
             } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
                 e.preventDefault();
-                S.targetPos     = Math.max(0, Math.round(S.virtualPos) - 1);
+                S.targetPos     = Math.max(0, Math.round(S.targetPos) - 1);
                 S.lastScrollDir = -1;
-                S.idleMs        = 0;
             } else if (e.key === 'Home') {
                 e.preventDefault();
-                S.targetPos = 0; S.lastScrollDir = -1; S.idleMs = 0;
+                S.targetPos = 0; S.lastScrollDir = -1;
             } else if (e.key === 'End') {
                 e.preventDefault();
-                S.targetPos = N - 1; S.lastScrollDir = 1; S.idleMs = 0;
+                S.targetPos = N - 1; S.lastScrollDir = 1;
             } else if (e.key === 'Escape') {
                 exitImmersive('top');
             }
@@ -330,7 +379,6 @@ export function initTimeline(projects) {
             if (!S.immersive) enterImmersive();
             S.targetPos     = heroIdx;
             S.lastScrollDir = heroIdx > Math.round(S.virtualPos) ? 1 : -1;
-            S.idleMs        = 0;
         });
     }
 
@@ -342,26 +390,16 @@ export function initTimeline(projects) {
             S.lastTs = ts;
 
             if (S.immersive) {
-                S.idleMs += dt;
-
                 S.targetPos = Math.max(-EXIT_OVER, Math.min(N - 1 + EXIT_OVER, S.targetPos));
-
-                if (S.idleMs > SNAP_IDLE_MS) {
-                    const floor = Math.floor(S.virtualPos);
-                    const frac  = S.virtualPos - floor;
-                    let snapped;
-                    if (S.lastScrollDir > 0 && frac >= SNAP_COMMIT)
-                        snapped = floor + 1;
-                    else if (S.lastScrollDir < 0 && frac <= 1 - SNAP_COMMIT)
-                        snapped = floor;
-                    else
-                        snapped = Math.round(S.virtualPos);
-                    const clamped = Math.max(0, Math.min(N - 1, snapped));
-                    S.targetPos += (clamped - S.targetPos) * SNAP_STRENGTH;
-                }
 
                 const alpha = 1 - Math.pow(1 - LERP_RATE, dt / 16.667);
                 S.virtualPos += (S.targetPos - S.virtualPos) * alpha;
+
+                // Snap exactly when close enough — prevents asymptotic creep
+                // that would re-trigger topic-reveal thresholds frame to frame.
+                if (Math.abs(S.targetPos - S.virtualPos) < 0.0015) {
+                    S.virtualPos = S.targetPos;
+                }
 
                 render(S.virtualPos);
             }
@@ -403,6 +441,16 @@ export function initTimeline(projects) {
             const pct = N > 1 ? (disp / (N - 1)) * 100 : 100;
             els.tmFill.style.width = `${pct.toFixed(1)}%`;
         }
+
+        // Track which slide is currently focused (the closest integer) and
+        // when we arrived at it — used for time-based bullet reveals below.
+        const focusIdx = Math.max(0, Math.min(N - 1, Math.round(disp)));
+        const nowMs    = performance.now();
+        if (focusIdx !== S.focusSlideIdx) {
+            S.focusSlideIdx  = focusIdx;
+            S.focusArrivedTs = nowMs;
+        }
+        const focusElapsedMs = nowMs - S.focusArrivedTs;
 
         // Slides with layered parallax. The slide element itself stays put;
         // each inner layer moves at its own rate so transforms don't compound.
@@ -458,22 +506,25 @@ export function initTimeline(projects) {
                 else vid.pause();
             }
 
-            // Highlight bullets: staggered reveal during the settled window
+            // Highlight bullets: time-based staggered reveal after arrival.
+            // The old scroll-progress reveal never fired in discrete-step mode
+            // because `progress` stays at 0 while a slide is the focused one.
+            // Now they cascade in after the slide settles, and only reset
+            // once the slide is fully invisible (so they fade with it).
             const highlights = slide.el.querySelectorAll('.topic-highlights li');
             if (highlights.length) {
-                const settled = progress >= 0 && progress < (1 - FADE);
-                // Normalised position within settled window (0 → 1)
-                const t = settled ? Math.min(1, Math.max(0, progress / (1 - FADE))) : (progress < 0 ? -1 : 2);
-                highlights.forEach((li, j) => {
-                    // Reveal across the first 60% of the settled window
-                    const threshold = (j + 1) / (highlights.length + 1) * 0.6;
-                    li.classList.toggle('highlight-visible', t >= threshold);
-                });
+                if (i === S.focusSlideIdx) {
+                    highlights.forEach((li, j) => {
+                        const triggerMs = REVEAL_START_MS + j * REVEAL_STAGGER_MS;
+                        if (focusElapsedMs >= triggerMs) li.classList.add('highlight-visible');
+                    });
+                } else if (opacity < 0.05) {
+                    highlights.forEach(li => li.classList.remove('highlight-visible'));
+                }
             }
         });
 
         // Nav dots: highlight whichever PROJECT we're currently looking at
-        const focusIdx    = Math.max(0, Math.min(N - 1, Math.round(disp)));
         const currentProj = slideData[focusIdx].project;
         const newProjIdx  = timelineProjects.indexOf(currentProj);
         if (newProjIdx !== S.activeProjIdx) {
