@@ -16,20 +16,24 @@
     "workTopics": [
       {
         "title": "Networked Enemy AI Architecture",
+        "image": "assets/everslaught_invasion_enemies.webp",
         "description": "Architected a P2P networked enemy system using a Character/Controller pattern, enabling authoritative host logic across up to 4 simultaneous players.",
         "highlights": [
           "Photon Fusion P2P state synchronisation across concurrent player sessions",
           "Behaviour tree AI (Behaviour Designer) supporting 8+ distinct enemy archetypes",
-          "Scalable spawner system managing 50+ enemies simultaneously with minimal overhead"
+          "Scalable spawner system managing 50+ enemies simultaneously with minimal overhead",
+          "Hot-swap enemy configurations at runtime without interrupting live sessions"
         ]
       },
       {
         "title": "Quest 2 Performance Optimization",
+        "image": "assets/everslaught_invasion_splashart.webp",
         "description": "Profiled and optimised the game to meet Oculus Quest 2's strict 72fps budget through systemic, data-driven improvements.",
         "highlights": [
           "Enemy pooling and per-type LOD system reducing draw calls by ~40%",
           "Custom low-complexity VR shaders replacing expensive stock materials",
-          "Fixed-timestep AI tick budgeting to prevent frame spikes during combat peaks"
+          "Fixed-timestep AI tick budgeting to prevent frame spikes during combat peaks",
+          "Memory budgeting pass — reduced peak allocation by 35% across wave modes"
         ]
       }
     ],
@@ -78,20 +82,24 @@
     "workTopics": [
       {
         "title": "Mini-game Systems",
+        "image": "assets/rough_justice_map.webp",
         "description": "Designed and built multiple self-contained tactical mini-games integrated into the game's contract mission flow.",
         "highlights": [
           "Lock-picking, safe-cracking, and surveillance interception mini-games",
           "Shared mini-game framework with designer-configurable difficulty parameters",
-          "Clean integration with the narrative contract and consequence system"
+          "Clean integration with the narrative contract and consequence system",
+          "Difficulty curves tuned from playtest data across 3 QA rounds"
         ]
       },
       {
         "title": "Editor Tooling & Pipeline",
+        "image": "assets/rough_justice_splashart.webp",
         "description": "Built a custom Unreal Editor tool allowing designers to author, configure, and validate game contracts without engineering support.",
         "highlights": [
           "Blueprint-based contract editor with live in-editor preview",
           "Automated build and packaging pipeline cutting deploy time by ~30%",
-          "Data validation layer surfacing configuration errors at edit time, not runtime"
+          "Data validation layer surfacing configuration errors at edit time, not runtime",
+          "Version-controlled asset manifest keeping shipped contract data in sync"
         ]
       }
     ],
@@ -138,11 +146,13 @@
     "workTopics": [
       {
         "title": "Mission & Objective System",
+        "image": "assets/cold_comfort_game.jpg",
         "description": "Designed and implemented a dynamic mission system driving co-operative objectives for up to 4 players.",
         "highlights": [
           "Event-driven mission state machine with branching objective conditions",
           "Dynamic enemy spawner tied to mission phase and player count",
-          "In-game debug HUD for rapid iteration without full recompile cycles"
+          "In-game debug HUD for rapid iteration without full recompile cycles",
+          "Shared objective UI propagated to all clients over Unreal's replication layer"
         ]
       }
     ],
@@ -156,11 +166,11 @@
     "id": "EverslaughtShip",
     "title": "Everslaught: Ship",
     "subtitle": "Prototype Developer",
-    "image": "assets/everslaught_invasion_enemies.webp",
+    "image": "assets/Everslaught_Ship.png",
     "description": "A VR spaceship systems experiment for Unity.",
     "timelineDescription": "Explored interactive cockpit systems and motion controls.",
     "video": "assets/PortfolioVideoLowerRes.mp4",
-    "poster": "assets/everslaught_invasion_enemies.webp",
+    "poster": "assets/Everslaught_Ship.png",
     "showInPortfolio": false,
     "showInTimeline": true,
     "startDate": "2017-05",
@@ -168,11 +178,13 @@
     "workTopics": [
       {
         "title": "VR Cockpit Interaction",
+        "image": "assets/Everslaught_Ship2.png",
         "description": "Prototyped an immersive VR cockpit with physical button, lever, and throttle interaction systems using SteamVR.",
         "highlights": [
           "Physics-based grab and manipulation with SteamVR SDK",
           "Simulated ship subsystems — power routing, shields, weapon targeting",
-          "Comfort-focused seated locomotion with configurable comfort settings"
+          "Comfort-focused seated locomotion with configurable comfort settings",
+          "Modular input abstraction layer enabling fast swap between SteamVR and XR Toolkit"
         ]
       }
     ],
@@ -198,20 +210,24 @@
     "workTopics": [
       {
         "title": "Interactive Starfield & Animation",
+        "image": "assets/website_icon.png",
         "description": "Built a Three.js WebGL starfield background that responds to mouse movement, device orientation, and page scroll position.",
         "highlights": [
           "5,000-particle point cloud with vertex colours rendered via WebGL",
           "Smooth LERP camera sway driven by mouse input and device gyroscope",
-          "Visibility API integration to pause rendering when the tab is hidden"
+          "Visibility API integration to pause rendering when the tab is hidden",
+          "Hyperspace warp effect: Z-streaming particles triggered on timeline entry"
         ]
       },
       {
         "title": "Data-driven Architecture",
+        "image": "assets/website_icon.png",
         "description": "Designed a single-JSON data model that powers both the portfolio grid and the interactive CV timeline from one source of truth.",
         "highlights": [
           "projects.json as the single source of truth for all project content",
           "Dynamic portfolio card generation with 3D hover effects and tag chips",
-          "Custom ES module system — no build tools, no bundler, just the browser"
+          "Custom ES module system — no build tools, no bundler, just the browser",
+          "Project-indexed virtual scroll with directional snap and frame-rate-independent LERP"
         ]
       }
     ],

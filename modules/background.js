@@ -59,7 +59,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const swaySpeedX = 0.48, swaySpeedY = 0.67, swayDistance = 1;
   let warpFactor = 1.0;
   let warpTarget = 1.0;
-  window.addEventListener('timeline:warpSpeed', e => { warpTarget = e.detail?.factor ?? 1.0; });
+  window.addEventListener('timeline:warpSpeed', e => {
+    warpTarget = e.detail?.factor ?? 1.0;
+  });
 
   let targetRotationX = 0, targetRotationY = 0;
   const rotationSpeedX = 0.1, rotationSpeedY = -0.1;
@@ -151,7 +153,8 @@ document.addEventListener('DOMContentLoaded', () => {
 
     // warp factor lerp
     warpFactor += (warpTarget - warpFactor) * Math.min(1, dt * 2.5);
-    // sway (faster during warp)
+
+    // sway — accelerated during warp
     camera.position.x = Math.sin(elapsedTime * swaySpeedX * warpFactor) * swayDistance;
     camera.position.y = Math.cos(elapsedTime * swaySpeedY * warpFactor) * swayDistance;
 
@@ -159,7 +162,22 @@ document.addEventListener('DOMContentLoaded', () => {
     camera.rotation.x += (targetRotationY - camera.rotation.x) * 5 * dt;
     camera.rotation.y += (targetRotationX - camera.rotation.y) * 5 * dt;
 
-    updateCameraPosition();
+    if (warpFactor > 1.05) {
+      // Hyperspace: stream all star particles toward the camera in Z
+      // Creates a "travelling through space" zoom effect
+      const zSpeed = (warpFactor - 1.0) * 30;
+      const pos = geometry.attributes.position.array;
+      for (let i = 0; i < starCount; i++) {
+        pos[i * 3 + 2] += zSpeed * dt;
+        // Wrap back to far end when a star passes the camera
+        if (pos[i * 3 + 2] > starFieldRadius) pos[i * 3 + 2] -= starFieldRadius * 2;
+      }
+      geometry.attributes.position.needsUpdate = true;
+      camera.position.z = 0;
+    } else {
+      updateCameraPosition();
+    }
+
     renderer.render(scene, camera);
   }
   render();
