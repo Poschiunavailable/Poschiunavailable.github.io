@@ -2,14 +2,12 @@
 <html lang="en">
 
 <head>
-    <!-- Basic Meta Tags -->
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="style" href="styles/styles.css" />
     <title>Patrick Temborius</title>
 
-    <!-- CSS Stylesheets -->
     <link rel="stylesheet" href="styles/base.css">
     <link rel="stylesheet" href="styles/styles.css">
     <link rel="stylesheet" href="styles/animation.css">
@@ -17,12 +15,9 @@
     <link rel="stylesheet" href="styles/hero.css">
     <link rel="stylesheet" href="styles/about.css">
     <link rel="stylesheet" href="styles/portfolio.css">
-    <link rel="stylesheet" href="styles/portfoliodetails.css">
     <link rel="stylesheet" href="styles/cvstyle.css">
-
-    <!-- External Libraries -->
+    <link rel="stylesheet" href="styles/contact.css"> 
     <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js" defer></script>
-    <script src="https://vjs.zencdn.net/7.15.4/video.min.js"></script>
     <script src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js" async></script>
 
     <!-- Import Map for Three.js -->
@@ -44,13 +39,13 @@
     <header>
         <nav class="navbar" id="nonCVContent">
             <div class="brand">
-                <a href="#hero" onclick="scrollToSection(event, 'hero')">Patrick Temborius</a>
+                <a href="#hero" data-scroll-to="hero">Patrick Temborius</a>
             </div>
             <ul class="nav-links">
-                <li><a href="#about" onclick="scrollToSection(event, 'about')">About</a></li>
-                <li><a href="#portfolio" onclick="scrollToSection(event, 'portfolio')">Portfolio</a></li>
-                <li><a href="#cv" onclick="scrollToSection(event, 'cv')">CV</a></li>
-                <li><a href="#contact" onclick="scrollToSection(event, 'contact')">Contact</a></li>
+                <li><a href="#about" data-scroll-to="about">About</a></li>
+                <li><a href="#portfolio" data-scroll-to="portfolio">Portfolio</a></li>
+                <li><a href="#cv" data-scroll-to="cv">CV</a></li>
+                <li><a href="#contact" data-scroll-to="contact">Contact</a></li>
             </ul>
         </nav>
     </header>
@@ -99,7 +94,7 @@
                         consider myself an empathetic person and have experience distributing tasks to team members,
                         quickly identifying issues that slow down production, and finding solutions that satisfy
                         everyone.</p>
-                    <a href="#portfolio" class="cta-button animate" onclick="scrollToSection(event, 'portfolio')">View
+                    <a href="#portfolio" class="cta-button animate" data-scroll-to="portfolio">View
                         My Work</a>
                 </div>
             </div>
@@ -119,49 +114,63 @@
         </div>
     </section>
 
-    <!-- Portfolio Details Container -->
-    <div id="portfolioDetailsContainer">
-        <!-- Portfolio details will be injected here -->
-    </div>
-
-    <!-- CV Section -->
+    <!-- CV / Timeline Section -->
     <section id="cv">
-        <div class="small-separator"></div>
-        <div class="cv-section" id="cvSection">
-            <div id="container">
-                <!-- Timewheel (single column) -->
-                <div id="timewheel" aria-label="Timeline time selector" role="region">
-                    <div class="wheel day" aria-hidden="true"></div>
-                    <div class="wheel-center-marker" aria-hidden="true"></div>
+        <div id="cvSection">
+            <div id="cvSectionLabel">
+                <div class="typing-effect">
+                    <h2 class="typing-text typing-target">&lt;cv&gt;</h2>
                 </div>
-                <div id="tw-link" aria-hidden="true"></div>
+            </div>
+            <div id="cvScrollHint"><span>scroll to enter the time machine</span></div>
+            <div id="projectStage"></div>
+            <div id="timeMachine" aria-label="Current timeline date" aria-hidden="true">
+                <div id="tmLabel">TIME MACHINE</div>
+                <div id="tmDateDisplay">
+                    <span id="tmMonth">JAN</span>
+                    <span id="tmYear">2019</span>
+                </div>
+                <div id="tmProgressTrack"><div id="tmProgressFill"></div></div>
+            </div>
+            <nav id="cvProjectNav" aria-label="Timeline projects"></nav>
+        </div>
+    </section>
 
-                <!-- Date label shown beside the wheel -->
-                <div id="currentTime">Jan 01, 2019</div>
+    <section id="contact">
+        <div class="container animate">
+            <div class="typing-effect">
+                <h2 class="typing-text typing-target">&lt;contact&gt;</h2>
+            </div>
+            <form class="contact-form" action="mailto:your@email.com" method="post" enctype="text/plain">
+                <div class="form-group">
+                    <label for="name">Name</label>
+                    <input type="text" id="name" name="name" required>
+                </div>
+                <div class="form-group">
+                    <label for="email">Email</label>
+                    <input type="email" id="email" name="email" required>
+                </div>
+                <div class="form-group">
+                    <label for="message">Message</label>
+                    <textarea id="message" name="message" rows="5" required></textarea>
+                </div>
+                <button type="submit" class="cta-button">Send Message</button>
+            </form>
+        </div>
+    </section>
 
-                <!-- Projects -->
-                <div id="projects"></div>
+    <footer>
+        <div class="container">
+            <p>&copy; 2026 Patrick Temborius. All rights reserved.</p>
+            <div class="social-links">
+                <a href="#" target="_blank">LinkedIn</a>
+                <a href="#" target="_blank">GitHub</a>
             </div>
         </div>
-        </div>
-    </section>
-
-    <!-- Contact Section -->
-    <section id="contact">
-        <div class="small-separator"></div>
-        <!-- Add contact form or contact information here -->
-    </section>
-
-    <!-- Footer -->
-    <footer>
-        <div class="small-separator"></div>
-        <!-- Add your footer content here -->
     </footer>
 
-    <!-- JavaScript Files -->
-    <script src="modules/portfolio.js"></script>
-    <script src="modules/timeline.js"></script>
-    <script src="modules/scripts.js"></script>
+    <div id="timelineBackdrop" aria-hidden="true"></div>
+    <script type="module" src="modules/main.js"></script>
 </body>
 
 </html>

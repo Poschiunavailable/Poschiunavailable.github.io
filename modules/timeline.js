@@ -1,642 +1,535 @@
-// timeline.js — v5.3
-// Fixes based on your console:
-//  - 404 for /projects.json -> always load JSON relative to the HTML using document.baseURI
-//  - getBoundingClientRect() on null -> robust lookup for the CV section + guards
-//  - Keeps rAF + LERP smooth day wheel and exclusive active project
+// timeline.js — slide-based virtual scroll with parallax.
+// Each project becomes one hero slide + one slide per work topic.
+// Every wheel click / arrow / swipe commits to the next slide. Inspired by
+// mobile-product marketing pages (e.g. apple.com/iphone): one focused concept
+// per viewport, layered parallax, no overflow scrollbars.
 
-(function () {
-    'use strict';
+export function initTimeline(projects) {
+    const timelineProjects = projects.filter(p => p.showInTimeline);
+    if (!timelineProjects.length) return;
 
-    const ROW_H = 12; // per‑day row height (reduced for faster travel)
-    const MONTH_GAP = 30; // adjusted with smaller row height
-    const DATE_LABEL_FMT = { day: '2-digit', month: 'short', year: 'numeric' };
-    const YEAR_GAP = 40;  // adjusted with smaller row height
-    const STICKY_TOP_VH = 12;
-    const FADE_MS = 240;
-    const SMOOTHNESS = 0.18;
-    const SNAP_SMOOTHNESS = 0.35;   // faster easing when snapping to a day
-    const SNAP_IDLE_MS = 140;       // after this idle time, snap to nearest day
-    const SCROLL_SLOWDOWN = 1.6;    // >1 increases scroll distance for same date range
-    const ENTER_THRESHOLD_VH = 0.28; // when CV center near viewport center, enter immersive
-    const EXIT_OVERSCROLL_DAYS = 1.0; // overscroll beyond range before exiting immersive
-    const WHEEL_PX_PER_DAY = 90;    // wheel/trackpad: smaller = faster
-    const TOUCH_PX_PER_DAY = 28;    // touch drag: smaller = faster
-    const REENTER_GUARD_VH = 0.3;  // smaller band to unlock re‑entry after exit
-    const ENTER_RATIO = 0.5;        // section must cover 50% of viewport to auto-enter
-    const EXIT_MARGIN_PX = 180;     // margin outside entry band after exit
-    const REENTER_COOLDOWN_MS = 500; // grace period before re-entering
+    // ── Flatten into slide list ────────────────────────────────────────────────
+    // Each project → 1 hero + N topic slides.
+    // dateFrac (0..1) drives the time-machine date across the project's span.
+    const slideData = [];
+    timelineProjects.forEach(project => {
+        const projectSlides = [];
+        projectSlides.push({ type: 'hero', project });
+        (project.workTopics || []).forEach((topic, ti) => {
+            projectSlides.push({ type: 'topic', project, topic, topicIdx: ti });
+        });
+        const count = projectSlides.length;
+        projectSlides.forEach((s, li) => {
+            s.localIdx        = li;
+            s.slidesInProject = count;
+            s.dateFrac        = count > 1 ? li / (count - 1) : 0;
+        });
+        slideData.push(...projectSlides);
+    });
+    const N = slideData.length;
+
+    // Tunables
+    const TOUCH_SENS              = 0.0055;
+    const LERP_RATE               = 0.18;  // ~95% catch-up in ~280ms — snappy but readable
+    const WHEEL_SESSION_GAP_MS    = 90;    // Events closer than this = same physical input
+    const WHEEL_COOLDOWN_MS       = 320;   // Min interval between committed steps
+    const WHEEL_MIN_DELTA         = 4;     // Filter noise events smaller than this
+    const TOUCH_RELEASE_BIAS      = 0.18;  // Directional commit threshold on touch release
+    const FADE                    = 0.32;  // Crossfade fraction on each side of a slide boundary
+    const EXIT_OVER               = 0.55;
+    const ENTER_RATIO             = 0.5;
+    const REENTER_COOLDOWN        = 700;
+    const REVEAL_START_MS         = 120;   // Wait after slide arrival before first bullet
+    const REVEAL_STAGGER_MS       = 130;   // Stagger between consecutive bullets
+
+    const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
     const S = {
-        minDate: new Date(8640000000000000),
-        maxDate: new Date(-8640000000000000),
-        totalDays: 0,
-        els: { cv: null, projects: null, timewheel: null, label: null },
-        projects: [],
-        activeIdx: -1,
-        animFloat: 0,
-        targetFloat: 0,
-        rafId: 0,
-        lastTs: 0,
-        sepLabels: [],
-        sepItems: [],
-        monthStartIdxs: [],
-        yearStartIdxs: [],
-        dayOffsets: [],      // cumulative top offsets (px) for each day index
-        dayElems: [],        // references to .digit elements (one per day)
-        trackEl: null,       // the .track element inside day wheel
-        trackHeightPx: 0,
-        idleMs: 0,
-        lastScrollY: 0,
-        dragging: false,
-        spacerEl: null,
-        immersive: false,
-        virtualFloat: 0,
-        stageEl: null,
-        snapTo: null,
-        snapFrom: 0,
-        snapT: 0,
-        lastExitTs: 0,
-        enterObserver: null,
-        afterSpacer: null,
-        reentryLockDir: null,
-        reentryUnlockY: 0
+        immersive:        false,
+        virtualPos:       0,
+        targetPos:        0,
+        activeProjIdx:    -1,
+        focusSlideIdx:    -1,
+        focusArrivedTs:   0,
+        lastScrollDir:    0,
+        lastTs:           0,
+        lastExitTs:       0,
+        lastWheelStepTs:  0,
+        lastWheelEventTs: 0,
+        touchActive:      false,
+        touchStartY:      0,
+        touchStartPos:    0,
+        rafId:            0,
+        slides:           [],
+        dots:             [],
     };
 
-    const pad2 = n => String(n).padStart(2, '0');
-    const clamp = (v, a, b) => Math.max(a, Math.min(b, v));
-    const ymToDate = (ym) => { const [y, m] = ym.split('-').map(Number); return new Date(y, (m || 1) - 1, 1); };
-    const endOfMonth = (y, m) => new Date(y, m, 0);
-    const daysBetween = (a, b) => Math.floor((b - a) / 86400000);
-    const addDays = (d, n) => new Date(d.getFullYear(), d.getMonth(), d.getDate() + n);
+    const els = {
+        cvSection: document.getElementById('cvSection'),
+        stage:     document.getElementById('projectStage'),
+        tmYear:    document.getElementById('tmYear'),
+        tmMonth:   document.getElementById('tmMonth'),
+        tmFill:    document.getElementById('tmProgressFill'),
+        navEl:     document.getElementById('cvProjectNav'),
+    };
 
-    document.addEventListener('DOMContentLoaded', init);
-
-    async function init() {
-        wireEls();
-        if (!S.els.cv) {
-            console.error('[timeline] #cvSection not found. Falling back to .cv-section.');
-            S.els.cv = document.querySelector('.cv-section');
-        }
-        if (!S.els.cv) {
-            console.error('[timeline] No CV section found; aborting timeline init.');
-            return;
-        }
-
-        ensureDayWheel();
-        enableDragScroll();
-        positionLabel();
-        window.addEventListener('resize', positionLabel);
-        installEnterObserver();
-        window.addEventListener('mousemove', handleHoverCursor, { passive: true });
-
-        try {
-            const projects = await loadProjectsJSON();
-            buildFromData(projects.filter(p => p.showInTimeline === true));
-            ensureScrollSlowdown();
-            initFloats();
-            startRAF();
-            // observer will handle entering immersive automatically
-        } catch (e) {
-            console.error('[timeline] Failed to load projects.json', e);
-        }
+    if (!els.cvSection || !els.stage) {
+        console.warn('[timeline] Required elements not found.');
+        return;
     }
 
-    function ensureScrollSlowdown() {
-        const cv = S.els.cv; if (!cv) return;
-        let spacer = document.getElementById('cvScrollSpacer');
-        if (!spacer) {
-            spacer = document.createElement('div');
-            spacer.id = 'cvScrollSpacer';
-            cv.appendChild(spacer);
-        }
-        S.spacerEl = spacer;
-        const baseHeight = cv.scrollHeight - (spacer.offsetHeight || 0);
-        const extra = Math.max(0, Math.round(baseHeight * (SCROLL_SLOWDOWN - 1)));
-        spacer.style.height = extra + 'px';
-        window.addEventListener('resize', () => {
-            const base = cv.scrollHeight - (spacer.offsetHeight || 0);
-            spacer.style.height = Math.max(0, Math.round(base * (SCROLL_SLOWDOWN - 1))) + 'px';
+    buildSlides();
+    buildNavDots();
+    installEnterObserver();
+    installKeyboard();
+    listenPortfolioSelect();
+    startRAF();
+
+    // ── Build DOM ──────────────────────────────────────────────────────────────
+
+    function buildSlides() {
+        els.stage.innerHTML = '';
+        S.slides = [];
+
+        slideData.forEach((data, i) => {
+            const el = document.createElement('div');
+            el.className = `project-slide slide-${data.type}`;
+            el.dataset.idx = i;
+
+            if (data.type === 'hero') buildHeroSlide(el, data.project);
+            else                      buildTopicSlide(el, data.project, data.topic);
+
+            els.stage.appendChild(el);
+            S.slides.push({ el, data });
         });
     }
 
-    function wireEls() {
-        S.els.cv = document.getElementById('cvSection');
-        S.els.projects = document.getElementById('projects');
-        S.els.timewheel = document.getElementById('timewheel');
-        S.els.label = document.getElementById('currentTime');
-    }
-
-    async function loadProjectsJSON() {
-        // Always resolve relative to the HTML document, not the server root or script folder
-        const url = new URL('projects.json', document.baseURI).href;
-        const res = await fetch(url, { cache: 'no-store' });
-        if (!res.ok) throw new Error(`HTTP ${res.status} for ${url}`);
-        return await res.json();
-    }
-
-    function buildFromData(projects) {
-        projects.forEach(p => {
-            const s = ymToDate(p.startDate);
-            const [ey, em] = p.endDate.split('-').map(Number);
-            const e = endOfMonth(ey, em);
-            if (s < S.minDate) S.minDate = s;
-            if (e > S.maxDate) S.maxDate = e;
-        });
-        // Allow a small headroom before first and after last project so the marker/label can continue
-        // to move beyond the project range without snapping to top/bottom abruptly.
-        S.scrollMin = addDays(S.minDate, -7);
-        S.scrollMax = addDays(S.maxDate, 7);
-        S.totalDays = daysBetween(S.scrollMin, S.scrollMax) + 1;
-
-        // Build the day track using real calendar days and physical gaps
-        precomputeGaps();
-        buildDayTrack();
-
-        if (!S.els.projects) { console.warn('[timeline] #projects not found'); return; }
-        S.els.projects.innerHTML = '';
-        projects.forEach(p => {
-            const a = document.createElement('article'); a.className = 'cv-project';
-            a.dataset.start = p.startDate; a.dataset.end = p.endDate;
-            const head = document.createElement('header'); head.className = 'project-header';
-            const h = document.createElement('h3'); h.textContent = p.title || p.id || 'Project'; head.appendChild(h);
-            const when = document.createElement('div'); when.className = 'project-dates'; when.textContent = `${p.startDate} – ${p.endDate}`; head.appendChild(when);
-            a.appendChild(head);
-            if (p.video) { const v = document.createElement('video'); v.className = 'project-video'; v.src = p.video; v.muted = true; v.loop = true; v.playsInline = true; if (p.poster) v.poster = p.poster; a.appendChild(v); }
-            if (p.timelineDescription || p.description) { const b = document.createElement('p'); b.className = 'project-desc'; b.textContent = p.timelineDescription || p.description; a.appendChild(b); }
-            S.els.projects.appendChild(a);
-            const sDate = ymToDate(p.startDate);
-            const [ey, em] = p.endDate.split('-').map(Number);
-            const eDate = endOfMonth(ey, em);
-            S.projects.push({ el: a, s: sDate, e: eDate });
-        });
-    }
-
-    function precomputeGaps() {
-        S.monthStartIdxs = [];
-        S.yearStartIdxs = [];
-        for (let i = 0; i < S.totalDays; i++) {
-            const d = addDays(S.scrollMin, i);
-            if (d.getDate() === 1) {
-                S.monthStartIdxs.push(i);
-                if (d.getMonth() === 0) S.yearStartIdxs.push(i);
-            }
+    function buildHeroSlide(el, project) {
+        // Full-bleed background layer (parallax)
+        const bg = document.createElement('div');
+        bg.className = 'slide-bg';
+        if (project.video) {
+            const v = document.createElement('video');
+            v.className = 'slide-bg-video';
+            v.src = project.video;
+            v.muted = true; v.loop = true; v.playsInline = true;
+            if (project.poster || project.image) v.poster = project.poster || project.image;
+            bg.appendChild(v);
+        } else if (project.image) {
+            const img = document.createElement('div');
+            img.className = 'slide-bg-image';
+            img.style.backgroundImage = `url('${project.image}')`;
+            bg.appendChild(img);
         }
+        el.appendChild(bg);
+
+        // Darkening gradient overlay so text stays legible
+        const overlay = document.createElement('div');
+        overlay.className = 'slide-overlay';
+        el.appendChild(overlay);
+
+        // Foreground content (parallax — moves faster than bg)
+        const content = document.createElement('div');
+        content.className = 'slide-content slide-content-hero';
+        content.innerHTML = `
+            <p class="slide-eyebrow">${formatProjectDates(project)}</p>
+            <h2 class="slide-title">${project.title}</h2>
+            ${project.subtitle ? `<p class="slide-subtitle">${project.subtitle}</p>` : ''}
+            <p class="slide-desc">${project.timelineDescription || project.description || ''}</p>
+        `;
+        el.appendChild(content);
     }
 
-    function enableDragScroll() {
-        const el = S.els.timewheel; if (!el) return;
-        let dragging = false;
-        let startY = 0;
-        let startScroll = 0;
-        let startVirtual = 0;
+    function buildTopicSlide(el, project, topic) {
+        const content = document.createElement('div');
+        content.className = 'slide-content slide-content-topic';
+        const imgHtml = topic.image
+            ? `<div class="topic-image-section"><img src="${topic.image}" alt="${topic.title}" class="topic-image" loading="lazy"></div>`
+            : '<div class="topic-image-section topic-image-empty"></div>';
+        const bullets = (topic.highlights || []).map(h => `<li>${h}</li>`).join('');
+        content.innerHTML = `
+            ${imgHtml}
+            <div class="topic-text-section">
+                <p class="topic-eyebrow">${project.title}</p>
+                <h3 class="topic-title">${topic.title}</h3>
+                <p class="topic-desc">${topic.description}</p>
+                ${bullets ? `<ul class="topic-highlights">${bullets}</ul>` : ''}
+            </div>
+        `;
+        el.appendChild(content);
+    }
 
-        const onMouseMove = (e) => {
-            if (!dragging) return;
-            const dy = e.clientY - startY;
-            if (S.immersive) {
-                S.virtualFloat = startVirtual - dy / TOUCH_PX_PER_DAY;
-                S.targetFloat = S.virtualFloat;
-                if (S.virtualFloat < -EXIT_OVERSCROLL_DAYS) exitImmersive('top');
-                if (S.virtualFloat > (S.totalDays - 1) + EXIT_OVERSCROLL_DAYS) exitImmersive('bottom');
-            } else {
-                window.scrollTo({ top: startScroll - dy, behavior: 'auto' });
-            }
-            e.preventDefault();
+    function formatProjectDates(p) {
+        const fmt = s => {
+            const [y, m] = s.split('-').map(Number);
+            return `${MONTHS[m - 1]} ${y}`;
         };
-        const onMouseUp = () => {
-            if (!dragging) return;
-            dragging = false;
-            S.dragging = false;
-            el.classList.remove('dragging');
-            document.removeEventListener('mousemove', onMouseMove, true);
-            document.removeEventListener('mouseup', onMouseUp, true);
-            document.body.style.userSelect = '';
-            // reset body cursor if we set it
-            if (document.body.style.cursor === 'grabbing') document.body.style.cursor = '';
-            // Trigger fast snap to nearest day on release
-            S.snapFrom = S.animFloat;
-            S.snapTo = clamp(Math.round(S.targetFloat), 0, S.totalDays - 1);
-            S.snapT = 0;
-        };
-
-        // Start drag only if mousedown occurs within the timewheel's bounding box
-        document.addEventListener('mousedown', (e) => {
-            if (e.button !== 0) return; // left button only
-            const r = el.getBoundingClientRect();
-            const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-            if (!inside) return;
-            dragging = true;
-            S.dragging = true;
-            startY = e.clientY;
-            startScroll = window.scrollY;
-            startVirtual = S.virtualFloat;
-            el.classList.add('dragging');
-            document.body.style.userSelect = 'none';
-            document.body.style.cursor = 'grabbing';
-            document.addEventListener('mousemove', onMouseMove, true);
-            document.addEventListener('mouseup', onMouseUp, true);
-            e.preventDefault();
-        }, { passive: false });
-
-        window.addEventListener('blur', onMouseUp);
+        return `${fmt(p.startDate)} — ${fmt(p.endDate)}`;
     }
 
-    function handleHoverCursor(e) {
-        const el = S.els.timewheel; if (!el || S.dragging) return;
-        const r = el.getBoundingClientRect();
-        const inside = e.clientX >= r.left && e.clientX <= r.right && e.clientY >= r.top && e.clientY <= r.bottom;
-        if (inside) {
-            document.body.style.cursor = 'grab';
-        } else if (document.body.style.cursor === 'grab') {
-            document.body.style.cursor = '';
-        }
+    function buildNavDots() {
+        if (!els.navEl) return;
+        els.navEl.innerHTML = '';
+        S.dots = [];
+        timelineProjects.forEach((project) => {
+            const dot = document.createElement('button');
+            dot.className = 'nav-dot';
+            dot.setAttribute('aria-label', project.title);
+            dot.title = project.title;
+            dot.addEventListener('click', () => {
+                const heroIdx = slideData.findIndex(s => s.type === 'hero' && s.project === project);
+                if (heroIdx < 0) return;
+                S.targetPos     = heroIdx;
+                S.lastScrollDir = heroIdx > S.virtualPos ? 1 : -1;
+                if (!S.immersive) enterImmersive();
+            });
+            els.navEl.appendChild(dot);
+            S.dots.push(dot);
+        });
     }
+
+    // ── Entry / Exit ───────────────────────────────────────────────────────────
 
     function installEnterObserver() {
         if (!('IntersectionObserver' in window)) return;
-        if (S.enterObserver) { S.enterObserver.disconnect(); }
-        const cv = S.els.cv; if (!cv) return;
-        S.enterObserver = new IntersectionObserver(([entry]) => {
-            if (!entry) return;
-            if (S.immersive) return;
-            const now = performance.now();
-            if (now - S.lastExitTs < REENTER_COOLDOWN_MS) return;
-            const r = entry.boundingClientRect;
-            const vh = window.innerHeight || document.documentElement.clientHeight;
+        const observer = new IntersectionObserver(([entry]) => {
+            if (!entry || S.immersive) return;
+            if (performance.now() - S.lastExitTs < REENTER_COOLDOWN) return;
+            const r  = entry.boundingClientRect;
+            const vh = window.innerHeight;
             const vis = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
-            const coverRatio = vis / vh; // portion of viewport covered
-            if (S.reentryLockDir) {
-                const { top, bottom } = getCVPageBounds();
-                const bandTop = top + vh * REENTER_GUARD_VH;
-                const bandBottom = bottom - vh * REENTER_GUARD_VH;
-                const viewCenter = window.scrollY + vh * 0.5;
-                let unlock = false;
-                if (S.reentryLockDir === 'down') unlock = (viewCenter >= bandTop);
-                if (S.reentryLockDir === 'up') unlock = (viewCenter <= bandBottom);
-                if (!unlock) return; else S.reentryLockDir = null;
-            }
-            if (coverRatio >= ENTER_RATIO) enterImmersive();
-        }, { threshold: Array.from({length: 11}, (_,i)=>i/10) });
-        S.enterObserver.observe(cv);
+            if (vis / vh >= ENTER_RATIO) enterImmersive();
+        }, { threshold: Array.from({ length: 21 }, (_, i) => i / 20) });
+        observer.observe(els.cvSection);
     }
 
     function enterImmersive() {
         if (S.immersive) return;
-        S.immersive = true;
-        document.body.classList.add('timeline-immersive','timeline-immersive-enter');
-        // Anchor the page so the CV center aligns with the viewport center
-        const { top: cvTop, bottom: cvBottom } = getCVPageBounds();
-        const anchor = (cvTop + cvBottom) * 0.5 - window.innerHeight * 0.5;
-        window.scrollTo({ top: Math.max(0, Math.round(anchor)), behavior: 'auto' });
-        const enterFloat = pageScrollToFloat();
-        // Reset to boundary: if we're nearer the top half, snap to start; else snap to end
-        const half = (S.totalDays - 1) * 0.5;
-        const atStart = enterFloat <= half;
-        S.virtualFloat = atStart ? 0 : (S.totalDays - 1);
-        S.targetFloat = S.virtualFloat;
+
+        const rect = els.cvSection.getBoundingClientRect();
+        const centerTarget = window.scrollY + rect.top + rect.height / 2 - window.innerHeight / 2;
+        window.scrollTo({ top: Math.max(0, centerTarget), behavior: 'auto' });
+
+        S.immersive     = true;
+        S.lastScrollDir = 0;
+        document.body.classList.add('timeline-immersive');
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
+
+        S.virtualPos = Math.max(0, Math.min(N - 1, Math.round(S.virtualPos)));
+        S.targetPos  = S.virtualPos;
+
         bindVirtualScroll();
-        ensureStage();
-        setTimeout(() => document.body.classList.remove('timeline-immersive-enter'), 320);
+        window.dispatchEvent(new CustomEvent('timeline:warpSpeed', { detail: { factor: 1.8 } }));
     }
 
     function exitImmersive(direction) {
         if (!S.immersive) return;
         S.immersive = false;
+
+        S.slides.forEach(({ el }) => {
+            el.style.opacity       = '0';
+            el.style.pointerEvents = 'none';
+            const v = el.querySelector('video');
+            if (v) v.pause();
+            el.querySelectorAll('.topic-highlights li').forEach(li => li.classList.remove('highlight-visible'));
+        });
+
+        let scrollDest = 0;
+        if (els.cvSection) {
+            const rect    = els.cvSection.getBoundingClientRect();
+            const pageTop = window.scrollY + rect.top;
+            scrollDest = direction === 'top'
+                ? Math.max(0, pageTop - window.innerHeight - 80)
+                : pageTop + els.cvSection.offsetHeight + 80;
+        }
+
         document.body.classList.remove('timeline-immersive');
         unbindVirtualScroll();
         document.documentElement.style.overflow = '';
         document.body.style.overflow = '';
-        const { top: cvTop, bottom: cvBottom } = getCVPageBounds();
-        const vh = window.innerHeight;
-        // Jump outside the entry band so we don't immediately re-enter
-        const above = Math.max(0, Math.round(cvTop - vh * ENTER_THRESHOLD_VH - EXIT_MARGIN_PX));
-        let below = Math.round(cvBottom - (1 - ENTER_THRESHOLD_VH) * vh + EXIT_MARGIN_PX);
-        // Ensure we have enough room below; add a temporary spacer if not
-        ensureAfterSpacer(below);
-        const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
-        below = Math.min(maxScroll, Math.max(0, below));
-        const dest = direction === 'top' ? above : below;
-        window.scrollTo({ top: dest, behavior: 'auto' });
-        if (S.stageEl) S.stageEl.style.display = 'none';
+        window.scrollTo({ top: scrollDest, behavior: 'auto' });
+
         S.lastExitTs = performance.now();
-        // Set re-entry gate: require scrolling back across the band in the opposite direction
-        S.reentryLockDir = direction === 'top' ? 'down' : 'up';
+        window.dispatchEvent(new CustomEvent('timeline:warpSpeed', { detail: { factor: 1.0 } }));
     }
+
+    // ── Virtual Scroll ─────────────────────────────────────────────────────────
 
     function bindVirtualScroll() {
-        window.addEventListener('wheel', onWheelVirtual, { passive: false });
-        window.addEventListener('touchstart', onTouchStart, { passive: false });
-        window.addEventListener('touchmove', onTouchMove, { passive: false });
+        window.addEventListener('wheel',       onWheel,      { passive: false });
+        window.addEventListener('touchstart',  onTouchStart, { passive: false });
+        window.addEventListener('touchmove',   onTouchMove,  { passive: false });
+        window.addEventListener('touchend',    onTouchEnd);
+        window.addEventListener('touchcancel', onTouchEnd);
     }
+
     function unbindVirtualScroll() {
-        window.removeEventListener('wheel', onWheelVirtual, { passive: false });
-        window.removeEventListener('touchstart', onTouchStart, { passive: false });
-        window.removeEventListener('touchmove', onTouchMove, { passive: false });
+        window.removeEventListener('wheel',       onWheel,      { passive: false });
+        window.removeEventListener('touchstart',  onTouchStart, { passive: false });
+        window.removeEventListener('touchmove',   onTouchMove,  { passive: false });
+        window.removeEventListener('touchend',    onTouchEnd);
+        window.removeEventListener('touchcancel', onTouchEnd);
     }
 
-    function onWheelVirtual(e) {
+    // Wheel: each gesture commits ONE discrete slide step.
+    //
+    // Two defences against multi-step skips per physical click:
+    //   1. Session gap — Chrome/Edge often decompose a single wheel click into
+    //      multiple smaller events spanning 100–300ms (smooth-scroll); we only
+    //      commit on the first event of a burst and ignore the rest.
+    //   2. Hard cooldown — even if a "new session" sneaks past, a min interval
+    //      between commits caps the rate.
+    // Target is always an integer — no fractional drift after release.
+    function onWheel(e) {
         if (!S.immersive) return;
         e.preventDefault();
-        const d = e.deltaY; // positive when scrolling down
-        const atTop = S.virtualFloat <= 0 + 1e-3;
-        const atBottom = S.virtualFloat >= (S.totalDays - 1) - 1e-3;
-        if (d < 0 && atTop) { exitImmersive('top'); return; }
-        if (d > 0 && atBottom) { exitImmersive('bottom'); return; }
-        S.virtualFloat += d / WHEEL_PX_PER_DAY;
-        S.targetFloat = S.virtualFloat;
-        if (S.virtualFloat < -EXIT_OVERSCROLL_DAYS) exitImmersive('top');
-        if (S.virtualFloat > (S.totalDays - 1) + EXIT_OVERSCROLL_DAYS) exitImmersive('bottom');
+        if (Math.abs(e.deltaY) < WHEEL_MIN_DELTA) return;
+
+        const now = performance.now();
+        const gapSinceLastEvent = now - S.lastWheelEventTs;
+        S.lastWheelEventTs = now;
+
+        // Continuous input (smooth-scroll fragments, inertia) — already counted
+        if (gapSinceLastEvent < WHEEL_SESSION_GAP_MS) return;
+        // Hard floor between distinct commits
+        if (now - S.lastWheelStepTs < WHEEL_COOLDOWN_MS)  return;
+
+        const dir = Math.sign(e.deltaY);
+        // Step from the LOGICAL position (current target), not visual position —
+        // chained clicks during the lerp animation cleanly stack.
+        S.targetPos       = Math.round(S.targetPos) + dir;
+        S.lastScrollDir   = dir;
+        S.lastWheelStepTs = now;
+        checkBoundaryExit();
     }
 
-    let touchStartY = 0;
+    // Touch: continuous drag follows the finger, snap on release.
     function onTouchStart(e) {
-        if (!S.immersive) return;
-        if (e.touches && e.touches.length) touchStartY = e.touches[0].clientY;
+        if (!S.immersive || !e.touches?.length) return;
+        S.touchStartY   = e.touches[0].clientY;
+        S.touchStartPos = S.virtualPos;
+        S.touchActive   = true;
     }
+
     function onTouchMove(e) {
-        if (!S.immersive) return;
-        if (!(e.touches && e.touches.length)) return;
+        if (!S.immersive || !S.touchActive || !e.touches?.length) return;
         e.preventDefault();
-        const y = e.touches[0].clientY;
-        const dy = y - touchStartY;
-        touchStartY = y;
-        const atTop = S.virtualFloat <= 0 + 1e-3;
-        const atBottom = S.virtualFloat >= (S.totalDays - 1) - 1e-3;
-        // If dragging down (dy>0) and atTop -> exit top; if dragging up (dy<0) and atBottom -> exit bottom
-        if (dy > 0 && atTop) { exitImmersive('top'); return; }
-        if (dy < 0 && atBottom) { exitImmersive('bottom'); return; }
-        S.virtualFloat -= dy / TOUCH_PX_PER_DAY; // drag up advances days
-        S.targetFloat = S.virtualFloat;
-        if (S.virtualFloat < -EXIT_OVERSCROLL_DAYS) exitImmersive('top');
-        if (S.virtualFloat > (S.totalDays - 1) + EXIT_OVERSCROLL_DAYS) exitImmersive('bottom');
+        const dy = S.touchStartY - e.touches[0].clientY;
+        S.targetPos = S.touchStartPos + dy * TOUCH_SENS;
+        if (Math.abs(dy) > 5) S.lastScrollDir = Math.sign(dy);
+        checkBoundaryExit();
     }
 
-    function ensureStage() {
-        if (!S.stageEl) {
-            const stage = document.createElement('div');
-            stage.id = 'timelineStage';
-            document.body.appendChild(stage);
-            S.stageEl = stage;
-        }
-        S.stageEl.style.display = 'block';
-        renderStageForActive();
+    function onTouchEnd() {
+        if (!S.touchActive) return;
+        S.touchActive = false;
+
+        // Directional snap: if you've dragged past the bias threshold in a
+        // direction, commit to the next slide that way. Otherwise round.
+        const floor = Math.floor(S.virtualPos);
+        const frac  = S.virtualPos - floor;
+        let snapped;
+        if (S.lastScrollDir > 0 && frac >= TOUCH_RELEASE_BIAS)
+            snapped = floor + 1;
+        else if (S.lastScrollDir < 0 && frac <= 1 - TOUCH_RELEASE_BIAS)
+            snapped = floor;
+        else
+            snapped = Math.round(S.virtualPos);
+        S.targetPos = Math.max(0, Math.min(N - 1, snapped));
     }
 
-    function getCVPageBounds() {
-        const cv = S.els.cv; const r = cv.getBoundingClientRect();
-        const top = window.scrollY + r.top;
-        const bottom = top + r.height;
-        return { top, bottom };
+    function checkBoundaryExit() {
+        if (S.targetPos < -EXIT_OVER)              exitImmersive('top');
+        else if (S.targetPos > N - 1 + EXIT_OVER)  exitImmersive('bottom');
     }
 
-    function ensureAfterSpacer(targetBottomScrollTop) {
-        // Ensure the document has enough height to scroll to 'targetBottomScrollTop'
-        const vh = window.innerHeight;
-        const maxScroll = Math.max(0, document.documentElement.scrollHeight - vh);
-        if (targetBottomScrollTop <= maxScroll) return; // already enough room
-        const needed = targetBottomScrollTop - maxScroll + EXIT_MARGIN_PX;
-        let spacer = S.afterSpacer || document.getElementById('cvAfterSpacer');
-        if (!spacer) {
-            spacer = document.createElement('div');
-            spacer.id = 'cvAfterSpacer';
-            spacer.style.width = '1px';
-            spacer.style.height = '0px';
-            spacer.style.pointerEvents = 'none';
-            // Insert after the CV section
-            const parent = S.els.cv && S.els.cv.parentElement ? S.els.cv.parentElement : document.body;
-            parent.appendChild(spacer);
-        }
-        spacer.style.height = Math.max(needed, EXIT_MARGIN_PX) + 'px';
-        S.afterSpacer = spacer;
-    }
+    // ── Keyboard ───────────────────────────────────────────────────────────────
 
-    function renderStageForActive() {
-        if (!S.stageEl) return;
-        const idx = S.activeIdx;
-        S.stageEl.innerHTML = '';
-        if (idx == null || idx < 0 || idx >= S.projects.length) return;
-        const clone = S.projects[idx].el.cloneNode(true);
-        clone.classList.add('stage-card');
-        S.stageEl.appendChild(clone);
-    }
-
-    // Backdrop overlay removed in favor of background color fade
-
-    function buildDayTrack() {
-        const monthsAbbr = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
-        const tw = S.els.timewheel; if (!tw) return;
-        let dayWheel = tw.querySelector('.wheel.day');
-        if (!dayWheel) { dayWheel = document.createElement('div'); dayWheel.className = 'wheel day'; tw.prepend(dayWheel); }
-        let track = dayWheel.querySelector('.track');
-        if (!track) { track = document.createElement('div'); track.className = 'track'; dayWheel.appendChild(track); }
-        track.innerHTML = '';
-
-        S.trackEl = track;
-        S.dayOffsets = [];
-        S.dayElems = [];
-        let y = 0;
-        for (let i = 0; i < S.totalDays; i++) {
-            const d = addDays(S.scrollMin, i);
-            // Insert a gap before the first day of each month (except very first day)
-            if (i > 0 && d.getDate() === 1) {
-                const gap = document.createElement('div');
-                const isYear = d.getMonth() === 0;
-                gap.className = 'gap ' + (isYear ? 'year' : 'month');
-                const line = document.createElement('div'); line.className = 'gap-line'; gap.appendChild(line);
-                const label = document.createElement('div'); label.className = 'gap-label'; label.textContent = monthsAbbr[d.getMonth()]; gap.appendChild(label);
-                if (isYear) { const yEl = document.createElement('div'); yEl.className = 'gap-year'; yEl.textContent = d.getFullYear(); gap.appendChild(yEl); }
-                gap.style.height = (isYear ? YEAR_GAP : MONTH_GAP) + 'px';
-                track.appendChild(gap);
-                y += isYear ? YEAR_GAP : MONTH_GAP;
+    function installKeyboard() {
+        window.addEventListener('keydown', e => {
+            if (!S.immersive) return;
+            if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
+                e.preventDefault();
+                S.targetPos     = Math.min(N - 1, Math.round(S.targetPos) + 1);
+                S.lastScrollDir = 1;
+            } else if (e.key === 'ArrowLeft' || e.key === 'ArrowUp' || e.key === 'PageUp') {
+                e.preventDefault();
+                S.targetPos     = Math.max(0, Math.round(S.targetPos) - 1);
+                S.lastScrollDir = -1;
+            } else if (e.key === 'Home') {
+                e.preventDefault();
+                S.targetPos = 0; S.lastScrollDir = -1;
+            } else if (e.key === 'End') {
+                e.preventDefault();
+                S.targetPos = N - 1; S.lastScrollDir = 1;
+            } else if (e.key === 'Escape') {
+                exitImmersive('top');
             }
-            const el = document.createElement('div');
-            el.className = 'digit';
-            el.textContent = pad2(d.getDate());
-            track.appendChild(el);
-            S.dayElems.push(el);
-            S.dayOffsets.push(y);
-            y += ROW_H;
-        }
-        S.trackHeightPx = y;
+        });
     }
 
-    function ensureDayWheel() {
-        const tw = S.els.timewheel; if (!tw) return;
-        let dayWheel = tw.querySelector('.wheel.day');
-        if (!dayWheel) { dayWheel = document.createElement('div'); dayWheel.className = 'wheel day'; tw.prepend(dayWheel); }
-        if (!dayWheel.querySelector('.track')) {
-            const track = document.createElement('div'); track.className = 'track';
-            const vals = Array.from({ length: 31 }, (_, i) => pad2(i + 1));
-            const loop = vals.concat(vals, vals);
-            loop.forEach(v => { const d = document.createElement('div'); d.className = 'digit'; d.textContent = v; track.appendChild(d); });
-            dayWheel.appendChild(track);
-        }
-        if (!tw.querySelector('.wheel-center-marker')) { const c = document.createElement('div'); c.className = 'wheel-center-marker'; tw.appendChild(c); }
+    // ── Portfolio Card → Timeline ──────────────────────────────────────────────
+
+    function listenPortfolioSelect() {
+        window.addEventListener('portfolio:selectProject', e => {
+            const id      = e.detail?.id;
+            const heroIdx = slideData.findIndex(s => s.type === 'hero' && s.project.id === id);
+            if (heroIdx < 0) return;
+            if (!S.immersive) enterImmersive();
+            S.targetPos     = heroIdx;
+            S.lastScrollDir = heroIdx > Math.round(S.virtualPos) ? 1 : -1;
+        });
     }
 
-    function positionLabel() {
-        if (!S.els.timewheel) return;
-        const rect = S.els.timewheel.getBoundingClientRect();
-
-        // Position the date label (#currentTime) horizontally to the right of the wheel
-        if (S.els.label) {
-            S.els.label.style.left = `${rect.center}px`;
-
-            // Align the label's vertical center with the wheel's center marker
-            const marker = S.els.timewheel.querySelector('.wheel-center-marker');
-            if (marker) {
-                const m = marker.getBoundingClientRect();
-                const markerCenterY = m.top + m.height / 2;
-                S.els.label.style.top = `${markerCenterY}px`;
-                S.els.label.style.transform = 'translateY(-50%)';
-            }
-        }
-
-        // If the link line exists, align it with the same Y as the center marker
-        const linkEl = document.getElementById('tw-link');
-        if (linkEl) {
-            const marker = S.els.timewheel.querySelector('.wheel-center-marker');
-            if (marker) {
-                const m = marker.getBoundingClientRect();
-                const markerCenterY = m.top + m.height / 2;
-                linkEl.style.top = `${markerCenterY}px`;
-                linkEl.style.transform = 'translateY(-50%)';
-            }
-            // Keep its left starting point aligned with the wheel's right edge
-            linkEl.style.left = `${rect.right}px`;
-        }
-    }
-
-    function initFloats() {
-        S.targetFloat = mapScrollToFloat();
-        S.animFloat = S.targetFloat;
-        updateForFloat(S.animFloat);
-    }
+    // ── RAF Loop ───────────────────────────────────────────────────────────────
 
     function startRAF() {
-        if (S.rafId) cancelAnimationFrame(S.rafId);
-        S.lastTs = performance.now();
-        S.lastScrollY = window.scrollY;
         const tick = (ts) => {
-            const dt = ts - S.lastTs; S.lastTs = ts;
-            const prevScrollY = S.lastScrollY;
-            S.lastScrollY = window.scrollY;
-            if (Math.abs(S.lastScrollY - prevScrollY) < 0.25) {
-                S.idleMs += dt;
-            } else {
-                S.idleMs = 0;
+            const dt = ts - (S.lastTs || ts);
+            S.lastTs = ts;
+
+            if (S.immersive) {
+                S.targetPos = Math.max(-EXIT_OVER, Math.min(N - 1 + EXIT_OVER, S.targetPos));
+
+                const alpha = 1 - Math.pow(1 - LERP_RATE, dt / 16.667);
+                S.virtualPos += (S.targetPos - S.virtualPos) * alpha;
+
+                // Snap exactly when close enough — prevents asymptotic creep
+                // that would re-trigger topic-reveal thresholds frame to frame.
+                if (Math.abs(S.targetPos - S.virtualPos) < 0.0015) {
+                    S.virtualPos = S.targetPos;
+                }
+
+                render(S.virtualPos);
             }
 
-            // Freeze timeline until immersive view is active
-            S.targetFloat = S.immersive ? mapScrollToFloat() : S.animFloat;
-
-            // If idle and not interacting, pull to nearest day
-            let lerpSmooth = SMOOTHNESS;
-            if (!S.dragging && !S.immersive && S.snapTo == null && S.idleMs > SNAP_IDLE_MS) {
-                S.targetFloat = clamp(Math.round(S.targetFloat), 0, S.totalDays - 1);
-                lerpSmooth = SNAP_SMOOTHNESS;
-            }
-
-            if (S.dragging || S.immersive) {
-                // 1:1 tracking during drag
-                S.animFloat = S.targetFloat;
-            } else if (S.snapTo != null) {
-                // Quick, responsive snap after release
-                S.snapT += dt / 180; // 180ms duration
-                const t = Math.min(1, S.snapT);
-                const easeOutCubic = (x) => 1 - Math.pow(1 - x, 3);
-                const k = easeOutCubic(t);
-                S.animFloat = S.snapFrom + (S.snapTo - S.snapFrom) * k;
-                if (t >= 1) { S.animFloat = S.snapTo; S.snapTo = null; }
-            } else {
-                const alpha = 1 - Math.pow(1 - lerpSmooth, dt / 16.667);
-                S.animFloat += (S.targetFloat - S.animFloat) * alpha;
-            }
-
-            // Land exactly if close after idle pull
-            if (!S.dragging && !S.immersive && S.snapTo == null && S.idleMs > SNAP_IDLE_MS && Math.abs(S.animFloat - S.targetFloat) < 0.001) {
-                S.animFloat = S.targetFloat;
-            }
-            updateForFloat(S.animFloat);
             S.rafId = requestAnimationFrame(tick);
         };
         S.rafId = requestAnimationFrame(tick);
     }
 
-    function pageScrollToFloat() {
-        const cv = S.els.cv; if (!cv) return 0;
-        const mid = window.innerHeight / 2;
-        const rect = cv.getBoundingClientRect();
-        const startY = window.scrollY + rect.top;
-        const endY = startY + cv.scrollHeight;
-        const centerY = window.scrollY + mid;
-        const pos = clamp(centerY - startY, 0, Math.max(1, endY - startY));
-        const pct = pos / Math.max(1, endY - startY);
-        return clamp((S.totalDays - 1) * pct, 0, S.totalDays - 1);
+    // ── Render ─────────────────────────────────────────────────────────────────
+
+    function getDateForPos(pos) {
+        const clamped = Math.max(0, Math.min(N - 1, pos));
+        const i       = Math.floor(clamped);
+        const next    = Math.min(N - 1, i + 1);
+        const frac    = clamped - i;
+        const a       = slideData[i];
+        const b       = slideData[next];
+        const project = a.project;
+        const aFrac   = a.dateFrac;
+        // If next slide is a different project, stay at end of this one during transition
+        const bFrac   = b.project === a.project ? b.dateFrac : 1;
+        const blendedFrac = aFrac + (bFrac - aFrac) * frac;
+        const [sy, sm] = project.startDate.split('-').map(Number);
+        const [ey, em] = project.endDate.split('-').map(Number);
+        const t0 = new Date(sy, sm - 1, 1).getTime();
+        const t1 = new Date(ey, em - 1, 28).getTime();
+        return new Date(t0 + (t1 - t0) * blendedFrac);
     }
 
-    function mapScrollToFloat() {
-        if (S.immersive) {
-            return clamp(S.virtualFloat, -EXIT_OVERSCROLL_DAYS, (S.totalDays - 1) + EXIT_OVERSCROLL_DAYS);
-        }
-        return pageScrollToFloat();
-    }
+    function render(pos) {
+        const disp = Math.max(0, Math.min(N - 1, pos));
 
-    function setWheelByFloat(dayFloat) {
-        if (!S.els.timewheel) return;
-        const baseIndex = Math.floor(dayFloat);
-        const frac = dayFloat - baseIndex;
-        // Interpolate between the current day top and the next day's top (this naturally includes gaps)
-        const i0 = clamp(baseIndex, 0, S.totalDays - 1);
-        const i1 = clamp(baseIndex + 1, 0, S.totalDays - 1);
-        const top0 = S.dayOffsets[i0] || 0;
-        const top1 = S.dayOffsets[i1] || top0 + ROW_H;
-        const dayTop = top0 + (top1 - top0) * frac;
-
-        // Align the selected day row to the vertical center of the wheel marker
-        const dayWheel = S.els.timewheel.querySelector('.wheel.day');
-        const wheelH = dayWheel ? dayWheel.clientHeight : 0;
-        const desiredCenter = wheelH / 2;
-        const offset = desiredCenter - (dayTop + ROW_H / 2);
-        const track = S.trackEl || S.els.timewheel.querySelector('.wheel.day .track');
-        if (track) track.style.transform = `translate3d(0, ${offset}px, 0)`;
-
-        const activeIdx = clamp(Math.round(dayFloat), 0, S.totalDays - 1);
-        for (let i = 0; i < S.dayElems.length; i++) {
-            S.dayElems[i].classList.toggle('active', i === activeIdx);
-        }
-    }
-
-    function updateForFloat(dayFloat) {
-        // Clamp for display so overscroll (used only for exit detection) never distorts the wheel
-        const disp = clamp(dayFloat, 0, S.totalDays - 1);
-        setWheelByFloat(disp);
-        const labelIndex = clamp(Math.round(disp), 0, S.totalDays - 1);
-        const labelDate = addDays(S.scrollMin, labelIndex);
-        if (S.els.label) {
-            S.els.label.textContent = labelDate.toLocaleDateString(undefined, DATE_LABEL_FMT);
-        }
-        positionLabel();
-
-        let idx = -1;
-        for (let i = 0; i < S.projects.length; i++) {
-            const p = S.projects[i]; if (labelDate >= p.s && labelDate <= p.e) { idx = i; break; }
-        }
-        if (idx !== S.activeIdx) {
-            const prev = S.activeIdx >= 0 ? S.projects[S.activeIdx].el : null;
-            const next = idx >= 0 ? S.projects[idx].el : null;
-            if (prev) { prev.classList.remove('active-project'); prev.classList.add('fading-out'); setTimeout(() => prev.classList.remove('fading-out'), FADE_MS); }
-            if (next) { next.classList.add('active-project'); next.style.setProperty('--sticky-top', STICKY_TOP_VH + 'vh'); }
-            S.activeIdx = idx;
-            if (S.immersive) renderStageForActive();
+        // Time machine HUD
+        const date = getDateForPos(disp);
+        if (els.tmYear)  els.tmYear.textContent  = date.getFullYear();
+        if (els.tmMonth) els.tmMonth.textContent = MONTHS[date.getMonth()];
+        if (els.tmFill) {
+            const pct = N > 1 ? (disp / (N - 1)) * 100 : 100;
+            els.tmFill.style.width = `${pct.toFixed(1)}%`;
         }
 
-        S.projects.forEach((p, i) => {
-            const on = (i === S.activeIdx);
-            p.el.style.pointerEvents = on ? 'auto' : 'none';
-            const v = p.el.querySelector('video'); if (v) { try { on ? v.play() : v.pause(); } catch { } }
+        // Track which slide is currently focused (the closest integer) and
+        // when we arrived at it — used for time-based bullet reveals below.
+        const focusIdx = Math.max(0, Math.min(N - 1, Math.round(disp)));
+        const nowMs    = performance.now();
+        if (focusIdx !== S.focusSlideIdx) {
+            S.focusSlideIdx  = focusIdx;
+            S.focusArrivedTs = nowMs;
+        }
+        const focusElapsedMs = nowMs - S.focusArrivedTs;
+
+        // Slides with layered parallax. The slide element itself stays put;
+        // each inner layer moves at its own rate so transforms don't compound.
+        // Viewport speeds — bg: 0.3x ty, content: 1.0x ty, image: 0.7x ty.
+        S.slides.forEach((slide, i) => {
+            const progress = pos - i;
+            let opacity, ty;
+
+            if (progress < -FADE) {
+                opacity = 0;  ty = 70;
+            } else if (progress < 0) {
+                opacity = (progress + FADE) / FADE;
+                ty = (1 - opacity) * 70;
+            } else if (progress < 1 - FADE) {
+                opacity = 1;  ty = 0;
+            } else if (progress < 1) {
+                opacity = (1 - progress) / FADE;
+                ty = (1 - opacity) * -50;
+            } else {
+                opacity = 0;  ty = -50;
+            }
+
+            slide.el.style.opacity       = opacity;
+            slide.el.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none';
+            // No transform on the slide itself — layers below move on their own
+
+            // Background drifts slowly (depth feel) with a subtle in-scroll scale
+            const bg = slide.el.querySelector('.slide-bg');
+            if (bg) {
+                const bgY   = ty * 0.3;
+                const scale = 1.06 + Math.max(0, progress) * 0.04;
+                bg.style.transform = `translateY(${bgY.toFixed(2)}px) scale(${scale.toFixed(3)})`;
+            }
+
+            // Main content does the primary slide-in motion
+            const content = slide.el.querySelector('.slide-content');
+            if (content) {
+                content.style.transform = `translateY(${ty.toFixed(2)}px)`;
+            }
+
+            // Topic image lags slightly behind the text for layered feel.
+            // Image is a child of content — its translate reverses some of content's.
+            // Net image viewport motion: ty + (-0.3 * ty) = 0.7 * ty
+            const topicImg = slide.el.querySelector('.topic-image-section');
+            if (topicImg) {
+                topicImg.style.transform = `translateY(${(-ty * 0.3).toFixed(2)}px)`;
+            }
+
+            // Video: play only when this slide is the focused one
+            const vid = slide.el.querySelector('video');
+            if (vid) {
+                if (opacity > 0.5) vid.play().catch(() => {});
+                else vid.pause();
+            }
+
+            // Highlight bullets: time-based staggered reveal after arrival.
+            // The old scroll-progress reveal never fired in discrete-step mode
+            // because `progress` stays at 0 while a slide is the focused one.
+            // Now they cascade in after the slide settles, and only reset
+            // once the slide is fully invisible (so they fade with it).
+            const highlights = slide.el.querySelectorAll('.topic-highlights li');
+            if (highlights.length) {
+                if (i === S.focusSlideIdx) {
+                    highlights.forEach((li, j) => {
+                        const triggerMs = REVEAL_START_MS + j * REVEAL_STAGGER_MS;
+                        if (focusElapsedMs >= triggerMs) li.classList.add('highlight-visible');
+                    });
+                } else if (opacity < 0.05) {
+                    highlights.forEach(li => li.classList.remove('highlight-visible'));
+                }
+            }
         });
+
+        // Nav dots: highlight whichever PROJECT we're currently looking at
+        const currentProj = slideData[focusIdx].project;
+        const newProjIdx  = timelineProjects.indexOf(currentProj);
+        if (newProjIdx !== S.activeProjIdx) {
+            S.activeProjIdx = newProjIdx;
+            S.dots.forEach((dot, i) => dot.classList.toggle('active', i === newProjIdx));
+        }
     }
-})();
+}
