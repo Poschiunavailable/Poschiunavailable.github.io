@@ -14,12 +14,23 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | U7 — Placeholder art and placeholder markers |
+| **Unit** | U8 — Cold Comfort card does nothing |
 | **Phase** | A |
-| **Goal** | No entry shows another project's art. Where an asset is missing, a simple, clearly labelled placeholder stands in (Patrick OK'd placeholder assets, 2026-10-03), and every placeholder is marked in `projects.json` so it can be found and replaced. |
-| **Acceptance check** | Cologne Game Lab card, hero and three topic slides and the Freelance card use placeholder art, not AURELION / Cold Comfort / Everslaught / Rough Justice art; each placeholder image itself reads "placeholder"; `projects.json` marks each placeholder field; the walk fails if a marked placeholder points at a non-placeholder asset or an unmarked field points at a placeholder asset; register below matches the data. Walk green, screenshots checked. |
-| **Files** | `assets/placeholders/`, `projects.json`, `tests/site-walk.mjs`, `Docs/STATUS.md`, `AGENTS.md` |
+| **Goal** | Every portfolio card's "View in CV →" lands somewhere meaningful. Cold Comfort has a card but no timeline entry of its own; its prototype is a topic slide of the Freelance entry. |
+| **Acceptance check** | Clicking the Cold Comfort card warp-jumps to the "Cold Comfort — Prototype" slide; the target comes from data (`projects.json`), not a special case in code; the walk asserts each card lands on its expected slide (hero or data-defined target); `warp-noop` known failure removed; full walk reports no stale entries. |
+| **Files** | `projects.json`, `modules/timeline.js`, `tests/site-walk.mjs`, `tests/known-failures.json`, `AGENTS.md`, `Docs/STATUS.md` |
 | **Step reached** | Not started. |
+
+### U7 — Placeholder art and markers (done 2026-10-03, `be85251` + hero tweak)
+
+Four labelled SVG placeholders in `assets/placeholders/` replace the borrowed
+art on the Cologne Game Lab card, hero and topic slides. `projects.json`
+marks 14 placeholder fields in per-project `placeholders` maps; the walk
+enforces both directions (self-test 6/6). Full walk PASSED; Lighthouse median
+perf 97 / a11y 100, LCP 2.26 s, CLS 0. Screenshot review found the hero
+placeholder repeating the slide title at full size right above the title
+panel; its label now sits small in the upper band (re-verified with a
+2-viewport walk, screenshots checked at 1920×1080 and 375×667).
 
 ### U6 — three.js vendored (done 2026-10-03, `f977913`)
 
@@ -111,13 +122,13 @@ Phases are strict: A before B before C.
 6. ~~**U6** Vendor three.js~~ — done 2026-10-03: (one pinned file) and drop `es-module-shims`
    (import maps are native in every current browser). Removes a third-party
    origin from the critical path.
-7. **U7** (card above) Placeholder art: the Cologne Game Lab card/hero uses the AURELION
+7. ~~**U7** Placeholder art~~ — done 2026-10-03: the Cologne Game Lab card/hero uses the AURELION
    artwork and its three topic slides use Cold Comfort / Everslaught / Rough
    Justice art, which reads as if those games were university projects.
    Replace with simple, clearly labelled placeholder images (Patrick OK'd
    placeholder assets, 2026-10-03) and mark every placeholder in
    `projects.json` (schema decided in that unit).
-8. **U8** Cold Comfort card does nothing on click. Give a card without its own
+8. **U8** (card above) Cold Comfort card does nothing on click. Give a card without its own
    timeline entry a target (the Freelance "Cold Comfort — Prototype" slide is the
    natural one) via data, not a special case in code.
 9. **U9** Timeline HUD collisions: time-machine box over the last bullet, nav
