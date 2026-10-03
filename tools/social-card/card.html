@@ -1,0 +1,54 @@
+<!doctype html>
+<!-- Source of assets/social/og-card.jpg (1200x630 social preview).
+     Re-render after editing: node tools/render-social-card.mjs
+     Uses only the site's own assets: fonts, starfield tile, profile photo. -->
+<html lang="en">
+<meta charset="utf-8">
+<style>
+  @font-face { font-family: 'Roboto'; src: url('../../assets/fonts/roboto-latin-wght.woff2'); font-weight: 400 700; }
+  @font-face { font-family: 'Lora'; src: url('../../assets/fonts/lora-latin-wght.woff2'); font-weight: 400 700; }
+  @font-face { font-family: 'Fira Code'; src: url('../../assets/fonts/firacode-latin-wght.woff2'); font-weight: 400 700; }
+  * { margin: 0; box-sizing: border-box; }
+  html, body { width: 1200px; height: 630px; overflow: hidden; }
+  body {
+    position: relative;
+    background:
+      url('streaks.svg'),
+      url('../../assets/starfield-static.svg') 0 0 / 600px 600px,
+      radial-gradient(ellipse 70% 90% at 78% 48%, #2a3346 0%, #1c212e 45%, #0d1018 100%);
+    color: #d0d2d3;
+    font-family: 'Roboto', sans-serif;
+  }
+  .card { position: absolute; inset: 0; display: flex; align-items: center; gap: 56px; padding: 0 80px; }
+  .photo {
+    flex: none; width: 236px; height: 236px; border-radius: 50%;
+    border: 6px solid #eab180; object-fit: cover;
+    box-shadow: 0 24px 60px rgba(0,0,0,.55), 0 0 0 14px rgba(234,177,128,.08);
+  }
+  h1 { font-family: 'Lora', serif; font-weight: 700; font-size: 74px; line-height: 1.05; letter-spacing: -0.01em; }
+  .role { font-family: 'Fira Code', monospace; font-weight: 700; font-size: 34px; color: #eab180; margin-top: 14px; }
+  .tag { font-size: 27px; line-height: 1.45; color: #aec6e4; margin-top: 26px; max-width: 700px; }
+  .foot {
+    position: absolute; left: 80px; right: 80px; bottom: 44px;
+    display: flex; align-items: center; gap: 18px;
+    font-family: 'Fira Code', monospace; font-size: 20px; letter-spacing: .08em; color: rgba(208,210,211,.6);
+  }
+  .rail { flex: 1; height: 2px; background: linear-gradient(90deg, rgba(129,168,209,.15), rgba(234,177,128,.55)); position: relative; }
+  .rail i { position: absolute; top: -5px; width: 12px; height: 12px; border-radius: 50%; border: 2px solid #81a8d1; background: #141821; }
+  .rail i:last-child { border-color: #eab180; background: #eab180; }
+</style>
+<body>
+  <div class="card">
+    <img class="photo" src="../../assets/profile_picture.jpg" alt="">
+    <div>
+      <h1>Patrick Temborius</h1>
+      <p class="role">&lt;software engineer&gt;</p>
+      <p class="tag">Cross-platform C/C++ · systems programming on Windows &amp; Linux · real-time simulation</p>
+    </div>
+  </div>
+  <div class="foot">
+    <span>poschiunavailable.github.io</span>
+    <span class="rail"><i style="left:0%"></i><i style="left:24%"></i><i style="left:48%"></i><i style="left:72%"></i><i style="left:calc(100% - 12px)"></i></span>
+  </div>
+</body>
+</html>

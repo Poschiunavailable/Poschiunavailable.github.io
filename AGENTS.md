@@ -219,6 +219,18 @@ python -m http.server 4173
 
 `.claude/launch.json` wires this up for the in-app browser preview.
 
+## Tools (`tools/`)
+
+Dev-only scripts whose output is committed (nothing runs at deploy time):
+
+- `render-social-card.mjs` — renders `tools/social-card/card.html` to
+  `assets/social/og-card.jpg`, the 1200×630 Open Graph / Twitter preview.
+  Re-run after changing the name, role or tagline. Uses Playwright from
+  `tests/node_modules`.
+
+`robots.txt` and `sitemap.xml` sit at the root; the canonical URL is
+`https://poschiunavailable.github.io/` (also in `index.html`).
+
 ## Testing (`tests/`)
 
 ```bash

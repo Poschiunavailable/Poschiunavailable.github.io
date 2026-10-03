@@ -44,6 +44,9 @@ const SECTIONS = ['hero', 'about', 'portfolio', 'cv', 'contact'];
 // slide, at a phone and a desktop size, default variant.
 const AXE_VIEWPORTS = ['375x812', '1920x1080'];
 const AXE_PATH = path.join(HERE, 'node_modules', 'axe-core', 'axe.min.js');
+// Where the site is published. URLs on this origin are checked against the
+// local checkout: that is what is about to be deployed.
+const CANONICAL = 'https://poschiunavailable.github.io/';
 
 // Console messages that come from the browser, not the site. Each needs a reason.
 const BROWSER_NOISE = [
@@ -85,6 +88,7 @@ const SELF_TEST_FAULTS = {
     'broken-anchor':  ['/index.html', s => s.replace('</footer>', '<a href="#self-test-missing-anchor">self-test</a></footer>'), /self-test-missing-anchor/],
     'cls':            ['/modules/scripts.js', s => s + "\naddEventListener('load', () => setTimeout(() => { document.querySelector('.hero-content').style.marginTop = '320px'; }, 150));\n", /layout shift during load/],
     'placeholder-data': ['/projects.json', s => { const d = JSON.parse(s); delete d[0].placeholders.image; return JSON.stringify(d); }, /UniversityProjects\.image .*not marked/],
+    'metadata':       ['/index.html', s => s.replace('content="1200"', 'content="1201"'), /disagree with the file/],
     'slide-overflow': ['/styles/cvstyle.css', s => s + '\n.project-slide[data-idx="1"] .topic-desc { padding-bottom: 150vh; }\n', /^slide 1 /],
 };
 function selfTestTransform(urlPath, buf) {
@@ -636,7 +640,8 @@ async function checkLinks(base, refs, projects) {
             if (id && !anchorIds.has(id)) fail('default', '-', 'broken-anchor', `${v} (${ref.where}) has no target`);
             continue;
         }
-        const abs = new URL(v, base).href;
+        let abs = new URL(v, base).href;
+        if (abs.startsWith(CANONICAL)) abs = base + abs.slice(CANONICAL.length);
         if (seen.has(abs)) continue;
         seen.add(abs);
         if (abs.startsWith(base)) {
@@ -699,6 +704,56 @@ async function curlStatus(url) {
     } catch (e) {
         return parse(String(e.stdout || '').trimEnd());
     }
+}
+
+// ── Head metadata, robots, sitemap (QUALITY.md §4) ───────────────────────────
+
+function jpegOrPngSize(buf) {
+    if (buf.readUInt32BE(0) === 0x89504e47) return { w: buf.readUInt32BE(16), h: buf.readUInt32BE(20), type: 'png' };
+    if (buf[0] === 0xff && buf[1] === 0xd8) {
+        for (let i = 2; i < buf.length;) {
+            if (buf[i] !== 0xff) { i++; continue; }
+            const m = buf[i + 1], len = buf.readUInt16BE(i + 2);
+            if (m >= 0xc0 && m <= 0xcf && ![0xc4, 0xc8, 0xcc].includes(m)) return { h: buf.readUInt16BE(i + 5), w: buf.readUInt16BE(i + 7), type: 'jpeg' };
+            i += 2 + len;
+        }
+    }
+    return null;
+}
+
+async function checkHead(page, base) {
+    const head = await page.evaluate(() => {
+        const m = sel => document.querySelector(sel)?.getAttribute('content')?.trim() || '';
+        return {
+            description: m('meta[name="description"]'),
+            canonical: document.querySelector('link[rel="canonical"]')?.getAttribute('href') || '',
+            og: Object.fromEntries(['type', 'site_name', 'url', 'title', 'description', 'image', 'image:width', 'image:height', 'image:alt']
+                .map(k => [k, m(`meta[property="og:${k}"]`)])),
+            tw: Object.fromEntries(['card', 'title', 'description', 'image'].map(k => [k, m(`meta[name="twitter:${k}"]`)])),
+        };
+    });
+    const H = msg => fail('-', '-', 'metadata', msg);
+    if (head.description.length < 50) H(`meta description missing or too short (${head.description.length} chars)`);
+    if (head.canonical !== CANONICAL) H(`canonical is "${head.canonical}", expected ${CANONICAL}`);
+    for (const [k, v] of Object.entries(head.og)) if (!v) H(`og:${k} missing`);
+    for (const [k, v] of Object.entries(head.tw)) if (!v) H(`twitter:${k} missing`);
+    if (head.og.url && head.og.url !== CANONICAL) H(`og:url is "${head.og.url}", expected ${CANONICAL}`);
+    for (const img of new Set([head.og.image, head.tw.image].filter(Boolean))) {
+        if (!img.startsWith(CANONICAL)) { H(`${img}: preview images must be absolute on ${CANONICAL}`); continue; }
+        const res = await fetch(base + img.slice(CANONICAL.length));
+        if (!res.ok) { H(`${img} → ${res.status} locally`); continue; }
+        const buf = Buffer.from(await res.arrayBuffer());
+        const size = jpegOrPngSize(buf);
+        if (!size) H(`${img}: not a JPEG or PNG`);
+        else if (size.w !== 1200 || size.h !== 630) H(`${img}: ${size.w}×${size.h}, expected 1200×630`);
+        else if (+head.og['image:width'] !== size.w || +head.og['image:height'] !== size.h) H(`og:image:width/height (${head.og['image:width']}×${head.og['image:height']}) disagree with the file (${size.w}×${size.h})`);
+        if (buf.length > 300 * 1024) H(`${img}: ${Math.round(buf.length / 1024)} KiB, over 300 KiB`);
+    }
+    const robots = await (await fetch(base + 'robots.txt')).text().catch(() => '');
+    if (!robots.includes(`Sitemap: ${CANONICAL}sitemap.xml`)) H('robots.txt missing or does not name the sitemap');
+    const sitemap = await fetch(base + 'sitemap.xml');
+    const sm = sitemap.ok ? await sitemap.text() : '';
+    if (!sm.includes(`<loc>${CANONICAL}</loc>`)) H('sitemap.xml missing or does not list the canonical URL');
 }
 
 // ── Placeholder markers ──────────────────────────────────────────────────────
@@ -822,6 +877,7 @@ async function main() {
         await page.goto(base, { waitUntil: 'load' });
         await page.waitForSelector('#projectStage .project-slide', { timeout: 10000 }).catch(() => {});
         anchorIds = new Set(await page.evaluate(() => [...document.querySelectorAll('[id]')].map(e => e.id)));
+        await checkHead(page, base);
         await ctx.close();
         const linksChecked = await checkLinks(base, expect.refs, projects);
         if (!expect.refs.length) fail('default', '-', 'tested-nothing', 'no references collected from the page');

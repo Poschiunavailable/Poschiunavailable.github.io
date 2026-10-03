@@ -263,7 +263,6 @@ table adds what lives outside `projects.json`.
 | P2 | `UniversityProjects`: `workTopics[0..2].image` | `assets/placeholders/cgl-*.svg` (labelled) | Screenshots of the student games / a thesis figure |
 | P3 | every project's `cardVideo` | the shared `portfolio_reel.mp4` | Per-project preview clips |
 | P4 | `Freelance`: `image`, `poster` | Cold Comfort splash art (same as the Cold Comfort card) | An image representing the freelance work |
-| P5 | `index.html` → `og:image` | Everslaught splash art, relative URL | Designed 1200×630 preview (B3) |
 | P6 | `UniversityProjects` topic text | Collaborative projects described by theme, not title (true, but incomplete) | Individual student game titles (only Patrick has them) |
 
 Not placeholders, recorded so they are not "fixed" by mistake:
