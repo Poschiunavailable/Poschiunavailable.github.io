@@ -14,12 +14,30 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | B6 — Responsive images, deferred timeline art |
-| **Phase** | B |
-| **Goal** | Initial load within the 600 KiB budget at every measured size; images sized to their slot. |
-| **Acceptance check** | Walk budget at 375×812 and 1920×1080 within limits (`budget` known failure removed, no stale entries); no timeline image requested before the timeline opens (walk asserts); every raster in `projects.json` has 480/960 variants and rendered card/topic images carry `srcset` + `sizes` (walk asserts); screenshots unchanged in look; Lighthouse `image-delivery-insight` passes or its remainder is explained. |
-| **Files** | `tools/make-responsive.py`, `assets/img/`, `modules/portfolio.js`, `modules/timeline.js`, `modules/images.js`, `tests/lib/server.mjs`, `tests/site-walk.mjs`, `tests/known-failures.json` |
-| **Step reached** | Measured: 471 KiB of images at 1920×1080 — all 16 timeline slides' art downloads at page load (slides are in the DOM at opacity 0); the test server's `no-store` also fetched the profile photo twice. |
+| **Unit** | — (waiting) |
+| **Phase** | B → C |
+| **Goal** | Phase B is done except B1, which waits on question 7 (generator or not). Phase C's direction waits on question 8 (heading style A/B/C). |
+| **Acceptance check** | — |
+| **Files** | — |
+| **Step reached** | Waiting on Patrick. Work that needs neither answer: hover/focus/pressed states audit (QUALITY §4 walk check). |
+
+### B6 + B7 — Responsive images, deferred timeline media, performance budget (done 2026-10-03, `f037ffe`)
+
+Timeline slide media attaches only while the timeline is open (±1 slide);
+480w/960w WebP variants (`tools/make-responsive.py`) with `srcset`/`sizes` on
+cards and topic images; test server caches like GitHub Pages. **Initial load
+365 KiB at 375×812 (was 523) and 400 KiB at 1920×1080 (was 758) — within the
+600 KiB budget; `budget` known failure removed.** Walk asserts variants,
+srcset, and that no timeline-only image loads with the page (self-test 9/9).
+Lighthouse median **perf 97, a11y 100, BP 100, SEO 100; LCP 2.26 s, CLS 0,
+TBT 133 ms** — B7's bar is met. Remaining Lighthouse notes: `image-delivery`
+4 KiB (about photo, not worth a variant); `cache-insight` wants long cache
+lifetimes, which GitHub Pages fixes at 10 min — not changeable from the repo.
+
+Full walk: one unexpected failure, once — at 768×1024 the CV nav link didn't
+enter the timeline. Three loaded re-runs didn't reproduce it and the code path
+(toggle → link → 120 ms → warp) shows no race; the failure now records
+timeline state, body classes, menu/link visibility and a screenshot.
 
 ### B5 — Designed 404 page (done 2026-10-03, `5d9ad71`)
 
@@ -228,8 +246,8 @@ B3. ~~Metadata~~ — done 2026-10-03: absolute `og:image`, Twitter card fields, 
 B4. ~~Favicon set~~ — done 2026-10-03 (SVG + 32 px ICO + 180 px apple-touch + manifest icons);
     today a 129 KB 2048²-derived PNG is linked as the icon.
 B5. ~~Designed `404.html`~~ — done 2026-10-03.
-B6. (card above) Responsive images (`srcset`/`sizes`) for card and slide art.
-B7. Lighthouse mobile Performance ≥ 90 and the transfer budget in QUALITY.md.
+B6. ~~Responsive images~~ — done 2026-10-03 (`srcset`/`sizes`) for card and slide art.
+B7. ~~Lighthouse mobile Performance ≥ 90 and the transfer budget~~ — met 2026-10-03 (perf 97; 365/400 KiB).
 
 **Phase C — polish** (only after A and B): type and spacing scale as tokens,
 hover/focus/pressed states everywhere, motion and art direction refinement

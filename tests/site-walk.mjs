@@ -605,7 +605,16 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
     // ── The CV nav link is the third entry point ──
     if (await toggle.isVisible()) await toggle.click();
     await page.locator('#navLinks a[data-scroll-to="cv"]').click();
-    if (!(await waitFocus(0))) F('timeline-enter', 'CV nav link did not enter the timeline at slide 0');
+    if (!(await waitFocus(0))) {
+        const diag = await page.evaluate(() => ({
+            state: window.__timelineState(),
+            body: document.body.className,
+            menu: document.getElementById('navToggle')?.getAttribute('aria-expanded'),
+            link: (() => { const a = document.querySelector('#navLinks a[data-scroll-to="cv"]'); const r = a?.getBoundingClientRect(); return r ? `${Math.round(r.x)},${Math.round(r.y)} ${getComputedStyle(a).visibility}` : 'missing'; })(),
+            focus: document.activeElement?.id || document.activeElement?.tagName,
+        }));
+        F('timeline-enter', `CV nav link did not enter the timeline at slide 0 (${JSON.stringify(diag)})`, await shoot('nav-cv-failed'));
+    }
     else await exitTimeline('nav link');
 
     if (variant === 'reduced-motion') {
