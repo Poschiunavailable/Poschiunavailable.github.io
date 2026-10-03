@@ -35,13 +35,12 @@
     <link rel="stylesheet" href="styles/portfolio.css">
     <link rel="stylesheet" href="styles/cvstyle.css">
     <link rel="stylesheet" href="styles/contact.css">
-    <script src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js" async></script>
-
-    <!-- Import Map for Three.js -->
+    <!-- three.js is vendored (provenance: Docs/HISTORY.md "three.js"). Import
+         maps are native in every current browser, so no shim is needed. -->
     <script type="importmap">
         {
             "imports": {
-                "three": "https://unpkg.com/three@0.151.3/build/three.module.js"
+                "three": "./modules/vendor/three-0.151.3.module.min.js"
             }
         }
     </script>

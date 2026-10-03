@@ -274,3 +274,18 @@ elements × 4 body states × 2 viewports: two differences, both explained —
 instancer), and the About button, which now gets both its reveal and hover
 transitions (see `about.css`); before, the `@import` re-insertion of
 `base.css` silently dropped its reveal transition.
+
+## three.js (U6, 2026-10-03)
+
+`modules/vendor/three-0.151.3.module.min.js` is three.js r151.3
+(`build/three.module.js` from unpkg, sha256
+`95b4fa4c…e34d2`), minified once with
+`npx esbuild@0.25.10 three.module.js --minify --format=esm --legal-comments=inline`
+because r151 ships no minified ES module. MIT licence in
+`modules/vendor/LICENSE-three.txt`; the licence header stays inline.
+Not upgraded: r152 changed colour-management defaults, which would shift the
+star colours. `es-module-shims` dropped — import maps are native in every
+current browser.
+
+Measured: walk script transfer 272 → 179 KiB; an `--offline` walk with an
+empty third-party cache made no third-party request at all.

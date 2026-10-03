@@ -21,6 +21,15 @@
     "reason": "background.js assumes WebGL; without it three.js throws and there is no static background."
   },
   {
+    "code": "console-error",
+    "match": "Error creating WebGL context",
+    "variants": [
+      "no-webgl"
+    ],
+    "unit": "U10",
+    "reason": "Same bug as the page error above: three.js (vendored since U6, so same-origin) logs it before throwing."
+  },
+  {
     "code": "budget",
     "unit": "U5/U6/B6",
     "reason": "Initial load over budget: render-blocking fonts, three.js from CDN, oversized icons and images."
