@@ -15,7 +15,15 @@
 
   --background-color: #212836;
   --secondary-background-color: #1c212e;
-  --secondary-background-color-translucent: rgba(28, 33, 46, 0.8); /* was missing */
+  --secondary-background-color-translucent: rgba(28, 33, 46, 0.8);
+
+  /* Section fills are deliberately translucent so the WebGL starfield behind
+     them stays visible. #canvas-container is position:fixed at z-index -100,
+     which paints above the body background but below all content — so an
+     opaque section fill hides it completely, which is what used to happen. */
+  --section-fill: rgba(33, 40, 54, 0.74);
+  --section-fill-alt: rgba(28, 33, 46, 0.80);
+  --footer-fill: rgba(24, 29, 40, 0.86);
 
   --highlight-color: #eab180;
   --highlight-color-translucent: rgba(234, 177, 128, 0.6);

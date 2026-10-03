@@ -10,13 +10,16 @@
     flex-direction: column;
     justify-content: center;
     align-items: center;
-    padding-top: 100px;
-    padding-bottom: 100px;
+    /* min-height, never a fixed height: the hero must be allowed to grow past
+       the viewport rather than clip its own content (CTA button used to be cut
+       off entirely in landscape). svh accounts for mobile browser toolbars. */
+    min-height: 100vh;
+    min-height: 100svh;
+    padding: 100px 20px;
     width: 100%;
     background-color: transparent;
     color: var(--primary-color);
     text-align: center;
-    overflow: hidden;
 }
 
 .hero-video-overlay {
@@ -24,7 +27,7 @@
     top: 0;
     left: 0;
     width: 100%;
-    height: var(--video-height, 100%);
+    height: 100%;
     overflow: hidden;
     z-index: -1;
 }
@@ -67,19 +70,20 @@
 
 .hero-image img {
     width: 100%;
+    height: auto;
     border-radius: 50%;
     border: 5px solid var(--highlight-color);
     box-shadow: var(--box-shadow);
 }
 
 .hero h1 {
-    font-size: 3rem;
+    font-size: clamp(2rem, 6vw, 3rem);
     margin-bottom: 0.5rem;
     color: var(--primary-color);
 }
 
 .hero h2 {
-    font-size: 2rem;
+    font-size: clamp(1.35rem, 4.5vw, 2rem);
     margin-bottom: 1rem;
     color: var(--highlight-color);
     font-family: var(--tertiary-font);
@@ -101,16 +105,7 @@
 ----------------------------------*/
 @media (max-width: 768px) {
     .hero {
-        padding-top: 80px;
-        padding-bottom: 80px;
-    }
-
-    .hero h1 {
-        font-size: 2.5rem;
-    }
-
-    .hero h2 {
-        font-size: 1.8rem;
+        padding: 90px 20px 60px;
     }
 
     .hero p {
@@ -120,5 +115,37 @@
     .hero-image {
         max-width: 150px;
         margin-bottom: 15px;
+    }
+}
+
+/* Short viewports (landscape phones, small laptops): the 10vh separators and
+   the avatar are the first things to go, otherwise content overflows. */
+@media (max-height: 700px) {
+    .hero .small-separator {
+        height: 0;
+    }
+
+    .hero {
+        padding-top: 80px;
+        padding-bottom: 40px;
+    }
+
+    .hero-image {
+        max-width: 110px;
+        margin-bottom: 10px;
+    }
+
+    .hero p {
+        margin-bottom: 1rem;
+    }
+
+    .hero .cta-button {
+        margin-top: 10px;
+    }
+}
+
+@media (max-height: 460px) {
+    .hero-image {
+        display: none;
     }
 }

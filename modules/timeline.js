@@ -4,9 +4,18 @@
 // mobile-product marketing pages (e.g. apple.com/iphone): one focused concept
 // per viewport, layered parallax, no overflow scrollbars.
 
+import { prefersReducedMotion } from './scripts.js';
+
 export function initTimeline(projects) {
-    const timelineProjects = projects.filter(p => p.showInTimeline);
+    // Chronological order matters: this is a "time machine" with a monotonic
+    // progress bar. Following raw projects.json order previously produced
+    // 2018 → 2021 → 2016 → 2017 → 2022. ISO "YYYY-MM" sorts lexically.
+    const timelineProjects = projects
+        .filter(p => p.showInTimeline)
+        .sort((a, b) => String(a.startDate || '').localeCompare(String(b.startDate || '')));
     if (!timelineProjects.length) return;
+
+    const REDUCED = prefersReducedMotion();
 
     // ── Flatten into slide list ────────────────────────────────────────────────
     // Each project → 1 hero + N topic slides.
@@ -37,12 +46,28 @@ export function initTimeline(projects) {
     const TOUCH_RELEASE_BIAS      = 0.18;  // Directional commit threshold on touch release
     const FADE                    = 0.32;  // Crossfade fraction on each side of a slide boundary
     const EXIT_OVER               = 0.55;
-    const ENTER_RATIO             = 0.5;
-    const REENTER_COOLDOWN        = 700;
     const REVEAL_START_MS         = 120;   // Wait after slide arrival before first bullet
     const REVEAL_STAGGER_MS       = 130;   // Stagger between consecutive bullets
 
+    // Warp jump (portfolio card → timeline)
+    const WARP_IMMERSIVE          = 1.6;   // Cruising warp while in the timeline
+    const WARP_JUMP               = 9;     // Lightspeed burst during the jump
+    const FLY_FADE_MS             = 320;   // Page fade-out before we switch
+    const FLY_WARP_MS             = 430;   // Time spent at lightspeed
+    const ARRIVE_MS               = 640;   // Bloom + settle on landing
+
     const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
+
+    // Overall span covered by the timeline, used to drive the progress bar.
+    const msOf = (s, fallback) => {
+        const [y, m] = String(s || '').split('-').map(Number);
+        return y ? new Date(y, (m || 1) - 1, 1).getTime() : fallback;
+    };
+    // An ongoing role has no endDate — it runs to today.
+    const NOW_MS = Date.now();
+    const endMsOf = p => msOf(p.endDate, NOW_MS);
+    const TIMELINE_START = Math.min(...timelineProjects.map(p => msOf(p.startDate, Infinity)));
+    const TIMELINE_END   = Math.max(...timelineProjects.map(endMsOf));
 
     const S = {
         immersive:        false,
@@ -57,6 +82,8 @@ export function initTimeline(projects) {
         lastWheelStepTs:  0,
         lastWheelEventTs: 0,
         touchActive:      false,
+        flying:           false,   // a warp jump is in progress
+        arriveTimer:      0,
         touchStartY:      0,
         touchStartPos:    0,
         rafId:            0,
@@ -80,8 +107,9 @@ export function initTimeline(projects) {
 
     buildSlides();
     buildNavDots();
-    installEnterObserver();
+    installEnterTriggers();
     installKeyboard();
+    installExitButton();
     listenPortfolioSelect();
     startRAF();
 
@@ -108,10 +136,15 @@ export function initTimeline(projects) {
         // Full-bleed background layer (parallax)
         const bg = document.createElement('div');
         bg.className = 'slide-bg';
-        if (project.video) {
+        if (project.video && !REDUCED && !isDataSaver()) {
             const v = document.createElement('video');
             v.className = 'slide-bg-video';
-            v.src = project.video;
+            // Deliberately NOT setting .src here — assigning it up front made
+            // every slide fetch the video on page load (6 elements → 12
+            // requests for the same file). ensureVideoLoaded() attaches the
+            // source only when a slide is actually approached.
+            v.dataset.src = project.video;
+            v.preload = 'none';
             v.muted = true; v.loop = true; v.playsInline = true;
             if (project.poster || project.image) v.poster = project.poster || project.image;
             bg.appendChild(v);
@@ -131,11 +164,21 @@ export function initTimeline(projects) {
         // Foreground content (parallax — moves faster than bg)
         const content = document.createElement('div');
         content.className = 'slide-content slide-content-hero';
+        const linksHtml = (project.links || [])
+            .map(l => `<a class="slide-link" href="${l.href}" target="_blank" rel="noopener noreferrer">${l.text} &#8599;</a>`)
+            .join('');
+        // `details` is a free-form key/value map — render whatever keys the
+        // project defines, in author order, as a compact fact list.
+        const factsHtml = Object.entries(project.details || {})
+            .map(([k, v]) => `<div class="slide-fact"><dt>${k}</dt><dd>${v}</dd></div>`)
+            .join('');
         content.innerHTML = `
             <p class="slide-eyebrow">${formatProjectDates(project)}</p>
             <h2 class="slide-title">${project.title}</h2>
             ${project.subtitle ? `<p class="slide-subtitle">${project.subtitle}</p>` : ''}
             <p class="slide-desc">${project.timelineDescription || project.description || ''}</p>
+            ${factsHtml ? `<dl class="slide-facts">${factsHtml}</dl>` : ''}
+            ${linksHtml ? `<div class="slide-links">${linksHtml}</div>` : ''}
         `;
         el.appendChild(content);
     }
@@ -159,12 +202,36 @@ export function initTimeline(projects) {
         el.appendChild(content);
     }
 
+    function isDataSaver() {
+        const c = navigator.connection;
+        return !!c?.saveData || /(^|-)2g$/.test(c?.effectiveType || '');
+    }
+
+    // Attach the real source the first time a slide comes into play, so the
+    // video is fetched on demand rather than all at once on page load.
+    function ensureVideoLoaded(video) {
+        if (!video || !video.dataset.src) return;
+        video.src = video.dataset.src;
+        delete video.dataset.src;
+        video.preload = 'auto';
+        video.load();
+    }
+
+    // Tolerates missing/partial dates rather than throwing on `.split` of
+    // undefined; an absent endDate reads as an ongoing role.
+    function fmtMonth(s) {
+        if (typeof s !== 'string') return null;
+        const [y, m] = s.split('-').map(Number);
+        if (!y) return null;
+        return m >= 1 && m <= 12 ? `${MONTHS[m - 1]} ${y}` : `${y}`;
+    }
+
     function formatProjectDates(p) {
-        const fmt = s => {
-            const [y, m] = s.split('-').map(Number);
-            return `${MONTHS[m - 1]} ${y}`;
-        };
-        return `${fmt(p.startDate)} — ${fmt(p.endDate)}`;
+        const start = fmtMonth(p.startDate);
+        const end = fmtMonth(p.endDate);
+        if (!start && !end) return '';
+        if (!start) return end;
+        return `${start} — ${end || 'PRESENT'}`;
     }
 
     function buildNavDots() {
@@ -174,8 +241,11 @@ export function initTimeline(projects) {
         timelineProjects.forEach((project) => {
             const dot = document.createElement('button');
             dot.className = 'nav-dot';
+            dot.type = 'button';
             dot.setAttribute('aria-label', project.title);
-            dot.title = project.title;
+            // data-label, not title: `title` would raise the browser's native
+            // tooltip on top of the styled ::after one.
+            dot.dataset.label = project.title;
             dot.addEventListener('click', () => {
                 const heroIdx = slideData.findIndex(s => s.type === 'hero' && s.project === project);
                 if (heroIdx < 0) return;
@@ -190,20 +260,28 @@ export function initTimeline(projects) {
 
     // ── Entry / Exit ───────────────────────────────────────────────────────────
 
-    function installEnterObserver() {
-        if (!('IntersectionObserver' in window)) return;
-        const observer = new IntersectionObserver(([entry]) => {
-            if (!entry || S.immersive) return;
-            if (performance.now() - S.lastExitTs < REENTER_COOLDOWN) return;
-            const r  = entry.boundingClientRect;
-            const vh = window.innerHeight;
-            const vis = Math.max(0, Math.min(r.bottom, vh) - Math.max(r.top, 0));
-            if (vis / vh >= ENTER_RATIO) enterImmersive();
-        }, { threshold: Array.from({ length: 21 }, (_, i) => i / 20) });
-        observer.observe(els.cvSection);
+    // Entry is EXPLICIT only.
+    //
+    // This used to be an IntersectionObserver that flipped into immersive mode
+    // as soon as the CV section covered half the viewport. That meant anyone
+    // scrolling down the page got their scrolling taken away without asking for
+    // it — the single most hostile thing the site did. Now it takes a deliberate
+    // action: the section's own button, the CV nav link, or a portfolio card.
+    function installEnterTriggers() {
+        const enterBtn = document.getElementById('cvEnter');
+        if (enterBtn) enterBtn.addEventListener('click', () => flyToProject(0));
+
+        // The CV nav link is itself an explicit request for the timeline.
+        document.querySelectorAll('[data-scroll-to="cv"]').forEach(a => {
+            a.addEventListener('click', () => {
+                // Let the smooth-scroll in scripts.js start first so exiting
+                // later returns to a sensible place.
+                setTimeout(() => { if (!S.immersive) flyToProject(0); }, 120);
+            });
+        });
     }
 
-    function enterImmersive() {
+    function enterImmersive({ silent = false } = {}) {
         if (S.immersive) return;
 
         const rect = els.cvSection.getBoundingClientRect();
@@ -220,12 +298,19 @@ export function initTimeline(projects) {
         S.targetPos  = S.virtualPos;
 
         bindVirtualScroll();
-        window.dispatchEvent(new CustomEvent('timeline:warpSpeed', { detail: { factor: 1.8 } }));
+        // `silent` during a warp jump — flyToProject() owns the warp level
+        // there and must not have it overwritten mid-burst.
+        if (!REDUCED && !silent) setWarp(WARP_IMMERSIVE);
     }
 
     function exitImmersive(direction) {
         if (!S.immersive) return;
         S.immersive = false;
+        // A jump could still be mid-flight (e.g. Escape during the burst) —
+        // clear its classes so the page isn't left faded out or mid-bloom.
+        S.flying = false;
+        clearTimeout(S.arriveTimer);
+        document.body.classList.remove('timeline-warping', 'timeline-arriving');
 
         S.slides.forEach(({ el }) => {
             el.style.opacity       = '0';
@@ -251,7 +336,7 @@ export function initTimeline(projects) {
         window.scrollTo({ top: scrollDest, behavior: 'auto' });
 
         S.lastExitTs = performance.now();
-        window.dispatchEvent(new CustomEvent('timeline:warpSpeed', { detail: { factor: 1.0 } }));
+        setWarp(1.0);
     }
 
     // ── Virtual Scroll ─────────────────────────────────────────────────────────
@@ -284,6 +369,7 @@ export function initTimeline(projects) {
     function onWheel(e) {
         if (!S.immersive) return;
         e.preventDefault();
+        if (S.flying) return;   // don't let input fight a warp jump
         if (Math.abs(e.deltaY) < WHEEL_MIN_DELTA) return;
 
         const now = performance.now();
@@ -306,7 +392,7 @@ export function initTimeline(projects) {
 
     // Touch: continuous drag follows the finger, snap on release.
     function onTouchStart(e) {
-        if (!S.immersive || !e.touches?.length) return;
+        if (!S.immersive || S.flying || !e.touches?.length) return;
         S.touchStartY   = e.touches[0].clientY;
         S.touchStartPos = S.virtualPos;
         S.touchActive   = true;
@@ -349,6 +435,8 @@ export function initTimeline(projects) {
     function installKeyboard() {
         window.addEventListener('keydown', e => {
             if (!S.immersive) return;
+            // Escape must still work mid-jump; everything else waits.
+            if (S.flying && e.key !== 'Escape') return;
             if (e.key === 'ArrowRight' || e.key === 'ArrowDown' || e.key === 'PageDown' || e.key === ' ') {
                 e.preventDefault();
                 S.targetPos     = Math.min(N - 1, Math.round(S.targetPos) + 1);
@@ -369,6 +457,16 @@ export function initTimeline(projects) {
         });
     }
 
+    // ── Exit affordance ────────────────────────────────────────────────────────
+    // Immersive mode hides the header and locks scroll. Escape handles desktop,
+    // but touch users previously had no way out except swiping every slide.
+
+    function installExitButton() {
+        const btn = document.getElementById('cvExit');
+        if (!btn) return;
+        btn.addEventListener('click', () => exitImmersive('top'));
+    }
+
     // ── Portfolio Card → Timeline ──────────────────────────────────────────────
 
     function listenPortfolioSelect() {
@@ -376,10 +474,62 @@ export function initTimeline(projects) {
             const id      = e.detail?.id;
             const heroIdx = slideData.findIndex(s => s.type === 'hero' && s.project.id === id);
             if (heroIdx < 0) return;
-            if (!S.immersive) enterImmersive();
-            S.targetPos     = heroIdx;
-            S.lastScrollDir = heroIdx > Math.round(S.virtualPos) ? 1 : -1;
+            flyToProject(heroIdx);
         });
+    }
+
+    // Warp jump: fade the page out around the starfield, push the field to
+    // lightspeed, land on the chosen project, fade it in. The travel is
+    // expressed by the starfield rather than by scrolling through every
+    // intervening slide.
+    function flyToProject(heroIdx) {
+        if (S.flying) return;
+
+        // Reduced motion: no warp, no fade — just arrive.
+        if (REDUCED) {
+            if (!S.immersive) enterImmersive({ silent: true });
+            S.virtualPos = S.targetPos = heroIdx;
+            S.lastScrollDir = 1;
+            render(S.virtualPos);
+            return;
+        }
+
+        S.flying = true;
+        document.body.classList.add('timeline-warping');
+        setWarp(WARP_JUMP, 7);
+
+        // 1. Page fades out; starfield accelerates.
+        setTimeout(() => {
+            if (!S.immersive) enterImmersive({ silent: true });
+            // Jump straight to the target — the warp *is* the travel, so there
+            // is no lerp across the intervening slides.
+            S.virtualPos    = heroIdx;
+            S.targetPos     = heroIdx;
+            S.lastScrollDir = 1;
+            S.focusSlideIdx = -1;            // re-arm the highlight reveal
+            render(S.virtualPos);
+        }, FLY_FADE_MS);
+
+        // 2. Arrive: drop out of warp, bloom, and settle the stage in.
+        setTimeout(() => {
+            document.body.classList.remove('timeline-warping');
+            document.body.classList.add('timeline-arriving');
+            setWarp(WARP_IMMERSIVE, 3.5);
+            S.focusArrivedTs = performance.now();  // stagger bullets from now
+            S.flying = false;
+
+            clearTimeout(S.arriveTimer);
+            S.arriveTimer = setTimeout(
+                () => document.body.classList.remove('timeline-arriving'),
+                ARRIVE_MS,
+            );
+        }, FLY_FADE_MS + FLY_WARP_MS);
+    }
+
+    function setWarp(factor, response) {
+        window.dispatchEvent(new CustomEvent('timeline:warpSpeed', {
+            detail: response ? { factor, response } : { factor },
+        }));
     }
 
     // ── RAF Loop ───────────────────────────────────────────────────────────────
@@ -423,10 +573,10 @@ export function initTimeline(projects) {
         // If next slide is a different project, stay at end of this one during transition
         const bFrac   = b.project === a.project ? b.dateFrac : 1;
         const blendedFrac = aFrac + (bFrac - aFrac) * frac;
-        const [sy, sm] = project.startDate.split('-').map(Number);
-        const [ey, em] = project.endDate.split('-').map(Number);
-        const t0 = new Date(sy, sm - 1, 1).getTime();
-        const t1 = new Date(ey, em - 1, 28).getTime();
+        const t0 = msOf(project.startDate, NOW_MS);
+        // Ongoing roles (no endDate) interpolate up to today rather than
+        // throwing on a split of undefined.
+        const t1 = endMsOf(project);
         return new Date(t0 + (t1 - t0) * blendedFrac);
     }
 
@@ -438,8 +588,13 @@ export function initTimeline(projects) {
         if (els.tmYear)  els.tmYear.textContent  = date.getFullYear();
         if (els.tmMonth) els.tmMonth.textContent = MONTHS[date.getMonth()];
         if (els.tmFill) {
-            const pct = N > 1 ? (disp / (N - 1)) * 100 : 100;
-            els.tmFill.style.width = `${pct.toFixed(1)}%`;
+            // Fill by elapsed time, not slide index — projects have unequal
+            // spans, and a bar under a date readout should track the date.
+            const span = TIMELINE_END - TIMELINE_START;
+            const pct = span > 0
+                ? ((date.getTime() - TIMELINE_START) / span) * 100
+                : (N > 1 ? (disp / (N - 1)) * 100 : 100);
+            els.tmFill.style.width = `${Math.max(0, Math.min(100, pct)).toFixed(1)}%`;
         }
 
         // Track which slide is currently focused (the closest integer) and
@@ -473,6 +628,11 @@ export function initTimeline(projects) {
                 opacity = 0;  ty = -50;
             }
 
+            // Reduced motion: keep the crossfade (it conveys the change of
+            // slide) but drop every translation — parallax is the part that
+            // triggers vestibular discomfort.
+            if (REDUCED) ty = 0;
+
             slide.el.style.opacity       = opacity;
             slide.el.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none';
             // No transform on the slide itself — layers below move on their own
@@ -481,7 +641,7 @@ export function initTimeline(projects) {
             const bg = slide.el.querySelector('.slide-bg');
             if (bg) {
                 const bgY   = ty * 0.3;
-                const scale = 1.06 + Math.max(0, progress) * 0.04;
+                const scale = REDUCED ? 1.06 : 1.06 + Math.max(0, progress) * 0.04;
                 bg.style.transform = `translateY(${bgY.toFixed(2)}px) scale(${scale.toFixed(3)})`;
             }
 
@@ -499,11 +659,17 @@ export function initTimeline(projects) {
                 topicImg.style.transform = `translateY(${(-ty * 0.3).toFixed(2)}px)`;
             }
 
-            // Video: play only when this slide is the focused one
+            // Video: play only when this slide is the focused one.
+            // Guard on state — this runs every frame, and calling play()
+            // unconditionally allocated a promise per frame per video.
             const vid = slide.el.querySelector('video');
             if (vid) {
-                if (opacity > 0.5) vid.play().catch(() => {});
-                else vid.pause();
+                const shouldPlay = opacity > 0.5;
+                // Preload one slide ahead so approaching a slide isn't a
+                // cold start, but never all of them at once.
+                if (Math.abs(i - S.focusSlideIdx) <= 1) ensureVideoLoaded(vid);
+                if (shouldPlay && vid.paused) vid.play().catch(() => {});
+                else if (!shouldPlay && !vid.paused) vid.pause();
             }
 
             // Highlight bullets: time-based staggered reveal after arrival.
@@ -515,7 +681,8 @@ export function initTimeline(projects) {
             if (highlights.length) {
                 if (i === S.focusSlideIdx) {
                     highlights.forEach((li, j) => {
-                        const triggerMs = REVEAL_START_MS + j * REVEAL_STAGGER_MS;
+                        // Reduced motion: no stagger, everything is simply there
+                        const triggerMs = REDUCED ? 0 : REVEAL_START_MS + j * REVEAL_STAGGER_MS;
                         if (focusElapsedMs >= triggerMs) li.classList.add('highlight-visible');
                     });
                 } else if (opacity < 0.05) {

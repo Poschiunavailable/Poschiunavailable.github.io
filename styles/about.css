@@ -4,9 +4,11 @@
 /*--------------------------------
     About Section
 ----------------------------------*/
+/* Transparent on purpose: the starfield shows through here, and the readable
+   surface is #about .container below rather than a full-width fill. */
 #about {
     background-color: transparent;
-    padding: 100px 0;
+    padding: 100px 20px;
     position: relative;
     z-index: 1;
 }
@@ -28,6 +30,12 @@
     flex-direction: column;
 }
 
+@media (max-width: 768px) {
+    #about .container {
+        padding: 30px 22px;
+    }
+}
+
 .about-content {
     display: flex;
     align-items: center;
@@ -43,8 +51,16 @@
 
 .about-image img {
     width: 100%;
+    height: auto;
     border-radius: 10px;
     box-shadow: var(--box-shadow);
+    transition: transform var(--transition-duration) ease;
+}
+
+@media (hover: hover) and (pointer: fine) {
+    .about-image img:hover {
+        transform: scale(1.05);
+    }
 }
 
 .about-text {

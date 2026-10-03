@@ -6,7 +6,21 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
     <link rel="preload" as="style" href="styles/styles.css" />
-    <title>Patrick Temborius</title>
+    <title>Patrick Temborius — Software Engineer</title>
+
+    <meta name="description"
+        content="Patrick Temborius — software engineer with six years in cross-platform C/C++. Low-level systems programming on Windows and Linux, real-time simulation, and test automation.">
+    <meta name="theme-color" content="#212836">
+    <link rel="icon" href="favicon.ico" sizes="any">
+    <link rel="icon" href="assets/website_icon.png" type="image/png">
+    <link rel="apple-touch-icon" href="assets/website_icon.png">
+
+    <meta property="og:type" content="website">
+    <meta property="og:title" content="Patrick Temborius — Software Engineer">
+    <meta property="og:description"
+        content="Cross-platform C/C++ systems programming, real-time simulation and test automation.">
+    <meta property="og:image" content="assets/everslaught_invasion_splashart.webp">
+    <meta name="twitter:card" content="summary_large_image">
 
     <link rel="stylesheet" href="styles/base.css">
     <link rel="stylesheet" href="styles/styles.css">
@@ -16,8 +30,7 @@
     <link rel="stylesheet" href="styles/about.css">
     <link rel="stylesheet" href="styles/portfolio.css">
     <link rel="stylesheet" href="styles/cvstyle.css">
-    <link rel="stylesheet" href="styles/contact.css"> 
-    <script src="https://cdnjs.cloudflare.com/ajax/libs/gsap/3.11.5/gsap.min.js" defer></script>
+    <link rel="stylesheet" href="styles/contact.css">
     <script src="https://unpkg.com/es-module-shims@1.6.3/dist/es-module-shims.js" async></script>
 
     <!-- Import Map for Three.js -->
@@ -33,15 +46,21 @@
 <body>
     <!-- Background Animation -->
     <script src="modules/background.js" type="module"></script>
-    <div id="canvas-container"></div>
+    <div id="canvas-container" aria-hidden="true"></div>
 
     <!-- Navigation Bar -->
     <header>
-        <nav class="navbar" id="nonCVContent">
+        <nav class="navbar">
             <div class="brand">
                 <a href="#hero" data-scroll-to="hero">Patrick Temborius</a>
             </div>
-            <ul class="nav-links">
+            <button class="nav-toggle" id="navToggle" aria-expanded="false" aria-controls="navLinks"
+                aria-label="Open navigation menu">
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+                <span class="nav-toggle-bar"></span>
+            </button>
+            <ul class="nav-links" id="navLinks">
                 <li><a href="#about" data-scroll-to="about">About</a></li>
                 <li><a href="#portfolio" data-scroll-to="portfolio">Portfolio</a></li>
                 <li><a href="#cv" data-scroll-to="cv">CV</a></li>
@@ -51,49 +70,54 @@
     </header>
 
     <!-- Hero Section -->
-    <section id="hero" class="hero nonCVContent">
-        <div class="hero-video-overlay" id="videoOverlay">
-            <video class="hero-video" id="heroVideo" autoplay muted loop playsinline>
-                <source src="assets/PortfolioVideoLowerRes.mp4" type="video/mp4">
+    <section id="hero" class="hero">
+        <div class="hero-video-overlay" id="videoOverlay" aria-hidden="true">
+            <video class="hero-video" id="heroVideo" autoplay muted loop playsinline preload="none"
+                poster="assets/portfolio_reel_poster.jpg">
+                <source src="assets/portfolio_reel.mp4" type="video/mp4">
             </video>
         </div>
         <div class="hero-content">
             <div class="small-separator"></div>
             <div class="hero-image animate">
-                <img src="assets/profile_picture.jpg" alt="Profile Picture">
+                <img src="assets/profile_picture.jpg" alt="Patrick Temborius" width="500" height="500"
+                    fetchpriority="high">
             </div>
             <h1>Patrick Temborius</h1>
-            <h2>&lt;software developer&gt;</h2>
-            <p>Working with <b>international</b> and <b>diverse teams</b>, specializing in developing maintainable and
-                expandable <b>game systems</b> and <b>tools</b>.</p>
-            <a href="#portfolio" class="cta-button">View My Work</a>
+            <h2>&lt;software engineer&gt;</h2>
+            <p>Six years of cross-platform <b>C/C++</b> development — low-level <b>systems programming</b> on Windows
+                and Linux, <b>real-time and simulation</b> software, and <b>test automation</b>.</p>
+            <a href="#portfolio" class="cta-button" data-scroll-to="portfolio">View My Work</a>
             <div class="small-separator"></div>
         </div>
     </section>
 
     <!-- About Section -->
-    <section id="about" class="nonCVContent">
+    <section id="about">
         <div class="container animate">
             <div class="typing-effect">
                 <h2 class="typing-text typing-target">&lt;about me&gt;</h2>
             </div>
             <div class="about-content">
                 <div class="about-image animate">
-                    <img src="assets/profile_picture.jpg" alt="Patrick Temborius">
+                    <img src="assets/profile_picture.jpg" alt="Patrick Temborius" width="500" height="500"
+                        loading="lazy">
                 </div>
                 <div class="about-text">
-                    <h3 class="animate">Passionate Game Developer</h3>
-                    <p class="animate">Hello! My name is Patrick Temborius and I am a Game Programmer. I am passionate
-                        about physics, games, AI, procedural generation, and cutting-edge technology. I have experience
-                        in various game engines and programming languages. In my free time, I enjoy watching lectures,
-                        woodworking, attending old-school LAN parties with friends, or going to the cinema.</p>
-                    <p class="animate">With a strong background in programming, I am constantly learning and adapting to
-                        new technologies to stay on the cutting edge of the industry, always looking forward to new
-                        technologies and releases from both Unity and Unreal Engine. I'm constantly trying out new
-                        workflows, tools, and programming patterns and love learning from or teaching colleagues. I
-                        consider myself an empathetic person and have experience distributing tasks to team members,
-                        quickly identifying issues that slow down production, and finding solutions that satisfy
-                        everyone.</p>
+                    <h3 class="animate">Systems &amp; Simulation Engineer</h3>
+                    <p class="animate">I'm a software engineer with six years of experience in cross-platform C/C++
+                        development. My focus is low-level systems programming across Windows and Linux, real-time and
+                        simulation software, and test automation. I get up to speed in unfamiliar domains quickly —
+                        moving from games into automotive simulation is the clearest evidence of that.</p>
+                    <p class="animate">Today I work on sensor-simulation software built on Unreal Engine 5, used to
+                        validate ECUs and automated driving functions. Before that I spent five years shipping games:
+                        network-synchronised systems for standalone VR, a data-driven C++ core for a published Unreal
+                        title, and the prototypes that got both projects funded. I've led a small team, designed
+                        technical hiring tests, and worked remotely with international colleagues throughout.</p>
+                    <p class="animate">I studied Digital Games at the Cologne Game Lab (TH Köln) — a BA, followed by
+                        master's coursework with a computer science focus. Outside work I'm interested in real-time
+                        rendering and graphics APIs, home-labbing and network engineering, and electrical engineering
+                        and physics.</p>
                     <a href="#portfolio" class="cta-button animate" data-scroll-to="portfolio">View
                         My Work</a>
                 </div>
@@ -102,7 +126,7 @@
     </section>
 
     <!-- Portfolio Section -->
-    <section id="portfolio" class="nonCVContent">
+    <section id="portfolio">
         <div class="container animate">
             <div class="typing-effect">
                 <h2 class="typing-text typing-target">&lt;portfolio&gt;</h2>
@@ -118,17 +142,24 @@
     <section id="cv">
         <div id="cvSection">
             <div id="cvSectionLabel">
-                <div class="typing-effect">
-                    <h2 class="typing-text typing-target">&lt;cv&gt;</h2>
-                </div>
+                <h2>&lt;cv&gt;</h2>
             </div>
-            <div id="cvScrollHint"><span>scroll to enter the time machine</span></div>
+            <!-- Entering the timeline is deliberately an explicit action. It takes
+                 over scrolling, so it must never trigger just because the section
+                 drifted into view. -->
+            <div id="cvIntro">
+                <p>Five chapters, one timeline — from university productions to automotive
+                    sensor simulation.</p>
+                <button id="cvEnter" class="cta-button" type="button">Enter the time machine</button>
+                <p class="cv-note">Takes over scrolling — leave any time with Esc or the exit button.</p>
+            </div>
             <div id="projectStage"></div>
-            <div id="timeMachine" aria-label="Current timeline date" aria-hidden="true">
+            <button id="cvExit" type="button" aria-label="Exit the timeline">&#10005;<span>Exit timeline</span></button>
+            <div id="timeMachine" aria-label="Current timeline date">
                 <div id="tmLabel">TIME MACHINE</div>
                 <div id="tmDateDisplay">
-                    <span id="tmMonth">JAN</span>
-                    <span id="tmYear">2019</span>
+                    <span id="tmMonth">&nbsp;</span>
+                    <span id="tmYear">&nbsp;</span>
                 </div>
                 <div id="tmProgressTrack"><div id="tmProgressFill"></div></div>
             </div>
@@ -141,21 +172,18 @@
             <div class="typing-effect">
                 <h2 class="typing-text typing-target">&lt;contact&gt;</h2>
             </div>
-            <form class="contact-form" action="mailto:your@email.com" method="post" enctype="text/plain">
-                <div class="form-group">
-                    <label for="name">Name</label>
-                    <input type="text" id="name" name="name" required>
-                </div>
-                <div class="form-group">
-                    <label for="email">Email</label>
-                    <input type="email" id="email" name="email" required>
-                </div>
-                <div class="form-group">
-                    <label for="message">Message</label>
-                    <textarea id="message" name="message" rows="5" required></textarea>
-                </div>
-                <button type="submit" class="cta-button">Send Message</button>
-            </form>
+            <!-- Contact runs through LinkedIn by choice: no email address or phone
+                 number is published here, so there's nothing on the page for scrapers
+                 to harvest. A form would need an address to send to, so there isn't one. -->
+            <div class="contact-card animate">
+                <p class="contact-lead">The best way to reach me is on LinkedIn — messages there land directly
+                    with me.</p>
+                <a class="cta-button contact-primary" href="https://www.linkedin.com/in/patrick-temborius"
+                    target="_blank" rel="noopener noreferrer">Message me on LinkedIn</a>
+                <p class="contact-secondary">You can also find my code on <a
+                        href="https://github.com/Poschiunavailable" target="_blank"
+                        rel="noopener noreferrer">GitHub</a>.</p>
+            </div>
         </div>
     </section>
 
@@ -163,13 +191,15 @@
         <div class="container">
             <p>&copy; 2026 Patrick Temborius. All rights reserved.</p>
             <div class="social-links">
-                <a href="#" target="_blank">LinkedIn</a>
-                <a href="#" target="_blank">GitHub</a>
+                <a href="https://www.linkedin.com/in/patrick-temborius" target="_blank"
+                    rel="noopener noreferrer">LinkedIn</a>
+                <a href="https://github.com/Poschiunavailable" target="_blank" rel="noopener noreferrer">GitHub</a>
             </div>
         </div>
     </footer>
 
     <div id="timelineBackdrop" aria-hidden="true"></div>
+    <div id="warpFlash" aria-hidden="true"></div>
     <script type="module" src="modules/main.js"></script>
 </body>
 

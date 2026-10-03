@@ -9,6 +9,7 @@
 
 #cvSection {
     min-height: 100vh;
+    min-height: 100svh;
     position: relative;
     display: flex;
     align-items: center;
@@ -26,35 +27,64 @@
     transition: opacity 0.4s ease;
 }
 
-body.timeline-immersive #cvSectionLabel {
+/* visibility, not just opacity: topic slides are deliberately semi-transparent
+   (starfield shows through), so anything left in #cvSection paints through them
+   while its opacity transition is still running. visibility isn't in the
+   transition list, so it cuts out immediately. */
+body.timeline-immersive #cvSectionLabel,
+body.timeline-warping #cvSectionLabel {
     opacity: 0;
+    visibility: hidden;
     pointer-events: none;
 }
 
-/* ── Scroll hint ─────────────────────────────────────────────────────────────── */
+/* ── Entry panel (explicit opt-in) ───────────────────────────────────────────
+   Replaces the old "scroll to enter" hint. Immersive mode takes over page
+   scrolling, so it is entered by a button press, never by scroll position. */
 
-#cvScrollHint {
+#cvIntro {
     position: absolute;
-    bottom: 48px;
     left: 50%;
-    transform: translateX(-50%);
-    font-family: var(--tertiary-font);
-    font-size: 0.78rem;
-    letter-spacing: 0.12em;
-    color: rgba(221, 231, 246, 0.45);
-    text-transform: uppercase;
-    pointer-events: none;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    width: min(560px, 86vw);
+    text-align: center;
     transition: opacity 0.4s ease;
-    animation: hintPulse 2.8s ease-in-out infinite;
 }
 
-body.timeline-immersive #cvScrollHint {
+#cvIntro p {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    color: var(--primary-color);
+    opacity: 0.85;
+    margin-bottom: 26px;
+}
+
+#cvEnter {
+    font-size: 1.05rem;
+    font-weight: bold;
+    padding: 0.85em 2em;
+}
+
+#cvIntro .cv-note {
+    margin: 18px 0 0;
+    font-family: var(--tertiary-font);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    color: rgba(221, 231, 246, 0.45);
+    opacity: 1;
+}
+
+body.timeline-immersive #cvIntro,
+body.timeline-warping #cvIntro {
     opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
 }
 
-@keyframes hintPulse {
-    0%, 100% { opacity: 0.3; }
-    50%       { opacity: 0.7; }
+@media (max-height: 620px) {
+    #cvIntro p { font-size: 0.92rem; margin-bottom: 18px; }
+    #cvIntro .cv-note { margin-top: 12px; }
 }
 
 /* ── Project Stage (full viewport canvas) ────────────────────────────────────── */
@@ -63,6 +93,7 @@ body.timeline-immersive #cvScrollHint {
     position: relative;
     width: 100%;
     height: 100vh;
+    height: 100svh;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
@@ -72,6 +103,7 @@ body.timeline-immersive #cvScrollHint {
 body.timeline-immersive #projectStage {
     position: fixed;
     top: 0; left: 0; right: 0; bottom: 0;
+    height: auto;
     opacity: 1;
     pointer-events: none;
     z-index: 5;
@@ -98,12 +130,18 @@ body.timeline-immersive #projectStage {
     justify-content: center;
 }
 
-/* Background media — sits behind the gradient and content */
+/* Background media — sits behind the gradient and content.
+   Masked to fade out toward the edges so the starfield stays part of the
+   picture on title slides instead of being covered by a hard full-bleed rect. */
 .slide-bg {
     position: absolute;
     inset: 0;
     overflow: hidden;
     will-change: transform;
+    -webkit-mask-image: radial-gradient(ellipse 82% 78% at 50% 42%,
+        #000 40%, rgba(0, 0, 0, 0.72) 70%, rgba(0, 0, 0, 0.18) 90%, transparent 100%);
+    mask-image: radial-gradient(ellipse 82% 78% at 50% 42%,
+        #000 40%, rgba(0, 0, 0, 0.72) 70%, rgba(0, 0, 0, 0.18) 90%, transparent 100%);
 }
 
 .slide-bg-image {
@@ -121,24 +159,44 @@ body.timeline-immersive #projectStage {
     object-fit: cover;
 }
 
-/* Darkening gradient — heavier at the bottom where text sits */
+/* Much lighter than it used to be: legibility is now the content panel's job
+   (see .slide-content-hero), so this only has to seat the artwork rather than
+   flatten the whole viewport — which also let the starfield back in. */
 .slide-overlay {
     position: absolute;
     inset: 0;
     background: linear-gradient(180deg,
-        rgba(8, 12, 22, 0.35) 0%,
-        rgba(8, 12, 22, 0.55) 45%,
-        rgba(8, 12, 22, 0.92) 100%);
+        rgba(8, 12, 22, 0.10) 0%,
+        rgba(8, 12, 22, 0.24) 45%,
+        rgba(8, 12, 22, 0.58) 100%);
     pointer-events: none;
 }
 
+/* Readable panel rather than text floating on artwork. The video/key art
+   behind it is high-contrast and moving, which text-shadow alone can't cope
+   with. */
 .slide-content-hero {
     position: relative;
     z-index: 2;
-    width: min(880px, 88%);
+    width: min(820px, 90%);
     text-align: center;
-    padding: 0 32px 14vh;
+    padding: 30px 34px 34px;
+    margin-bottom: 9vh;
+    border-radius: 22px;
+    background: rgba(10, 14, 24, 0.62);
+    -webkit-backdrop-filter: blur(14px) saturate(115%);
+    backdrop-filter: blur(14px) saturate(115%);
+    border: 1px solid rgba(129, 168, 209, 0.16);
+    box-shadow: 0 26px 70px rgba(0, 0, 0, 0.5);
     will-change: transform;
+}
+
+/* Without backdrop-filter the panel would be too see-through to read against
+   moving footage, so lean on a more opaque fill instead. */
+@supports not ((backdrop-filter: blur(1px)) or (-webkit-backdrop-filter: blur(1px))) {
+    .slide-content-hero {
+        background: rgba(10, 14, 24, 0.86);
+    }
 }
 
 .slide-eyebrow {
@@ -189,7 +247,24 @@ body.timeline-immersive #projectStage {
     padding: 4vh 6vw;
 }
 
+/* Topic slides have no artwork of their own, so the starfield is the
+   background. Darken only the middle, where the text sits — the stars stay
+   visible toward the edges. */
+.slide-topic::before {
+    content: "";
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse 70% 60% at 50% 50%,
+        rgba(8, 12, 22, 0.82) 0%,
+        rgba(8, 12, 22, 0.62) 45%,
+        rgba(8, 12, 22, 0.18) 78%,
+        rgba(8, 12, 22, 0) 100%);
+    pointer-events: none;
+}
+
 .slide-content-topic {
+    position: relative;
+    z-index: 1;
     display: grid;
     grid-template-columns: 1fr 1fr;
     gap: clamp(32px, 5vw, 64px);
@@ -358,6 +433,65 @@ body.timeline-immersive #timeMachine {
     box-shadow: 0 0 24px rgba(129, 168, 209, 0.08), inset 0 1px rgba(255,255,255,0.04);
 }
 
+/* ── Exit affordance ─────────────────────────────────────────────────────────
+   Immersive mode locks page scroll and hides the header, so without this the
+   only way out on touch is swiping through every slide. Escape covers desktop;
+   this covers everyone. */
+
+#cvExit {
+    position: fixed;
+    top: 20px;
+    right: 20px;
+    z-index: 21;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    padding: 9px 14px;
+    font-family: var(--tertiary-font);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    text-transform: uppercase;
+    color: var(--primary-color);
+    background: rgba(12, 16, 26, 0.7);
+    border: 1px solid rgba(129, 168, 209, 0.28);
+    border-radius: 999px;
+    cursor: pointer;
+    opacity: 0;
+    visibility: hidden;
+    pointer-events: none;
+    backdrop-filter: blur(10px);
+    transition: opacity 0.3s ease, visibility 0.3s, background 0.2s ease, border-color 0.2s ease;
+}
+
+body.timeline-immersive #cvExit {
+    opacity: 1;
+    visibility: visible;
+    pointer-events: auto;
+}
+
+#cvExit:hover {
+    background: rgba(234, 177, 128, 0.16);
+    border-color: rgba(234, 177, 128, 0.5);
+    color: var(--highlight-color);
+}
+
+#cvExit:focus-visible {
+    outline: 2px solid var(--highlight-color);
+    outline-offset: 3px;
+}
+
+@media (max-width: 768px) {
+    #cvExit {
+        top: 14px;
+        right: 14px;
+        padding: 10px 14px;
+    }
+    /* Icon only — the label costs width that the nav dots need */
+    #cvExit span {
+        display: none;
+    }
+}
+
 /* ── Project Nav Dots ────────────────────────────────────────────────────────── */
 
 #cvProjectNav {
@@ -370,12 +504,16 @@ body.timeline-immersive #timeMachine {
     flex-direction: column;
     gap: 10px;
     opacity: 0;
+    /* visibility (not just opacity) so the dots leave the tab order entirely
+       when the timeline isn't active */
+    visibility: hidden;
     pointer-events: none;
-    transition: opacity 0.4s ease;
+    transition: opacity 0.4s ease, visibility 0.4s;
 }
 
 body.timeline-immersive #cvProjectNav {
     opacity: 1;
+    visibility: visible;
     pointer-events: auto;
 }
 
@@ -402,8 +540,15 @@ body.timeline-immersive #cvProjectNav {
     transform: scale(1.2);
 }
 
+.nav-dot:focus-visible {
+    outline: 2px solid var(--highlight-color);
+    outline-offset: 4px;
+}
+
+/* data-label, not title: a `title` attribute would also raise the browser's
+   own native tooltip, duplicating this one. */
 .nav-dot::after {
-    content: attr(title);
+    content: attr(data-label);
     position: absolute;
     right: 18px;
     top: 50%;
@@ -427,11 +572,14 @@ body.timeline-immersive #cvProjectNav {
 
 /* ── Timeline Backdrop ───────────────────────────────────────────────────────── */
 
+/* Kept light so the starfield reads through the timeline. Legibility on topic
+   slides comes from the centred vignette below rather than from flattening the
+   whole viewport. */
 #timelineBackdrop {
     position: fixed;
     inset: 0;
     z-index: 4;
-    background: rgba(8, 12, 22, 0.6);
+    background: rgba(8, 12, 22, 0.3);
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.5s ease;
@@ -470,7 +618,9 @@ body.timeline-immersive header {
         align-items: center;
     }
     .slide-content-hero {
-        padding: 0 24px;
+        padding: 22px 20px 24px;
+        margin-bottom: 0;
+        border-radius: 18px;
     }
     .slide-topic {
         padding: 4vh 5vw;
@@ -502,10 +652,354 @@ body.timeline-immersive header {
         inset: -16px;
     }
 
-    #cvScrollHint { white-space: nowrap; font-size: 0.7rem; }
 }
 
 @media (max-width: 480px) {
     #tmYear { font-size: 1.7rem; }
     .topic-image-section { aspect-ratio: 16 / 10; max-height: 26vh; }
+}
+
+/* ── Short viewports ─────────────────────────────────────────────────────────
+   The stage is overflow:hidden AND page scroll is hijacked, so anything that
+   doesn't fit is permanently unreachable — content must be made to fit rather
+   than allowed to overflow. Previously a 375x667 phone lost the last highlight
+   bullet, and a 667x375 landscape phone lost ~157px of every topic slide. */
+
+@media (max-height: 760px) {
+    .slide-topic {
+        padding: 2vh 6vw;
+    }
+    .slide-content-topic {
+        gap: 18px;
+    }
+    .topic-image-section {
+        max-height: 24vh;
+    }
+    .topic-title {
+        margin-bottom: 10px;
+    }
+    .topic-desc {
+        margin-bottom: 14px;
+    }
+    .topic-highlights li {
+        padding: 5px 0 5px 22px;
+        font-size: 0.8rem;
+        line-height: 1.45;
+    }
+    .slide-content-hero {
+        padding: 20px 24px 22px;
+        margin-bottom: 6vh;
+    }
+}
+
+/* 640–700px tall (360x640 Android, 375x667 iPhone SE) is the tightest band
+   that still shows the image — the longest topic slide overflowed by ~9px
+   here, which silently ate its last bullet. */
+@media (max-height: 700px) {
+    .topic-image-section {
+        max-height: 18vh;
+    }
+    .topic-title {
+        font-size: clamp(1.35rem, 2.4vw, 1.8rem);
+        margin-bottom: 8px;
+    }
+    .topic-desc {
+        font-size: 0.88rem;
+        line-height: 1.5;
+        margin-bottom: 10px;
+    }
+    .topic-eyebrow {
+        margin-bottom: 8px;
+    }
+    .topic-highlights li {
+        padding: 3px 0 3px 20px;
+        font-size: 0.76rem;
+        line-height: 1.4;
+    }
+}
+
+@media (max-height: 620px) {
+    /* Below this the image costs more than it adds — text is the payload. */
+    .topic-image-section {
+        display: none;
+    }
+    .slide-content-topic {
+        grid-template-columns: 1fr;
+    }
+    .topic-eyebrow {
+        margin-bottom: 8px;
+    }
+    .topic-desc {
+        font-size: 0.9rem;
+        margin-bottom: 12px;
+    }
+    .topic-highlights li {
+        padding: 4px 0 4px 20px;
+        font-size: 0.78rem;
+    }
+    .slide-content-hero {
+        padding: 16px 20px 18px;
+        margin-bottom: 3vh;
+    }
+    #timeMachine {
+        transform: scale(0.85);
+        transform-origin: bottom left;
+    }
+}
+
+/* Landscape phones: two columns fit again because width is plentiful, but
+   vertical space is the constraint. */
+@media (max-height: 520px) and (orientation: landscape) {
+    .slide-topic {
+        padding: 1vh 8vw;
+    }
+    .topic-highlights li {
+        padding: 3px 0 3px 20px;
+    }
+    .slide-desc {
+        font-size: 0.9rem;
+    }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────────
+   The timeline is motion-heavy (parallax, crossfades, staggered reveals,
+   scroll hijacking). Honour the OS preference: keep everything, drop the
+   movement. JS additionally disables the warp effect and the reveal stagger. */
+
+@media (prefers-reduced-motion: reduce) {
+
+    .topic-highlights li {
+        transition: none;
+        transform: none;
+    }
+
+    #cvSectionLabel,
+    #projectStage,
+    #cvExit,
+    #cvProjectNav,
+    #timeMachine,
+    #timelineBackdrop {
+        transition: none;
+    }
+
+    #tmProgressFill {
+        transition: none;
+    }
+
+    .nav-dot {
+        transition: none;
+    }
+}
+
+/* ── Hero slide links (store / product pages) ────────────────────────────────── */
+
+.slide-links {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px;
+    justify-content: center;
+    margin-top: 22px;
+}
+
+.slide-link {
+    font-family: var(--tertiary-font);
+    font-size: 0.72rem;
+    letter-spacing: 0.06em;
+    text-transform: uppercase;
+    color: var(--primary-color);
+    background: rgba(12, 16, 26, 0.55);
+    border: 1px solid rgba(129, 168, 209, 0.3);
+    border-radius: 999px;
+    padding: 7px 14px;
+    transition: background 0.2s ease, border-color 0.2s ease, color 0.2s ease;
+}
+
+.slide-link:hover {
+    color: var(--highlight-color);
+    background: rgba(234, 177, 128, 0.14);
+    border-color: rgba(234, 177, 128, 0.5);
+}
+
+.slide-link:focus-visible {
+    outline: 2px solid var(--highlight-color);
+    outline-offset: 3px;
+}
+
+@media (max-height: 700px) {
+    .slide-links { margin-top: 14px; }
+    .slide-link { padding: 5px 12px; font-size: 0.68rem; }
+}
+
+/* ── Warp jump (portfolio card → timeline) ───────────────────────────────────
+   Everything except the starfield fades out, the field goes to lightspeed,
+   then the target project fades in. Driven by flyToProject() in timeline.js.
+
+   These MUST live after the `body.timeline-immersive` rules above: they have
+   identical specificity, so the cascade is decided by source order alone. */
+
+/* Match the top of the page rather than dropping to near-black — the jump
+   should read as travelling through the same space, not cutting to a void. */
+body.timeline-warping {
+    background-image: linear-gradient(var(--background-color), var(--secondary-background-color));
+}
+
+/* A touch of blur sells the speed; the directional streaking comes from the
+   per-star trail geometry in background.js. */
+body.timeline-warping #canvas-container {
+    filter: blur(0.6px);
+}
+
+/* Everything that is not the starfield fades out */
+body.timeline-warping header,
+body.timeline-warping #hero,
+body.timeline-warping #about,
+body.timeline-warping #portfolio,
+body.timeline-warping #contact,
+body.timeline-warping footer {
+    opacity: 0;
+    transition: opacity 320ms ease;
+    pointer-events: none;
+}
+
+/* The starfield is the one thing that must NOT fade */
+body.timeline-warping #canvas-container {
+    opacity: 1;
+    transition: opacity 200ms ease;
+}
+
+/* Hold the slides and HUD back until the jump lands */
+body.timeline-warping #projectStage,
+body.timeline-warping #timelineBackdrop,
+body.timeline-warping #timeMachine,
+body.timeline-warping #cvExit,
+body.timeline-warping #cvProjectNav {
+    opacity: 0;
+    transition: none;
+}
+
+/* Arrival: the stage eases in once .timeline-warping is removed */
+body.timeline-immersive:not(.timeline-warping) #projectStage {
+    transition: opacity 420ms ease;
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.timeline-warping header,
+    body.timeline-warping #hero,
+    body.timeline-warping #about,
+    body.timeline-warping #portfolio,
+    body.timeline-warping #contact,
+    body.timeline-warping footer,
+    body.timeline-immersive:not(.timeline-warping) #projectStage {
+        transition: none;
+    }
+}
+
+/* ── Hero slide fact list (projects.json `details`) ──────────────────────────── */
+
+.slide-facts {
+    display: flex;
+    flex-wrap: wrap;
+    justify-content: center;
+    gap: 8px 28px;
+    margin: 22px auto 0;
+    max-width: 700px;
+    padding: 0;
+}
+
+.slide-fact {
+    text-align: center;
+}
+
+.slide-fact dt {
+    font-family: var(--tertiary-font);
+    font-size: 0.58rem;
+    letter-spacing: 0.2em;
+    text-transform: uppercase;
+    color: rgba(129, 168, 209, 0.7);
+    margin-bottom: 3px;
+}
+
+.slide-fact dd {
+    margin: 0;
+    font-size: 0.86rem;
+    color: var(--primary-color);
+    opacity: 0.92;
+    text-shadow: 0 2px 10px rgba(0, 0, 0, 0.6);
+}
+
+@media (max-height: 760px) {
+    .slide-facts { margin-top: 14px; gap: 6px 20px; }
+    .slide-fact dd { font-size: 0.8rem; }
+}
+
+@media (max-height: 620px) {
+    /* Vertical space is the scarce resource here — the facts are a nice-to-have
+       next to the title and description. */
+    .slide-facts { display: none; }
+}
+
+@media (max-width: 480px) {
+    .slide-facts { gap: 6px 16px; }
+    .slide-fact dt { font-size: 0.54rem; letter-spacing: 0.14em; }
+    .slide-fact dd { font-size: 0.78rem; }
+}
+
+/* ── Arrival ─────────────────────────────────────────────────────────────────
+   Plays for ~600ms after a warp jump lands: a light bloom washes out from the
+   centre while the stage settles from a slight overshoot. Applied via
+   body.timeline-arriving from flyToProject(). */
+
+#warpFlash {
+    position: fixed;
+    inset: 0;
+    z-index: 6;
+    pointer-events: none;
+    opacity: 0;
+    background: radial-gradient(ellipse 60% 50% at 50% 50%,
+        rgba(190, 240, 255, 0.55) 0%,
+        rgba(129, 168, 209, 0.22) 38%,
+        rgba(129, 168, 209, 0) 72%);
+}
+
+body.timeline-arriving #warpFlash {
+    animation: warpArriveFlash 620ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+}
+
+@keyframes warpArriveFlash {
+    0%   { opacity: 0.95; transform: scale(1.25); }
+    100% { opacity: 0;    transform: scale(1); }
+}
+
+body.timeline-arriving #projectStage {
+    animation: warpArriveStage 560ms cubic-bezier(0.16, 1, 0.3, 1) forwards;
+    transition: none;
+}
+
+@keyframes warpArriveStage {
+    0%   { opacity: 0; transform: scale(1.06); filter: blur(6px); }
+    55%  { opacity: 1; }
+    100% { opacity: 1; transform: scale(1);    filter: blur(0); }
+}
+
+/* The HUD drops in just behind the stage */
+body.timeline-arriving #timeMachine,
+body.timeline-arriving #cvExit,
+body.timeline-arriving #cvProjectNav {
+    animation: warpArriveHud 520ms 120ms ease-out backwards;
+}
+
+@keyframes warpArriveHud {
+    0%   { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.timeline-arriving #warpFlash,
+    body.timeline-arriving #projectStage,
+    body.timeline-arriving #timeMachine,
+    body.timeline-arriving #cvExit,
+    body.timeline-arriving #cvProjectNav {
+        animation: none;
+    }
+    body.timeline-warping #canvas-container { filter: none; }
 }

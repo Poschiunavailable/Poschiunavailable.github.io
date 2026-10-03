@@ -1,4 +1,9 @@
-/* Import Base and Animation Styles */
+/* styles.css — global layout & shared section chrome.
+   Section-specific rules live in their own files (hero.css, about.css,
+   portfolio.css, cvstyle.css, contact.css). Do not re-declare .hero/.cta-button
+   here — duplicating them across files is what previously caused the hero to
+   inherit `height:100vh` from one file and `overflow:hidden` from another. */
+
 @import url("base.css");
 @import url("animation.css");
 
@@ -8,11 +13,15 @@ body {
     font-family: var(--primary-font);
     color: var(--primary-color);
     overflow-x: hidden;
-    height: 100%;
     margin: 0;
     padding: 0;
     position: relative;
     transition: background-color 280ms ease, background-image 280ms ease;
+}
+
+/* Anchor targets must clear the fixed navbar */
+section[id] {
+    scroll-margin-top: 80px;
 }
 
 /* Canvas Container */
@@ -24,6 +33,7 @@ body {
     height: 100%;
     z-index: -100;
     overflow: hidden;
+    pointer-events: none;
 }
 
 #canvas-container canvas {
@@ -31,182 +41,44 @@ body {
     height: 100%;
 }
 
-/* Darken background slightly while immersive. Keep stars visible but subdued */
+/* Immersive mode is "in space" — the starfield is the point, so it stays
+   near-full strength. Slide legibility is handled per-slide in cvstyle.css
+   (hero art is full-bleed; topic slides use a centred vignette). */
 body.timeline-immersive {
     background-image: linear-gradient(#0a0d12, #06080c);
 }
-body.timeline-immersive #canvas-container { opacity: 0.35; transition: opacity 260ms ease; }
-body:not(.timeline-immersive) #canvas-container { opacity: 1; transition: opacity 260ms ease; }
 
-/* Global Styles */
-h1,
-h2,
-h3 {
-    z-index: 2;
+body.timeline-immersive #canvas-container {
+    opacity: 0.9;
+    transition: opacity 260ms ease;
 }
 
-p {
-    z-index: 2;
+body:not(.timeline-immersive) #canvas-container {
+    opacity: 1;
+    transition: opacity 260ms ease;
 }
 
+/* The warp-jump rules live at the end of cvstyle.css, not here: cvstyle.css
+   loads after this file and its `body.timeline-immersive #projectStage` rules
+   have identical specificity, so warp rules placed here would lose the
+   cascade and silently do nothing. */
 
-.navbar .brand a {
-    color: var(--primary-color);
-    font-size: 1.5rem;
-    text-decoration: none;
-    font-weight: bold;
-    transition: color 0.3s ease;
-}
-
-.navbar .brand a:hover {
-    color: var(--highlight-color);
-}
-
-.navbar .nav-links {
-    list-style: none;
-    display: flex;
-    gap: 20px;
-}
-
-.navbar .nav-links li a {
-    color: var(--primary-color);
-    text-decoration: none;
-    font-size: 1rem;
-    transition: color 0.3s ease;
-}
-
-.navbar .nav-links li a:hover {
-    color: var(--highlight-color);
-}
-
-/* Hero Section */
-.hero {
-    height: 100vh;
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    position: relative;
-    background-color: var(--background-color);
-    color: var(--primary-color);
-    padding: 0 20px;
-}
-
-.hero-video-overlay {
-    position: absolute;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: var(--video-height);
-    overflow: hidden;
-    z-index: -1;
-}
-
-.hero-video {
-    width: 100%;
-    height: 100%;
-    object-fit: cover;
-}
-
-.hero-content {
-    text-align: center;
-    z-index: 2;
-}
-
-.hero-content h1 {
-    font-size: 3rem;
-    margin-bottom: 0.5rem;
-    animation: fadeIn 1s forwards;
-}
-
-.hero-content h2 {
-    font-size: 2rem;
-    margin-bottom: 1rem;
-    color: var(--senary-color);
-    animation: fadeIn 1.2s forwards;
-}
-
-.hero-content p {
-    font-size: 1.2rem;
-    margin-bottom: 2rem;
-    max-width: 600px;
-    margin-left: auto;
-    margin-right: auto;
-    animation: fadeIn 1.4s forwards;
-}
-
-.cta-button {
-    display: inline-block;
-    padding: 10px 20px;
-    background-color: var(--highlight-color);
-    color: #fff;
-    border: none;
-    border-radius: 5px;
-    text-decoration: none;
-    font-size: 1rem;
-    cursor: pointer;
-    transition: background-color 0.3s ease, transform 0.3s ease;
-}
-
-.cta-button:hover {
-    background-color: var(--senary-color);
-    transform: scale(1.05);
-}
-
-/* About Section */
-#about {
-    padding: 100px 20px;
-    background-color: var(--secondary-background-color);
-    color: var(--primary-color);
-    font-family: var(--primary-font);
-}
-
-.about-content {
-    display: flex;
-    flex-wrap: wrap;
-    gap: 20px;
-    align-items: center;
-    justify-content: center;
-}
-
-.about-image img {
-    width: 100%;
-    max-width: 300px;
-    border-radius: 10px;
-    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
-    transition: transform var(--transition-duration) ease;
-}
-
-.about-image img:hover {
-    transform: scale(1.05);
-}
-
-.about-text {
-    max-width: 600px;
-}
-
-.about-text h3 {
-    margin-bottom: 1rem;
-    color: var(--senary-color);
-}
-
-.about-text p {
-    margin-bottom: 1rem;
-    line-height: 1.6;
-}
-
-/* Contact Section */
-#contact {
-    padding: 100px 20px;
-    background-color: var(--background-color);
-    color: var(--primary-color);
-    font-family: var(--primary-font);
-}
+/* #about lives in about.css and #contact in contact.css — don't re-declare
+   either here. Both files load after this one, so duplicated section rules
+   here silently lose the cascade; that is the class of bug that broke the
+   hero layout. */
 
 /* Footer Styling */
 footer {
     padding: 50px 20px;
-    background-color: var(--secondary-background-color);
+    background-color: var(--footer-fill);
     color: var(--primary-color);
     text-align: center;
     font-size: 0.9rem;
+}
+
+footer .social-links {
+    display: flex;
+    gap: 1.25rem;
+    justify-content: center;
 }

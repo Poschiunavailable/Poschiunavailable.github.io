@@ -2,7 +2,7 @@
 
 #contact {
     padding: 100px 20px;
-    background-color: var(--background-color);
+    background-color: var(--section-fill);
     color: var(--primary-color);
     text-align: center;
 }
@@ -47,4 +47,46 @@
     width: 100%;
     font-size: 1.1rem;
     font-weight: bold;
+}
+.form-note {
+    margin-top: 14px;
+    min-height: 1.2em;
+    font-size: 0.85rem;
+    color: var(--secondary-color);
+    text-align: center;
+}
+
+/* The submit button is styled as a <button>; make sure it doesn't inherit a
+   default border/appearance from the UA stylesheet. */
+#contact button.cta-button {
+    border: none;
+    font-family: var(--primary-font);
+}
+
+/* ── Contact card (no form: contact runs through LinkedIn) ───────────────────── */
+
+.contact-card {
+    max-width: 620px;
+    margin: 40px auto 0;
+    text-align: center;
+}
+
+.contact-lead {
+    font-size: 1.05rem;
+    line-height: 1.7;
+    margin-bottom: 28px;
+    color: var(--primary-color);
+    opacity: 0.9;
+}
+
+.contact-primary {
+    font-size: 1.05rem;
+    font-weight: bold;
+    padding: 0.9em 2em;
+}
+
+.contact-secondary {
+    margin-top: 22px;
+    font-size: 0.9rem;
+    color: var(--secondary-color);
 }

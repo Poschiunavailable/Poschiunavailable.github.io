@@ -142,3 +142,26 @@
 .slide-in-right {
     animation: slideInFromRight 1s ease-out forwards;
 }
+/*--------------------------------
+    Reduced Motion
+----------------------------------*/
+/* Global safety net. Individual modules also check the preference in JS so
+   they can skip the work entirely rather than just its animation. */
+
+@media (prefers-reduced-motion: reduce) {
+    *,
+    *::before,
+    *::after {
+        animation-duration: 0.01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: 0.01ms !important;
+        scroll-behavior: auto !important;
+    }
+
+    /* .animate starts at opacity 0 and is revealed by an IntersectionObserver.
+       If anything fails to add .visible, this keeps content readable. */
+    .animate {
+        opacity: 1;
+        transform: none;
+    }
+}

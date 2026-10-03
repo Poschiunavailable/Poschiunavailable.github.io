@@ -1,240 +1,328 @@
 [
   {
-    "id": "EverslaughtInvasion",
-    "title": "Everslaught Invasion",
-    "subtitle": "AI & Enemy Systems Engineer",
-    "image": "assets/everslaught_invasion_splashart.webp",
-    "description": "A Virtual Reality zombie horde mode for the Quest 2 built with Unity.",
-    "timelineDescription": "Networked enemy AI and core gameplay systems for a fast-paced VR title.",
-    "video": "assets/PortfolioVideoLowerRes.mp4",
-    "poster": "assets/everslaught_invasion_splashart.webp",
-    "tags": ["Enemy AI", "P2P Networking", "Unity", "VR / Quest 2", "Performance"],
+    "id": "UniversityProjects",
+    "title": "Cologne Game Lab",
+    "subtitle": "BA Digital Games, Game Programming — TH Köln",
+    "image": "assets/sensor_simulation.svg",
+    "poster": "assets/sensor_simulation.svg",
+    "description": "Seven semesters of project-based games education at TH Köln's Cologne Game Lab, taught and examined in English.",
+    "timelineDescription": "A degree built on shipped team projects rather than coursework alone.",
+    "tags": [
+      "C#",
+      "Unity",
+      "Unreal Engine",
+      "Team Projects",
+      "Prototyping"
+    ],
     "showInPortfolio": true,
     "showInTimeline": true,
-    "startDate": "2018-05",
-    "endDate": "2020-12",
+    "startDate": "2015-09",
+    "endDate": "2019-07",
+    "details": {
+      "Institution": "TH Köln — Cologne Game Lab",
+      "Degree": "B.A. Digital Games",
+      "Specialisation": "Game Programming",
+      "Language": "English"
+    },
+    "links": [
+      {
+        "text": "Cologne Game Lab",
+        "href": "https://www.colognegamelab.de"
+      }
+    ],
     "workTopics": [
       {
-        "title": "Networked Enemy AI Architecture",
-        "image": "assets/everslaught_invasion_enemies.webp",
-        "description": "Architected a P2P networked enemy system using a Character/Controller pattern, enabling authoritative host logic across up to 4 simultaneous players.",
+        "title": "Collaborative Project Series",
+        "image": "assets/cold_comfort_splashart.webp",
+        "description": "Five semester-long team productions, each built by a cross-disciplinary group of programmers, designers and artists around a different design brief.",
         "highlights": [
-          "Photon Fusion P2P state synchronisation across concurrent player sessions",
-          "Behaviour tree AI (Behaviour Designer) supporting 8+ distinct enemy archetypes",
-          "Scalable spawner system managing 50+ enemies simultaneously with minimal overhead",
-          "Hot-swap enemy configurations at runtime without interrupting live sessions"
+          "Ludic Games, Narrative Games and Mixed Reality Games in years one and two",
+          "Experimental Games and Serious Games in the later semesters",
+          "Cross-disciplinary teams — the same collaboration model as a small studio",
+          "Mainly C# in Unity, with one mixed-reality project in Unreal Engine"
         ]
       },
       {
-        "title": "Quest 2 Performance Optimization",
+        "title": "Self-Initiated Project",
         "image": "assets/everslaught_invasion_splashart.webp",
-        "description": "Profiled and optimised the game to meet Oculus Quest 2's strict 72fps budget through systemic, data-driven improvements.",
+        "description": "A full semester dedicated to a single self-directed production — the largest individual module of the degree at 25 ECTS.",
         "highlights": [
-          "Enemy pooling and per-type LOD system reducing draw calls by ~40%",
-          "Custom low-complexity VR shaders replacing expensive stock materials",
-          "Fixed-timestep AI tick budgeting to prevent frame spikes during combat peaks",
-          "Memory budgeting pass — reduced peak allocation by 35% across wave modes"
-        ]
-      }
-    ],
-    "details": {
-      "about": {
-        "summary": "About the Project",
-        "content": [
-          "Fast-paced VR action game.",
-          "Developed for Oculus Quest 2.",
-          {"type": "link", "text": "Official Website", "href": "https://everslaughtinvasion.com"},
-          {"type": "link", "text": "Steam Page", "href": "https://store.steampowered.com/app/everslaughtinvasion"}
+          "Self-defined scope, schedule and technical direction",
+          "Largest single module of the programme (25 ECTS)",
+          "Direct precursor to the freelance prototyping work that followed"
         ]
       },
-      "work": {
-        "summary": "Work as the Enemy/AI Engineer and Generalist",
-        "content": [
-          "Created P2P networked enemy architecture using a Character/Controller approach",
-          "Implemented scalable AI behaviours and tooling",
-          "Optimised Quest 2 performance budgets"
-        ]
-      },
-      "technologies": {
-        "summary": "Technologies Used",
-        "content": [
-          {"type": "sub-list", "text": "Unity Engine", "items": ["Shader Graph", "Behaviour Designer", "Scriptable Objects"]},
-          "Photon Fusion P2P (Networking)",
-          "Oculus Quest 2"
-        ]
-      }
-    }
-  },
-  {
-    "id": "RoughJustice",
-    "title": "Rough Justice: '84",
-    "subtitle": "Gameplay Programmer",
-    "image": "assets/rough_justice_splashart.webp",
-    "description": "An agency management simulator released on Steam and developed in Unreal Engine 4.",
-    "timelineDescription": "Designed and implemented tactical mini‑games and supporting tools.",
-    "video": "assets/PortfolioVideoLowerRes.mp4",
-    "poster": "assets/rough_justice_splashart.webp",
-    "tags": ["Mini-games & Puzzles", "Editor Tooling", "Unreal Engine 4", "C++ & Blueprints"],
-    "showInPortfolio": true,
-    "showInTimeline": true,
-    "startDate": "2021-01",
-    "endDate": "2022-06",
-    "workTopics": [
       {
-        "title": "Mini-game Systems",
+        "title": "Bachelor Thesis",
         "image": "assets/rough_justice_map.webp",
-        "description": "Designed and built multiple self-contained tactical mini-games integrated into the game's contract mission flow.",
+        "description": "Thesis on character scale and movement constraints in digital games — how body proportions and traversal rules interact with level geometry.",
         "highlights": [
-          "Lock-picking, safe-cracking, and surveillance interception mini-games",
-          "Shared mini-game framework with designer-configurable difficulty parameters",
-          "Clean integration with the narrative contract and consequence system",
-          "Difficulty curves tuned from playtest data across 3 QA rounds"
-        ]
-      },
-      {
-        "title": "Editor Tooling & Pipeline",
-        "image": "assets/rough_justice_splashart.webp",
-        "description": "Built a custom Unreal Editor tool allowing designers to author, configure, and validate game contracts without engineering support.",
-        "highlights": [
-          "Blueprint-based contract editor with live in-editor preview",
-          "Automated build and packaging pipeline cutting deploy time by ~30%",
-          "Data validation layer surfacing configuration errors at edit time, not runtime",
-          "Version-controlled asset manifest keeping shipped contract data in sync"
+          "\"Resolving character sizing issues and movement limitations in digital games\"",
+          "Combined practical implementation with written research",
+          "Graduated B.A. Digital Games, Game Programming, July 2019"
         ]
       }
     ],
-    "details": {
-      "about": {
-        "summary": "About the Project",
-        "content": [
-          "Retro‑inspired management game.",
-          "Released on Steam.",
-          {"type": "link", "text": "Steam Page", "href": "https://store.steampowered.com/app/roughjustice"}
-        ]
-      },
-      "work": {
-        "summary": "Gameplay Programmer",
-        "content": [
-          "Implemented multiple puzzle mini‑games",
-          "Created editor tooling for contract creation",
-          "Maintained build automation"
-        ]
-      },
-      "technologies": {
-        "summary": "Technologies Used",
-        "content": [
-          "Unreal Engine 4",
-          "Blueprints and C++",
-          "Steamworks"
-        ]
-      }
-    }
+    "cardVideo": "assets/portfolio_reel.mp4"
   },
   {
     "id": "ColdComfort",
     "title": "Cold Comfort",
-    "subtitle": "Gameplay Programmer",
+    "subtitle": "Gameplay Programmer — Prototype",
     "image": "assets/cold_comfort_splashart.webp",
-    "description": "Multiplayer survival horror prototype built in Unreal Engine 4.",
-    "timelineDescription": "Prototyped co‑op zombie survival with dynamic objectives.",
-    "video": "assets/PortfolioVideoLowerRes.mp4",
     "poster": "assets/cold_comfort_splashart.webp",
-    "showInPortfolio": false,
-    "showInTimeline": true,
-    "startDate": "2016-03",
-    "endDate": "2017-04",
-    "workTopics": [
+    "description": "Asymmetric 5v5 PvP shooter prototype in Unreal Engine 4, built at Gamma Minus and presented to publishers at the Gamescom Business Arena.",
+    "timelineDescription": "Asymmetric multiplayer prototype shown to publishers at Gamescom.",
+    "tags": [
+      "C++17",
+      "Unreal Engine 4",
+      "Asymmetric PvP",
+      "Network Replication",
+      "Steam Online Subsystem"
+    ],
+    "showInPortfolio": true,
+    "showInTimeline": false,
+    "startDate": "2019-02",
+    "endDate": "2020-06",
+    "details": {
+      "Engine": "Unreal Engine 4",
+      "Mode": "Asymmetric 5v5 PvP",
+      "Networking": "Steam Online Subsystem",
+      "Status": "Announced, unreleased"
+    },
+    "links": [
       {
-        "title": "Mission & Objective System",
-        "image": "assets/cold_comfort_game.jpg",
-        "description": "Designed and implemented a dynamic mission system driving co-operative objectives for up to 4 players.",
-        "highlights": [
-          "Event-driven mission state machine with branching objective conditions",
-          "Dynamic enemy spawner tied to mission phase and player count",
-          "In-game debug HUD for rapid iteration without full recompile cycles",
-          "Shared objective UI propagated to all clients over Unreal's replication layer"
-        ]
+        "text": "Steam page",
+        "href": "https://store.steampowered.com/app/683190/Cold_Comfort/"
       }
     ],
-    "details": {
-      "about": {"summary": "About the Project", "content": ["Co‑op survival gameplay."]},
-      "work": {"summary": "Gameplay Programmer", "content": ["Authored mission system", "Built enemy spawning", "Created debug UI"]},
-      "technologies": {"summary": "Technologies Used", "content": ["Unreal Engine 4", "C++"]}
-    }
+    "workTopics": [],
+    "cardVideo": "assets/portfolio_reel.mp4"
   },
   {
-    "id": "EverslaughtShip",
-    "title": "Everslaught: Ship",
-    "subtitle": "Prototype Developer",
-    "image": "assets/Everslaught_Ship.png",
-    "description": "A VR spaceship systems experiment for Unity.",
-    "timelineDescription": "Explored interactive cockpit systems and motion controls.",
-    "video": "assets/PortfolioVideoLowerRes.mp4",
-    "poster": "assets/Everslaught_Ship.png",
-    "showInPortfolio": false,
-    "showInTimeline": true,
-    "startDate": "2017-05",
-    "endDate": "2018-02",
-    "workTopics": [
-      {
-        "title": "VR Cockpit Interaction",
-        "image": "assets/Everslaught_Ship2.png",
-        "description": "Prototyped an immersive VR cockpit with physical button, lever, and throttle interaction systems using SteamVR.",
-        "highlights": [
-          "Physics-based grab and manipulation with SteamVR SDK",
-          "Simulated ship subsystems — power routing, shields, weapon targeting",
-          "Comfort-focused seated locomotion with configurable comfort settings",
-          "Modular input abstraction layer enabling fast swap between SteamVR and XR Toolkit"
-        ]
-      }
+    "id": "Freelance",
+    "title": "Freelance Software Engineer",
+    "subtitle": "Self-employed — C++ / Unreal Engine 4",
+    "image": "assets/cold_comfort_splashart.webp",
+    "poster": "assets/cold_comfort_splashart.webp",
+    "description": "Independent C++ and Unreal Engine 4 development, building the prototypes that two studio productions grew out of.",
+    "timelineDescription": "Built the prototypes that secured funding and led to two permanent studio roles.",
+    "tags": [
+      "C++17",
+      "Unreal Engine 4",
+      "Prototyping",
+      "Network Replication",
+      "Steam Online Subsystem"
     ],
-    "details": {
-      "about": {"summary": "About the Project", "content": ["Experimental VR cockpit"]},
-      "work": {"summary": "Prototype Developer", "content": ["Built interaction framework", "Simulated ship systems"]},
-      "technologies": {"summary": "Technologies Used", "content": ["Unity", "SteamVR"]}
-    }
-  },
-  {
-    "id": "PortfolioSite",
-    "title": "Portfolio Website",
-    "subtitle": "Solo Developer",
-    "image": "assets/website_icon.png",
-    "description": "Personal website showcasing projects and an interactive timeline.",
-    "timelineDescription": "Designed and coded a lightweight portfolio site with animated timeline.",
-    "video": "assets/PortfolioVideoLowerRes.mp4",
-    "poster": "assets/website_icon.png",
-    "showInPortfolio": false,
+    "showInPortfolio": true,
     "showInTimeline": true,
-    "startDate": "2022-07",
-    "endDate": "2023-05",
+    "startDate": "2019-02",
+    "endDate": "2021-02",
+    "details": {
+      "Engine": "Unreal Engine 4",
+      "Language": "C++17 & Blueprints",
+      "Focus": "Prototyping",
+      "Outcome": "Both prototypes funded"
+    },
     "workTopics": [
       {
-        "title": "Interactive Starfield & Animation",
-        "image": "assets/website_icon.png",
-        "description": "Built a Three.js WebGL starfield background that responds to mouse movement, device orientation, and page scroll position.",
+        "title": "Rough Justice: '84 — Prototype",
+        "image": "assets/rough_justice_splashart.webp",
+        "description": "Independently developed the prototype that secured project funding and grew into a shipped commercial title.",
         "highlights": [
-          "5,000-particle point cloud with vertex colours rendered via WebGL",
-          "Smooth LERP camera sway driven by mouse input and device gyroscope",
-          "Visibility API integration to pause rendering when the tab is hidden",
-          "Hyperspace warp effect: Z-streaming particles triggered on timeline entry"
+          "Secured project funding, including Film- und Medienstiftung NRW",
+          "Led directly to a permanent Lead Programmer role on the production",
+          "C++17 on Unreal Engine 4"
         ]
       },
       {
-        "title": "Data-driven Architecture",
-        "image": "assets/website_icon.png",
-        "description": "Designed a single-JSON data model that powers both the portfolio grid and the interactive CV timeline from one source of truth.",
+        "title": "Cold Comfort — Prototype",
+        "image": "assets/cold_comfort_game.webp",
+        "description": "Prototype built around asymmetric multiplayer mechanics, with lobby and session flow on the Steam Online Subsystem.",
         "highlights": [
-          "projects.json as the single source of truth for all project content",
-          "Dynamic portfolio card generation with 3D hover effects and tag chips",
-          "Custom ES module system — no build tools, no bundler, just the browser",
-          "Project-indexed virtual scroll with directional snap and frame-rate-independent LERP"
+          "Asymmetric multiplayer mechanics and network replication",
+          "Lobby and session system on the Steam Online Subsystem",
+          "Technical contact for press and investors at the Gamescom Business Arena"
         ]
       }
     ],
+    "cardVideo": "assets/portfolio_reel.mp4"
+  },
+  {
+    "id": "RoughJustice",
+    "title": "Rough Justice: '84",
+    "subtitle": "Lead Programmer — Gamma Minus UG",
+    "image": "assets/rough_justice_splashart.webp",
+    "poster": "assets/rough_justice_splashart.webp",
+    "description": "Agency management game built in Unreal Engine 4 with an international remote team. Published by Daedalic Entertainment.",
+    "timelineDescription": "Technical lead on a shipped UE4 title, from data-driven core architecture to team leadership.",
+    "tags": [
+      "C++17",
+      "Unreal Engine 4",
+      "Team Leadership",
+      "Tool Development",
+      "Procedural Generation"
+    ],
+    "showInPortfolio": true,
+    "showInTimeline": true,
+    "startDate": "2021-03",
+    "endDate": "2022-02",
     "details": {
-      "about": {"summary": "About the Project", "content": ["Responsive single‑page site"]},
-      "work": {"summary": "Web Developer", "content": ["Implemented Three.js starfield", "Created project data system", "Built scrolling timeline"]},
-      "technologies": {"summary": "Technologies Used", "content": ["HTML/CSS/JS", "Three.js"]}
-    }
+      "Engine": "Unreal Engine 4",
+      "Platform": "PC — Steam",
+      "Publisher": "Daedalic Entertainment",
+      "Team": "Led 3 engineers"
+    },
+    "links": [
+      {
+        "text": "Steam page",
+        "href": "https://store.steampowered.com/app/1291860/Rough_Justice_84/"
+      },
+      {
+        "text": "Press kit",
+        "href": "https://www.rough-justice.com/press-kit/"
+      }
+    ],
+    "workTopics": [
+      {
+        "title": "Data-driven Core Architecture",
+        "image": "assets/rough_justice_map.webp",
+        "description": "Designed the C++ core simulating time and resource flows, with modular systems for contracts, dialogue and agent management.",
+        "highlights": [
+          "Simulation of time and resource flows as the game's backbone",
+          "Separate modules for contract, dialogue and agent management",
+          "Data-driven design so designers could iterate without engineering support",
+          "C++17 on Unreal Engine 4"
+        ]
+      },
+      {
+        "title": "Technical Leadership & Tooling",
+        "image": "assets/rough_justice_splashart.webp",
+        "description": "Led a three-person junior team while building the tooling that removed manual setup work from the production pipeline.",
+        "highlights": [
+          "Code reviews, requirements analysis and ticket planning for three junior engineers",
+          "Designed the technical hiring tests used to grow the team",
+          "Built a procedural generation tool driven by network data",
+          "Worked in an international, fully remote team"
+        ]
+      }
+    ],
+    "cardVideo": "assets/portfolio_reel.mp4"
+  },
+  {
+    "id": "EverslaughtInvasion",
+    "title": "Everslaught Invasion",
+    "subtitle": "Software Engineer — MobX Games",
+    "image": "assets/everslaught_invasion_splashart.webp",
+    "poster": "assets/everslaught_invasion_splashart.webp",
+    "description": "VR action title for Meta Quest 2, published by Fast Travel Games. Network-synchronised real-time systems inside a standalone headset's memory and performance budget.",
+    "timelineDescription": "Agent AI and P2P network synchronisation under standalone VR constraints.",
+    "tags": [
+      "C#",
+      "Unity",
+      "Photon Fusion",
+      "P2P Networking",
+      "Behaviour Trees",
+      "Performance"
+    ],
+    "showInPortfolio": true,
+    "showInTimeline": true,
+    "startDate": "2022-02",
+    "endDate": "2023-04",
+    "details": {
+      "Engine": "Unity",
+      "Platform": "Meta Quest 2",
+      "Publisher": "Fast Travel Games",
+      "Networking": "Photon Fusion P2P"
+    },
+    "links": [
+      {
+        "text": "Fast Travel Games",
+        "href": "https://www.fasttravelgames.com/"
+      }
+    ],
+    "workTopics": [
+      {
+        "title": "Autonomous Agent AI Framework",
+        "image": "assets/everslaught_invasion_enemies.webp",
+        "description": "Built a behaviour-tree-based framework for autonomous agents, covering navigation and rule-driven spawning.",
+        "highlights": [
+          "Behaviour-tree architecture for autonomous agent decision-making",
+          "Path and terrain navigation for agents in 3D space",
+          "Rule-based spawn system driving encounter pacing",
+          "Designed for reuse across multiple agent types"
+        ]
+      },
+      {
+        "title": "Real-time Network Synchronisation",
+        "image": "assets/everslaught_invasion_splashart.webp",
+        "description": "Implemented peer-to-peer state replication over Photon Fusion, kept stable within the tight budgets of a standalone headset.",
+        "highlights": [
+          "State replication for 10+ agents in real time over Photon Fusion P2P",
+          "Lean state design to stay inside standalone VR memory budgets",
+          "Custom object pooling to avoid runtime allocation spikes",
+          "Refactored session management: lobby, join flow and matchmaking"
+        ]
+      }
+    ],
+    "cardVideo": "assets/portfolio_reel.mp4"
+  },
+  {
+    "id": "Aurelion",
+    "title": "AURELION — Sensor Simulation",
+    "subtitle": "Software Engineer, Simulation & Validation — dSPACE",
+    "image": "assets/sensor_simulation.svg",
+    "poster": "assets/sensor_simulation.svg",
+    "description": "Ongoing development of AURELION, dSPACE's sensor-simulation software built on Unreal Engine 5, used to validate ECUs and automated driving functions.",
+    "timelineDescription": "Cross-platform C++ systems work for automotive sensor simulation on Unreal Engine 5.",
+    "tags": [
+      "C++20",
+      "Unreal Engine 5",
+      "Vulkan",
+      "Linux",
+      "Windows API",
+      "CMake",
+      "Azure DevOps"
+    ],
+    "showInPortfolio": true,
+    "showInTimeline": true,
+    "startDate": "2024-05",
+    "details": {
+      "Engine": "Unreal Engine 5",
+      "Platform": "Windows & Linux",
+      "Domain": "Automotive SIL / HIL",
+      "Language": "C++20"
+    },
+    "links": [
+      {
+        "text": "AURELION product page",
+        "href": "https://www.dspace.com/en/pub/home/products/systems/automotive_simulation_models/aurelion_sensor-realistic_simulation.cfm"
+      }
+    ],
+    "workTopics": [
+      {
+        "title": "Cross-platform GPU & Display Detection",
+        "image": "assets/sensor_simulation.svg",
+        "description": "Designed and built a cross-platform C/C++ library for GPU and monitor detection on multi-GPU simulation systems, now used across several products in the toolchain.",
+        "highlights": [
+          "Windows back end via Vulkan, Registry, Setup API and Configuration Manager",
+          "Linux back end via Vulkan, DRM and Xorg",
+          "A single API surface over two very different platform models",
+          "Adopted by several products across the toolchain"
+        ]
+      },
+      {
+        "title": "Rendering & Platform Engineering",
+        "image": "assets/sensor_simulation.svg",
+        "description": "Real-time rendering integration on Unreal Engine 5, alongside cross-platform support and build automation.",
+        "highlights": [
+          "Integrated and optimised real-time lighting with Unreal Engine Lumen and NVIDIA DLSS",
+          "Contributed to Linux support across the toolchain",
+          "Azure DevOps pipelines (YAML) with daily system health checks and repair routines",
+          "C++20 with CMake, Docker and unit testing; SIL/HIL workflows in a Scrum/SAFe setting"
+        ]
+      }
+    ],
+    "cardVideo": "assets/portfolio_reel.mp4"
   }
 ]
