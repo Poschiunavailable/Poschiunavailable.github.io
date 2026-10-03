@@ -121,9 +121,9 @@ Layout is validated at the viewports listed in `Docs/QUALITY.md`. **360×640 and
 Images/video referenced by `projects.json` and `index.html`: genuine key art
 for each game, Patrick's profile photo, the hero reel (`portfolio_reel.mp4` +
 poster), the original AURELION artwork, and `assets/fonts/` (self-hosted
-woff2 + OFL licences; provenance in `Docs/HISTORY.md` "Fonts"). Some assets are reused as
-placeholders for entries that lack their own — the register in
-`Docs/STATUS.md` says which.
+woff2 + OFL licences; provenance in `Docs/HISTORY.md` "Fonts"). Where an entry lacks its own art,
+a labelled placeholder from `assets/placeholders/` stands in (or existing art
+is reused); the register in `Docs/STATUS.md` says which.
 
 ## Editing content
 
@@ -133,6 +133,10 @@ for a straightforward new entry. To change what shows where, toggle
 additional timeline slides (image + description + `highlights[]` bullets).
 `details` is the fact list on the project's timeline hero slide (see the quirk
 below).
+`placeholders` maps field paths (`"image"`, `"workTopics[0].image"`) to the
+real content still needed. Mark every placeholder there; when real content
+arrives, replace the value and delete its key. The walk enforces both
+directions.
 
 ## Known quirks worth knowing before touching things
 

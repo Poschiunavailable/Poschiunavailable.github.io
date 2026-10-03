@@ -192,23 +192,25 @@ Measured locally (`python3 -m http.server 4173`) in the cloud sandbox.
 ## Placeholder register
 
 Everything shown on the site that is not a real, verified fact or genuine
-asset. Replace these; nothing else on the site is invented.
+asset. Nothing else on the site is invented. **Source of truth for data
+placeholders: the `placeholders` map in each `projects.json` entry** (field
+path → what real content is needed); the walk fails if a field uses
+`assets/placeholders/` without a marker, or a marker points at nothing. This
+table adds what lives outside `projects.json`.
 
-| # | Where | What is placeholder | Real content needed |
+| # | Where | What stands in | Real content needed |
 |---|---|---|---|
-| P1 | `projects.json` → `UniversityProjects.image` / `.poster` | Uses `assets/sensor_simulation.svg` (the AURELION artwork) | Image from a Cologne Game Lab project, or a neutral placeholder |
-| P2 | `projects.json` → `UniversityProjects.workTopics[0..2].image` | Cold Comfort, Everslaught and Rough Justice art standing in for university projects | Screenshots of the actual student games |
-| P3 | `projects.json` → every `cardVideo` | All six cards share the generic `portfolio_reel.mp4` | Per-project preview clips |
-| P4 | `projects.json` → `Freelance.image` / `.poster` | Reuses the Cold Comfort splash art (identical to the Cold Comfort card) | An image that represents the freelance work |
-| P5 | `index.html` → `og:image` | Everslaught splash art, relative URL | Designed 1200×630 preview (Phase B) |
-| P6 | `UniversityProjects` workTopics | Collaborative projects described by theme, not title | Individual student game titles (only Patrick has them) |
+| P1 | `UniversityProjects`: `image`, `poster` | `assets/placeholders/cologne-game-lab.svg` (labelled "PLACEHOLDER") | Image from a Cologne Game Lab project |
+| P2 | `UniversityProjects`: `workTopics[0..2].image` | `assets/placeholders/cgl-*.svg` (labelled) | Screenshots of the student games / a thesis figure |
+| P3 | every project's `cardVideo` | the shared `portfolio_reel.mp4` | Per-project preview clips |
+| P4 | `Freelance`: `image`, `poster` | Cold Comfort splash art (same as the Cold Comfort card) | An image representing the freelance work |
+| P5 | `index.html` → `og:image` | Everslaught splash art, relative URL | Designed 1200×630 preview (B3) |
+| P6 | `UniversityProjects` topic text | Collaborative projects described by theme, not title (true, but incomplete) | Individual student game titles (only Patrick has them) |
 
 Not placeholders, recorded so they are not "fixed" by mistake:
 `assets/sensor_simulation.svg` is deliberate original artwork for AURELION
-(no employer imagery); the game key art is genuine.
-
-Not yet marked in the data: the `"placeholder"` markers in `projects.json`
-land with U7.
+(no employer imagery); the game key art is genuine; the placeholder SVGs'
+starfield and corner brackets echo the site's own motifs on purpose.
 
 ## Questions for Patrick
 

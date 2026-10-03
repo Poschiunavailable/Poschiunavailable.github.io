@@ -3,8 +3,8 @@
     "id": "UniversityProjects",
     "title": "Cologne Game Lab",
     "subtitle": "BA Digital Games, Game Programming — TH Köln",
-    "image": "assets/sensor_simulation.svg",
-    "poster": "assets/sensor_simulation.svg",
+    "image": "assets/placeholders/cologne-game-lab.svg",
+    "poster": "assets/placeholders/cologne-game-lab.svg",
     "description": "Seven semesters of project-based games education at TH Köln's Cologne Game Lab, taught and examined in English.",
     "timelineDescription": "A degree built on shipped team projects rather than coursework alone.",
     "tags": [
@@ -33,7 +33,7 @@
     "workTopics": [
       {
         "title": "Collaborative Project Series",
-        "image": "assets/cold_comfort_splashart.webp",
+        "image": "assets/placeholders/cgl-collaborative-projects.svg",
         "description": "Five semester-long team productions, each built by a cross-disciplinary group of programmers, designers and artists around a different design brief.",
         "highlights": [
           "Ludic Games, Narrative Games and Mixed Reality Games in years one and two",
@@ -44,7 +44,7 @@
       },
       {
         "title": "Self-Initiated Project",
-        "image": "assets/everslaught_invasion_splashart.webp",
+        "image": "assets/placeholders/cgl-self-initiated-project.svg",
         "description": "A full semester dedicated to a single self-directed production — the largest individual module of the degree at 25 ECTS.",
         "highlights": [
           "Self-defined scope, schedule and technical direction",
@@ -54,7 +54,7 @@
       },
       {
         "title": "Bachelor Thesis",
-        "image": "assets/rough_justice_map.webp",
+        "image": "assets/placeholders/cgl-bachelor-thesis.svg",
         "description": "Thesis on character scale and movement constraints in digital games — how body proportions and traversal rules interact with level geometry.",
         "highlights": [
           "\"Resolving character sizing issues and movement limitations in digital games\"",
@@ -63,7 +63,15 @@
         ]
       }
     ],
-    "cardVideo": "assets/portfolio_reel.mp4"
+    "cardVideo": "assets/portfolio_reel.mp4",
+    "placeholders": {
+      "image": "Image from a Cologne Game Lab project",
+      "poster": "Same as image",
+      "workTopics[0].image": "Screenshot of a collaborative team production",
+      "workTopics[1].image": "Screenshot of the self-initiated project",
+      "workTopics[2].image": "Figure or prototype from the bachelor thesis",
+      "cardVideo": "Card hover preview: the shared generic reel, not footage of this project"
+    }
   },
   {
     "id": "ColdComfort",
@@ -97,7 +105,10 @@
       }
     ],
     "workTopics": [],
-    "cardVideo": "assets/portfolio_reel.mp4"
+    "cardVideo": "assets/portfolio_reel.mp4",
+    "placeholders": {
+      "cardVideo": "Card hover preview: the shared generic reel, not footage of this project"
+    }
   },
   {
     "id": "Freelance",
@@ -146,7 +157,12 @@
         ]
       }
     ],
-    "cardVideo": "assets/portfolio_reel.mp4"
+    "cardVideo": "assets/portfolio_reel.mp4",
+    "placeholders": {
+      "image": "Reuses the Cold Comfort splash art (identical to the Cold Comfort card); an image representing the freelance work",
+      "poster": "Same as image",
+      "cardVideo": "Card hover preview: the shared generic reel, not footage of this project"
+    }
   },
   {
     "id": "RoughJustice",
@@ -207,7 +223,10 @@
         ]
       }
     ],
-    "cardVideo": "assets/portfolio_reel.mp4"
+    "cardVideo": "assets/portfolio_reel.mp4",
+    "placeholders": {
+      "cardVideo": "Card hover preview: the shared generic reel, not footage of this project"
+    }
   },
   {
     "id": "EverslaughtInvasion",
@@ -265,7 +284,10 @@
         ]
       }
     ],
-    "cardVideo": "assets/portfolio_reel.mp4"
+    "cardVideo": "assets/portfolio_reel.mp4",
+    "placeholders": {
+      "cardVideo": "Card hover preview: the shared generic reel, not footage of this project"
+    }
   },
   {
     "id": "Aurelion",
@@ -323,6 +345,9 @@
         ]
       }
     ],
-    "cardVideo": "assets/portfolio_reel.mp4"
+    "cardVideo": "assets/portfolio_reel.mp4",
+    "placeholders": {
+      "cardVideo": "Card hover preview: the shared generic reel, not footage of this project"
+    }
   }
 ]

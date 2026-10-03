@@ -80,6 +80,7 @@ const SELF_TEST_FAULTS = {
     'broken-link':    ['/index.html', s => s.replace('</footer>', '<a href="assets/self-test-missing.png">self-test</a></footer>'), /self-test-missing\.png/],
     'broken-anchor':  ['/index.html', s => s.replace('</footer>', '<a href="#self-test-missing-anchor">self-test</a></footer>'), /self-test-missing-anchor/],
     'cls':            ['/modules/scripts.js', s => s + "\naddEventListener('load', () => setTimeout(() => { document.querySelector('.hero-content').style.marginTop = '320px'; }, 150));\n", /layout shift during load/],
+    'placeholder-data': ['/projects.json', s => { const d = JSON.parse(s); delete d[0].placeholders.image; return JSON.stringify(d); }, /UniversityProjects\.image .*not marked/],
     'slide-overflow': ['/styles/cvstyle.css', s => s + '\n.project-slide[data-idx="1"] .topic-desc { padding-bottom: 150vh; }\n', /^slide 1 /],
 };
 function selfTestTransform(urlPath, buf) {
@@ -611,6 +612,34 @@ async function curlStatus(url) {
     }
 }
 
+// ── Placeholder markers ──────────────────────────────────────────────────────
+// projects.json marks every placeholder field in a per-project `placeholders`
+// map ({ "workTopics[0].image": "what real content is needed" }), so they can
+// be found and replaced (Docs/STATUS.md "Placeholder register").
+
+function checkPlaceholders(projects) {
+    const get = (obj, p) => p.split('.').reduce((o, k) => {
+        const m = /^(\w+)\[(\d+)\]$/.exec(k);
+        return o == null ? undefined : m ? o[m[1]]?.[Number(m[2])] : o[k];
+    }, obj);
+    let marked = 0;
+    for (const p of projects) {
+        for (const [field, need] of Object.entries(p.placeholders || {})) {
+            marked++;
+            if (get(p, field) == null) fail('-', '-', 'placeholder-data', `${p.id}.${field} is marked as placeholder but does not exist`);
+            if (!String(need).trim()) fail('-', '-', 'placeholder-data', `${p.id}.${field}: marker says nothing about the real content needed`);
+        }
+        const assetFields = [['image', p.image], ['poster', p.poster], ['video', p.video], ['cardVideo', p.cardVideo],
+            ...(p.workTopics || []).map((t, i) => [`workTopics[${i}].image`, t.image])];
+        for (const [field, v] of assetFields) {
+            if (v && v.startsWith('assets/placeholders/') && !(p.placeholders || {})[field]) {
+                fail('-', '-', 'placeholder-data', `${p.id}.${field} uses ${v} but is not marked in "placeholders"`);
+            }
+        }
+    }
+    return marked;
+}
+
 // ── Contact sheet ────────────────────────────────────────────────────────────
 
 function writeContactSheet(report) {
@@ -661,6 +690,9 @@ async function main() {
         contentTitles: projects.filter(p => p.showInPortfolio || p.showInTimeline).map(p => p.title),
         refs: [],
     };
+
+    const marked = checkPlaceholders(projects);
+    info.push(`placeholder fields marked in projects.json: ${marked}`);
 
     const browser = await chromium.launch({
         executablePath: process.env.CHROMIUM_PATH || undefined,
