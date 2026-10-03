@@ -1,0 +1,93 @@
+/* Style exploration B — "Star chart".
+   Editorial and calm: large Lora titles, small letter-spaced eyebrows marked
+   with a four-point star, centred. A thin constellation line drops into each
+   section head, so scrolling the page reads as following a route between
+   stars — the same travel the warp jump makes in the timeline. */
+
+/* ── Section heads ─────────────────────────────────────────────────────── */
+
+.section-head {
+    margin-bottom: 2.75rem;
+    text-align: center;
+}
+
+/* Constellation segment: a line arriving from the previous section, ending
+   in a star node. */
+.section-head::before {
+    content: "";
+    display: block;
+    width: 1px;
+    height: 64px;
+    margin: 0 auto 14px;
+    background: linear-gradient(rgba(129, 168, 209, 0), rgba(129, 168, 209, 0.55));
+}
+
+.section-eyebrow {
+    display: inline-flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 12px;
+    font-family: var(--primary-font);
+    font-weight: 500;
+    font-size: 0.78rem;
+    letter-spacing: 0.34em;
+    text-transform: uppercase;
+    color: var(--highlight-color);
+}
+
+.section-eyebrow::before,
+.section-eyebrow::after {
+    content: "";
+    width: 11px;
+    height: 11px;
+    background: currentColor;
+    clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+    opacity: 0.9;
+}
+
+.section-title,
+#about .section-title {
+    margin: 0 auto;
+    max-width: 18ch;
+    font-family: var(--secondary-font);
+    font-weight: 700;
+    font-size: clamp(2.1rem, 5vw, 3.4rem);
+    line-height: 1.1;
+    letter-spacing: -0.01em;
+    text-align: center;
+    text-wrap: balance;
+    color: var(--primary-color);
+}
+
+#cvSectionLabel .section-head { margin: 0; }
+#cvSectionLabel .section-head::before { height: 40px; }
+
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+
+.hero h1 {
+    font-family: var(--secondary-font);
+    font-size: clamp(2.6rem, 8vw, 4.6rem);
+    letter-spacing: -0.015em;
+    line-height: 1.04;
+}
+
+.hero-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 14px;
+    margin: 0.5rem 0 1.4rem;
+    font-family: var(--primary-font);
+    font-weight: 500;
+    font-size: clamp(0.8rem, 2.4vw, 1rem);
+    letter-spacing: 0.36em;
+    text-transform: uppercase;
+    color: var(--highlight-color);
+}
+
+.hero-role::before,
+.hero-role::after {
+    content: "";
+    width: 36px;
+    height: 1px;
+    background: rgba(234, 177, 128, 0.5);
+}
