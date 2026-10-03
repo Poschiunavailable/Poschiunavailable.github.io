@@ -14,12 +14,29 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | U10 — Starfield without WebGL (and without JS) |
-| **Phase** | A |
-| **Goal** | No WebGL → no error and a static star background instead of a blank one; no JS → the same static background. |
-| **Acceptance check** | `no-webgl` walk: zero console/page errors (U10 known failures removed, no stale entries); screenshots show static stars; default walk unchanged (no doubled stars where WebGL works — the static layer must not paint under the live canvas); `no-js` screenshots show static stars. |
-| **Files** | `modules/background.js`, `assets/starfield-static.svg`, `styles/styles.css`, `index.html`, `tests/known-failures.json`, `Docs/STATUS.md` |
-| **Step reached** | Plan: probe WebGL with a plain canvas before creating the renderer (three.js logs an error before it throws, so try/catch alone would still fail); fallback class on `#canvas-container`; `html.no-js` swapped to `js` by a one-line inline script. |
+| **Unit** | B2 — Timeline accessibility |
+| **Phase** | B |
+| **Goal** | The timeline is operable by keyboard alone and understandable with a screen reader: focus moves in on enter and back on exit, each step is announced, invisible slides and the faded-out page can't be tabbed into, the nav dots say which project is current. |
+| **Acceptance check** | Walk (all JS variants): entering by keyboard puts focus inside the timeline; a polite live region reads "Slide 1 of 16 — …" and updates on every step; Tab only reaches visible controls (each focused element on screen and visibly rendered); the active nav dot has `aria-current`; Escape returns focus to the control that opened the timeline (button, nav link, card). Lighthouse Accessibility stays 100. |
+| **Files** | `modules/timeline.js`, `index.html`, `styles/cvstyle.css`, `tests/site-walk.mjs`, `Docs/STATUS.md` |
+| **Step reached** | Not started. (B1 waits on Patrick's answer to question 7.) |
+
+**Phase A done (2026-10-03).** U1–U10 closed. Lighthouse median perf 97 /
+a11y 100 / BP 100 / SEO 100, LCP 2.1–2.3 s, CLS 0; no third-party requests;
+initial load 521 KiB at 375×812 (budget 600), 756 KiB at 1920×1080 (images,
+B6). Remaining known failures: `budget` (B6) and `nojs-content` (B1).
+
+### U10 — Starfield without WebGL / JS (done 2026-10-03, `4de234f`)
+
+`background.js` probes WebGL with a plain canvas before creating the renderer
+and falls back to `assets/starfield-static.svg`; `html.no-js` shows the same
+tile. The walk asserts exactly one starfield per variant. Full walk PASSED:
+zero console/page errors in `no-webgl`; U10 known failures removed, no stale
+entries. Screenshots: static stars in no-webgl (1920×1080) and no-js
+(375×667). The no-JS screenshots also exposed more of B1 (recorded there).
+Budget note: the walk's image figure varies ±45 KiB between runs because lazy
+topic images sometimes finish before network idle, and the test server's
+`no-store` makes the profile photo load twice — to tighten in B6.
 
 ### U9 — Timeline HUD collisions (done 2026-10-03, `b99e609`)
 
@@ -150,7 +167,7 @@ Phases are strict: A before B before C.
    natural one) via data, not a special case in code.
 9. ~~**U9** Timeline HUD collisions~~ — done 2026-10-03: time-machine box over the last bullet, nav
    dots over text at narrow widths.
-10. **U10** (card above) Starfield without WebGL: no uncaught error, a static star
+10. ~~**U10** Starfield without WebGL~~ — done 2026-10-03: no uncaught error, a static star
     background instead.
 
 **Phase B — finish what is missing**
@@ -265,6 +282,14 @@ Collected here; asked together rather than one by one.
    register.
 6. **Master's thesis** — your CV lists it as planned for 2027/28, research
    topic machine learning in real-time strategy games. Not on the site; add it?
+
+7. **No-JS content (B1)** — options: (1, recommended) a dev-run generator
+   writes `projects.json` into `index.html` as static HTML that JS then
+   upgrades; the walk fails if the committed HTML drifts from the JSON; the
+   cost is one command after editing `projects.json`. (2) No generator: only
+   the about text is fixed and a `<noscript>` note says projects need JS.
+   (3) Hand-written static HTML — a second source, not recommended. This is a
+   generation step, so it waits for your call.
 
 ## Decisions
 
