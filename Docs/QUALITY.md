@@ -45,7 +45,8 @@ Lighthouse numbers are the **median of 3 runs**.
 
 | Bar | Measured by |
 |---|---|
-| Lighthouse Accessibility ≥ 95 (target 100) | Lighthouse mobile. Baseline 97 (fails `color-contrast`). |
+| Lighthouse Accessibility ≥ 95 (target 100) | Lighthouse mobile. Baseline 97 (fails `color-contrast`); 100 since U4. |
+| No serious/critical axe-core violations | The walk injects axe-core 4.11 (WCAG 2.0/2.1 A+AA + best practice) on the page and on every timeline slide at 375×812 and 1920×1080. Serious/critical fail the run; moderate/minor are listed in the report. Added in B2 after Lighthouse caught an `aria-prohibited-attr` the walk had missed. |
 | Text contrast ≥ 4.5:1 (≥ 3:1 for ≥ 24 px / 18.66 px bold and for UI component boundaries) | axe-core `color-contrast` run by the walk on every section **and every timeline slide** at 375×812 and 1920×1080. Body text on section fills was measured at 7.8–11.0:1 — keep it. |
 | Alt text everywhere | axe `image-alt`; decorative images use `alt=""` and are listed as decorative in code comments. |
 | Timeline controls operable and announced | Walk: enter/exit/next/previous/nav dots operable by keyboard alone; a polite live region announces "Slide x of N — title" after each step; focus moves into the timeline on enter and back to the trigger on exit. axe reports 0 serious/critical issues inside `#cv`. |

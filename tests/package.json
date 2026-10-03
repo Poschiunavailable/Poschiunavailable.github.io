@@ -10,6 +10,7 @@
     "lighthouse": "node lighthouse.mjs"
   },
   "devDependencies": {
+    "axe-core": "^4.11.0",
     "chrome-launcher": "1.2.2",
     "lighthouse": "13.5.0",
     "playwright": "1.56.1"

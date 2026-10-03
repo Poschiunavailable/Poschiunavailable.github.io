@@ -40,6 +40,10 @@ const ALL_VARIANTS = ['default', 'reduced-motion', 'no-webgl', 'no-js'];
 const BUDGET_VIEWPORTS = ['375x812', '1920x1080'];
 const BUDGET_KIB = { total: 600, script: 300, font: 100, stylesheet: 40, image: 200 };
 const SECTIONS = ['hero', 'about', 'portfolio', 'cv', 'contact'];
+// axe-core accessibility scan (QUALITY.md §3): the page, then every timeline
+// slide, at a phone and a desktop size, default variant.
+const AXE_VIEWPORTS = ['375x812', '1920x1080'];
+const AXE_PATH = path.join(HERE, 'node_modules', 'axe-core', 'axe.min.js');
 
 // Console messages that come from the browser, not the site. Each needs a reason.
 const BROWSER_NOISE = [
@@ -251,6 +255,26 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
     };
     const F = (code, msg, shot) => fail(variant, vp, code, msg, shot);
 
+    // Serious/critical axe violations fail the walk; the rest are listed.
+    const runAxe = variant === 'default' && AXE_VIEWPORTS.includes(vp);
+    const axe = async (where, include) => {
+        if (!runAxe) return;
+        if (!(await page.evaluate(() => !!window.axe))) await page.addScriptTag({ path: AXE_PATH });
+        const res = await page.evaluate(async (include) => {
+            const r = await window.axe.run(include ? { include: [include] } : document,
+                { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'] } });
+            return { passes: r.passes.length, violations: r.violations.map(v => ({ id: v.id, impact: v.impact,
+                nodes: v.nodes.slice(0, 3).map(n => n.target.join(' ')) })) };
+        }, include);
+        cov.axeRuns = (cov.axeRuns || 0) + 1;
+        if (!res.passes) F('tested-nothing', `axe ${where}: no rules passed — nothing was checked`);
+        for (const v of res.violations) {
+            const msg = `axe ${where}: ${v.id} (${v.impact}) on ${v.nodes.join(', ')}`;
+            if (v.impact === 'serious' || v.impact === 'critical') F('axe', msg);
+            else info.push(`${variant} ${vp} ${msg}`);
+        }
+    };
+
     // Errors from the site's own code
     const isSite = u => !u || u.startsWith(base);
     page.on('console', m => {
@@ -368,6 +392,8 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
         await shoot(`section-${id}`);
         cov.sections++;
     }
+
+    await axe('page');
 
     if (variant === 'reduced-motion') {
         const running = await page.evaluate(() => document.getAnimations()
@@ -493,6 +519,7 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
             if (a11y.current !== expect.slideProject[i]) F('a11y-current', `slide ${i}: aria-current on dot ${a11y.current}, expected ${expect.slideProject[i]}`);
             if (i === 0 && !a11y.inside) F('a11y-focus', 'entering the timeline did not move focus into it');
             if (i === 0 || i === 1) await checkTabStops(`slide ${i}`);
+            await axe(`slide ${i}`, '#cvSection');
             cov.slides++;
             if (i < expect.slides - 1) await page.keyboard.press('ArrowDown');
         }
