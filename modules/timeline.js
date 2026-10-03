@@ -373,18 +373,24 @@ export function initTimeline(projects) {
             .forEach(el => { el.inert = on; });
     }
 
-    // The page sections come back from visibility:hidden through a CSS
-    // transition, so the opener only becomes focusable a frame or two later.
-    // If it still can't take focus (gone, or a link in the closed mobile
-    // menu), the section's own button can.
+    // The page sections come back from visibility:hidden, and that change can
+    // itself be transitioned (under reduced motion the global rule gives every
+    // property a 0.01ms transition, and a busy main thread stretched the flip
+    // past two frames). So keep trying each frame until the opener takes
+    // focus; after ~500ms fall back to the section's own button (the opener
+    // may be gone, or a link in the closed mobile menu).
     function restoreFocus() {
         const t = S.returnFocus;
         S.returnFocus = null;
-        requestAnimationFrame(() => requestAnimationFrame(() => {
+        const deadline = performance.now() + 500;
+        const attempt = () => {
             if (S.immersive) return;            // re-entered in the meantime
             if (t?.isConnected) t.focus({ preventScroll: true });
-            if (document.activeElement !== t) els.enterBtn?.focus({ preventScroll: true });
-        }));
+            if (document.activeElement === t) return;
+            if (performance.now() < deadline) requestAnimationFrame(attempt);
+            else els.enterBtn?.focus({ preventScroll: true });
+        };
+        requestAnimationFrame(attempt);
     }
 
     // ── Virtual Scroll ─────────────────────────────────────────────────────────
