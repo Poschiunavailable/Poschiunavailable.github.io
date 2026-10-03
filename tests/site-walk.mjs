@@ -92,6 +92,7 @@ const SELF_TEST_FAULTS = {
     'placeholder-data': ['/projects.json', s => { const d = JSON.parse(s); delete d[0].placeholders.image; return JSON.stringify(d); }, /UniversityProjects\.image .*not marked/],
     'metadata':       ['/index.html', s => s.replace('content="1200"', 'content="1201"'), /disagree with the file/],
     'icons':          ['/site.webmanifest', s => s.replace('"192x192"', '"193x193"'), /declared 193x193/],
+    'responsive':     ['/projects.json', s => { const d = JSON.parse(s); d[0].workTopics[0].image = 'assets/profile_picture.jpg'; return JSON.stringify(d); }, /profile_picture-480\.webp/],
     'slide-overflow': ['/styles/cvstyle.css', s => s + '\n.project-slide[data-idx="1"] .topic-desc { padding-bottom: 150vh; }\n', /^slide 1 /],
 };
 function selfTestTransform(urlPath, buf) {
@@ -224,6 +225,11 @@ const collectRefs = () => {
     document.querySelectorAll('img[src], source[src], script[src]').forEach(e => add('src', e.getAttribute('src'), e.tagName.toLowerCase()));
     document.querySelectorAll('video[poster]').forEach(v => add('src', v.getAttribute('poster'), 'video[poster]'));
     document.querySelectorAll('[data-src]').forEach(v => add('src', v.getAttribute('data-src'), '[data-src]'));
+    document.querySelectorAll('[srcset], [data-srcset]').forEach(e => {
+        for (const part of (e.getAttribute('srcset') || e.getAttribute('data-srcset')).split(',')) {
+            add('src', part.trim().split(/\s+/)[0], 'srcset');
+        }
+    });
     document.querySelectorAll('[style*="url("]').forEach(e => {
         for (const m of e.getAttribute('style').matchAll(/url\(['"]?([^'")]+)['"]?\)/g)) add('src', m[1], 'style url()');
     });
@@ -317,6 +323,11 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
     await page.waitForLoadState('networkidle', { timeout: 15000 }).catch(() => {});
 
     page.off('requestfinished', onFinished);
+    if (variant !== 'no-js') {
+        const early = loadRequests.map(r => r.url().slice(base.length).split('?')[0])
+            .filter(u => expect.timelineOnly.some(t => u === t || u === t.replace(RASTER, '-480.webp') || u === t.replace(RASTER, '-960.webp')));
+        if (early.length) F('budget', `timeline-only images loaded with the page: ${early.join(', ')}`);
+    }
     if (variant === 'default' && BUDGET_VIEWPORTS.includes(vp)) await measureBudget(vp, base, cache, loadRequests);
 
     // ── Exactly one starfield: the live canvas, or the static tile — never
@@ -367,6 +378,9 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
         })));
     if (counts.c !== expect.cards.length) F('content-missing', `${counts.c} portfolio cards, expected ${expect.cards.length}`);
     if (counts.s !== expect.slides) F('content-missing', `${counts.s} timeline slides, expected ${expect.slides}`);
+    const noSrcset = await page.evaluate(() => [...document.querySelectorAll('#portfolioGrid img')]
+        .filter(i => /\.(webp|jpe?g|png)$/i.test(i.getAttribute('src')) && !(i.srcset && i.sizes)).map(i => i.getAttribute('src')));
+    if (noSrcset.length) F('responsive', `card images without srcset/sizes: ${noSrcset.join(', ')}`);
 
     const hOverflow = async (where) => {
         const px = await page.evaluate(() => document.documentElement.scrollWidth - innerWidth);
@@ -860,6 +874,30 @@ async function checkHead(page, base) {
 // map ({ "workTopics[0].image": "what real content is needed" }), so they can
 // be found and replaced (Docs/STATUS.md "Placeholder register").
 
+// ── Responsive images (tools/make-responsive.py convention) ─────────────────
+
+const RASTER = /\.(webp|jpe?g|png)$/i;
+function projectImages(projects) {
+    const out = [];
+    for (const p of projects) {
+        for (const k of ['image', 'poster']) if (p[k]) out.push([`${p.id}.${k}`, p[k]]);
+        (p.workTopics || []).forEach((t, i) => t.image && out.push([`${p.id}.workTopics[${i}].image`, t.image]));
+    }
+    return out;
+}
+async function checkResponsive(base, projects) {
+    let checked = 0;
+    for (const [where, img] of projectImages(projects)) {
+        if (!RASTER.test(img)) continue;
+        for (const w of [480, 960]) {
+            checked++;
+            const variant = img.replace(RASTER, `-${w}.webp`);
+            if ((await headStatus(base + variant)) !== 200) fail('-', '-', 'responsive', `${where}: ${img} has no ${variant} (run tools/make-responsive.py)`);
+        }
+    }
+    return checked;
+}
+
 function checkPlaceholders(projects) {
     const get = (obj, p) => p.split('.').reduce((o, k) => {
         const m = /^(\w+)\[(\d+)\]$/.exec(k);
@@ -944,6 +982,10 @@ async function main() {
     };
 
     const marked = checkPlaceholders(projects);
+    info.push(`responsive variants checked: ${await checkResponsive(base, projects)}`);
+    // Images only the timeline uses must not load with the page (B6).
+    const cardImages = new Set(projects.filter(p => p.showInPortfolio).flatMap(p => [p.image, p.poster]));
+    expect.timelineOnly = [...new Set(projectImages(projects).map(([, v]) => v))].filter(v => !cardImages.has(v));
     info.push(`placeholder fields marked in projects.json: ${marked}`);
 
     const browser = await chromium.launch({

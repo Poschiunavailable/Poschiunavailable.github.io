@@ -1,6 +1,6 @@
 // Static file server that behaves like GitHub Pages where it matters to the
-// tests: gzip for text, Range requests for video, and an unknown path answered
-// with 404.html (status 404) when that file exists.
+// tests: gzip for text, Range requests for video, max-age=600 caching, and an
+// unknown path answered with 404.html (status 404) when that file exists.
 //
 // `transform(urlPath, buffer) -> buffer` lets the self-test inject faults into
 // served files without touching the working tree.
@@ -58,7 +58,9 @@ export function startServer({ root, port = 0, transform = null } = {}) {
         // Transform by the file actually served, so `/` and `/index.html` match alike.
         if (transform) body = transform('/' + path.relative(rootAbs, file).split(path.sep).join('/'), body) ?? body;
         const type = MIME[path.extname(file).toLowerCase()] || 'application/octet-stream';
-        const headers = { 'content-type': type, 'cache-control': 'no-store' };
+        // GitHub Pages sends max-age=600. `no-store` made the browser fetch the same
+        // image twice within one page (the profile photo), inflating the budget.
+        const headers = { 'content-type': type, 'cache-control': 'max-age=600' };
 
         // Range support: Chromium requests video with Range and seeks with it.
         const range = req.headers.range && /^bytes=(\d*)-(\d*)$/.exec(req.headers.range);

@@ -1,4 +1,9 @@
 import { prefersReducedMotion } from './scripts.js';
+import { srcsetFor } from './images.js';
+
+// Card images are at most ~430px wide (measured 250–427px from 320 to 1920
+// wide viewports); full width minus padding on phones.
+const CARD_SIZES = '(max-width: 600px) calc(100vw - 72px), 430px';
 
 export function initPortfolio(projects) {
     generatePortfolioItems(projects);
@@ -35,7 +40,8 @@ function generatePortfolioItems(projects) {
 
         item.innerHTML = `
             <div class="portfolio-item-image-wrap">
-                <img src="${project.image}" alt="${project.title}" loading="lazy" decoding="async">
+                <img src="${project.image}" alt="${project.title}" loading="lazy" decoding="async"
+                     ${srcsetFor(project.image) ? `srcset="${srcsetFor(project.image)}" sizes="${CARD_SIZES}"` : ''}>
                 ${videoHtml}
             </div>
             <div class="portfolio-item-body">

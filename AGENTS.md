@@ -61,6 +61,7 @@ These are deliberate decisions, not oversights. Don't "fix" them:
 | `portfolio.js` | Builds portfolio cards from `projects.json` into `#portfolioGrid`. 3D tilt/scale hover effect. Clicking a card doesn't open a modal — it dispatches `portfolio:selectProject` (`{id}`), which `timeline.js` listens for. |
 | `timeline.js` | The CV/timeline section (`#cv`). Biggest/most complex module — a custom slide-based "virtual scroll" (like apple.com product pages): each project becomes one hero slide + one slide per `workTopics[]` entry, all flattened into `slideData`. Wheel/touch/keyboard input moves a `virtualPos` that LERPs toward an integer `targetPos`; scrolling into `#cv` far enough triggers "immersive mode" which locks page scroll and takes over input. Drives the `#timeMachine` date HUD by interpolating each project's `startDate`/`endDate` across its slides. |
 | `background.js` | Three.js starfield background (`#canvas-container`), independent of the rest — reacts to mouse/gyro tilt and scroll position, and listens for `timeline:warpSpeed` (dispatched by `timeline.js` on entering/exiting immersive mode) to trigger a hyperspace streak effect. |
+| `images.js` | `srcsetFor(path)`: the responsive-variant naming convention shared by cards and topic slides. |
 | `vendor/` | Third-party code, vendored and pinned: `three-0.151.3.module.min.js` (mapped to `"three"` by the import map in `index.html`) + its MIT licence. Provenance and why it isn't upgraded: `Docs/HISTORY.md` "three.js". The site loads nothing from third-party origins. |
 
 Cross-module coupling is intentionally just two `CustomEvent`s on `window`:
@@ -158,9 +159,12 @@ directions.
   in `cvstyle.css`.
 - Timeline projects are sorted by `startDate` at runtime, not by their order
   in `projects.json`.
-- Slide videos attach their `src` lazily from `data-src` (one slide ahead of
-  focus). Don't set `src` in the markup — that reintroduces the
-  every-video-on-load fetch storm.
+- **All slide media attaches lazily** (`ensureSlideMedia()`, one slide ahead of
+  focus, only while the timeline is open): videos and topic images via
+  `data-src`/`data-srcset`, hero art via `data-bg`. All 16 slides are in the
+  DOM from page load, so setting `src`/`background-image` in the markup
+  downloads every slide's media up front (it did: 233 KB of topic images per
+  visit). The walk fails if a timeline-only image loads with the page.
 - The 3D card tilt is deliberately desktop-only (`hover:hover`+`pointer:fine`);
   on touch there is no event that would undo it.
 - **Motion blur is one rule, not a warp feature.** `updateTrails()` takes a
@@ -229,6 +233,10 @@ Dev-only scripts whose output is committed (nothing runs at deploy time):
   Re-run after changing the name, role or tagline. Uses Playwright from
   `tests/node_modules`.
 
+- `make-responsive.py` — 480w/960w WebP variants of every raster image in
+  `projects.json` (`assets/foo.webp` → `foo-480.webp`, `foo-960.webp`);
+  `modules/images.js` builds `srcset` from that convention. Re-run after adding
+  an image; the walk fails if a variant is missing. Needs Pillow.
 - `make-icons.py` — favicon set (`favicon.ico`, `assets/icons/*`) from
   `assets/brand/pt-logo-512.png`, Patrick's PT logo. Needs Pillow.
 

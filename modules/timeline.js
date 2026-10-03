@@ -5,6 +5,7 @@
 // per viewport, layered parallax, no overflow scrollbars.
 
 import { prefersReducedMotion } from './scripts.js';
+import { srcsetFor } from './images.js';
 
 export function initTimeline(projects) {
     // Chronological order matters: this is a "time machine" with a monotonic
@@ -155,7 +156,7 @@ export function initTimeline(projects) {
             v.className = 'slide-bg-video';
             // Deliberately NOT setting .src here — assigning it up front made
             // every slide fetch the video on page load (6 elements → 12
-            // requests for the same file). ensureVideoLoaded() attaches the
+            // requests for the same file). ensureSlideMedia() attaches the
             // source only when a slide is actually approached.
             v.dataset.src = project.video;
             v.preload = 'none';
@@ -165,7 +166,10 @@ export function initTimeline(projects) {
         } else if (project.image) {
             const img = document.createElement('div');
             img.className = 'slide-bg-image';
-            img.style.backgroundImage = `url('${project.image}')`;
+            // Attached by ensureSlideMedia() when the slide comes near focus:
+            // all 16 slides are in the DOM from page load, and setting the
+            // background here downloaded every slide's art up front.
+            img.dataset.bg = project.image;
             bg.appendChild(img);
         }
         el.appendChild(bg);
@@ -200,8 +204,10 @@ export function initTimeline(projects) {
     function buildTopicSlide(el, project, topic) {
         const content = document.createElement('div');
         content.className = 'slide-content slide-content-topic';
+        // data-src, not src: see ensureSlideMedia().
         const imgHtml = topic.image
-            ? `<div class="topic-image-section"><img src="${topic.image}" alt="${topic.title}" class="topic-image" loading="lazy"></div>`
+            ? `<div class="topic-image-section"><img data-src="${topic.image}" data-srcset="${srcsetFor(topic.image)}"
+                    sizes="(max-width: 900px) min(560px, 90vw), 600px" alt="${topic.title}" class="topic-image" decoding="async"></div>`
             : '<div class="topic-image-section topic-image-empty"></div>';
         const bullets = (topic.highlights || []).map(h => `<li>${h}</li>`).join('');
         content.innerHTML = `
@@ -221,14 +227,27 @@ export function initTimeline(projects) {
         return !!c?.saveData || /(^|-)2g$/.test(c?.effectiveType || '');
     }
 
-    // Attach the real source the first time a slide comes into play, so the
-    // video is fetched on demand rather than all at once on page load.
-    function ensureVideoLoaded(video) {
-        if (!video || !video.dataset.src) return;
-        video.src = video.dataset.src;
-        delete video.dataset.src;
-        video.preload = 'auto';
-        video.load();
+    // Attach a slide's media the first time it comes into play (focus ±1,
+    // only while the timeline is open), so nothing of the timeline is fetched
+    // on page load: video, topic image and hero background alike.
+    function ensureSlideMedia(el) {
+        const video = el.querySelector('video[data-src]');
+        if (video) {
+            video.src = video.dataset.src;
+            delete video.dataset.src;
+            video.preload = 'auto';
+            video.load();
+        }
+        el.querySelectorAll('img[data-src]').forEach(img => {
+            if (img.dataset.srcset) img.srcset = img.dataset.srcset;
+            img.src = img.dataset.src;
+            delete img.dataset.src;
+            delete img.dataset.srcset;
+        });
+        el.querySelectorAll('[data-bg]').forEach(div => {
+            div.style.backgroundImage = `url('${div.dataset.bg}')`;
+            delete div.dataset.bg;
+        });
     }
 
     // Tolerates missing/partial dates rather than throwing on `.split` of
@@ -732,15 +751,16 @@ export function initTimeline(projects) {
                 topicImg.style.transform = `translateY(${(-ty * 0.3).toFixed(2)}px)`;
             }
 
+            // Media one slide ahead of focus, so approaching a slide isn't a
+            // cold start, but never all of them at once.
+            if (Math.abs(i - S.focusSlideIdx) <= 1) ensureSlideMedia(slide.el);
+
             // Video: play only when this slide is the focused one.
             // Guard on state — this runs every frame, and calling play()
             // unconditionally allocated a promise per frame per video.
             const vid = slide.el.querySelector('video');
             if (vid) {
                 const shouldPlay = opacity > 0.5;
-                // Preload one slide ahead so approaching a slide isn't a
-                // cold start, but never all of them at once.
-                if (Math.abs(i - S.focusSlideIdx) <= 1) ensureVideoLoaded(vid);
                 if (shouldPlay && vid.paused) vid.play().catch(() => {});
                 else if (!shouldPlay && !vid.paused) vid.pause();
             }

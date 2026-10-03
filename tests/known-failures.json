@@ -1,10 +1,5 @@
 [
   {
-    "code": "budget",
-    "unit": "B6",
-    "reason": "Initial load over budget at desktop size: card and slide images (no srcset yet). Fonts/CSS/JS are within budget since U5/U6."
-  },
-  {
     "code": "nojs-content",
     "variants": [
       "no-js"
