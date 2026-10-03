@@ -1,0 +1,112 @@
+/* Style exploration A — "Flight log".
+   Section heads read like the timeline's instruments: a mono readout label
+   (index + name, boxed like the TIME MACHINE HUD) with a hairline running
+   out to the right, over a tight sans title. Display type goes sans
+   throughout (Lora retired), so the whole site shares the cockpit voice the
+   timeline already has. */
+
+:root {
+    --secondary-font: 'Roboto', 'Roboto Fallback', sans-serif;
+}
+
+/* ── Section heads ─────────────────────────────────────────────────────── */
+
+.section-head {
+    margin-bottom: 2.5rem;
+    text-align: left;
+}
+
+.section-eyebrow {
+    display: flex;
+    align-items: center;
+    gap: 12px;
+    margin: 0 0 14px;
+    font-family: var(--tertiary-font);
+    font-size: 0.74rem;
+    letter-spacing: 0.24em;
+    text-transform: uppercase;
+    color: rgba(129, 168, 209, 0.9);
+}
+
+.section-eyebrow .idx {
+    padding: 4px 8px;
+    border: 1px solid rgba(129, 168, 209, 0.35);
+    border-radius: 6px;
+    background: rgba(12, 16, 26, 0.55);
+    color: var(--highlight-color);
+    letter-spacing: 0.12em;
+}
+
+.section-eyebrow::after {
+    content: "";
+    flex: 1;
+    height: 1px;
+    background: linear-gradient(90deg, rgba(129, 168, 209, 0.45), rgba(129, 168, 209, 0));
+}
+
+.section-title,
+#about .section-title {
+    margin: 0;
+    font-family: var(--primary-font);
+    font-weight: 700;
+    font-size: clamp(2rem, 4.6vw, 3.1rem);
+    line-height: 1.08;
+    letter-spacing: -0.025em;
+    text-align: left;
+    color: var(--primary-color);
+}
+
+/* The CV label sits centred over the starfield. */
+#cvSectionLabel .section-head { text-align: center; margin: 0; }
+#cvSectionLabel .section-eyebrow { justify-content: center; }
+#cvSectionLabel .section-eyebrow::before,
+#cvSectionLabel .section-eyebrow::after {
+    content: "";
+    flex: 0 0 56px;
+    height: 1px;
+    background: rgba(129, 168, 209, 0.4);
+}
+#cvSectionLabel .section-title { text-align: center; }
+
+#contact .section-head { text-align: center; }
+#contact .section-eyebrow { justify-content: center; }
+#contact .section-eyebrow::before {
+    content: "";
+    flex: 0 0 56px;
+    height: 1px;
+    background: linear-gradient(270deg, rgba(129, 168, 209, 0.45), rgba(129, 168, 209, 0));
+}
+#contact .section-eyebrow::after { flex: 0 0 56px; }
+#contact .section-title { text-align: center; }
+
+/* ── Hero ──────────────────────────────────────────────────────────────── */
+
+.hero h1 {
+    font-size: clamp(2.5rem, 7.5vw, 4.4rem);
+    letter-spacing: -0.035em;
+    line-height: 1.02;
+}
+
+.hero-role {
+    display: inline-flex;
+    align-items: center;
+    gap: 10px;
+    margin: 0.4rem 0 1.4rem;
+    padding: 7px 16px;
+    border: 1px solid rgba(234, 177, 128, 0.35);
+    border-radius: 999px;
+    background: rgba(12, 16, 26, 0.5);
+    font-family: var(--tertiary-font);
+    font-size: clamp(0.78rem, 2.3vw, 0.95rem);
+    letter-spacing: 0.26em;
+    text-transform: uppercase;
+    color: var(--highlight-color);
+}
+
+.hud-dot {
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: var(--highlight-color);
+    box-shadow: 0 0 10px rgba(234, 177, 128, 0.8);
+}
