@@ -457,13 +457,14 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
                 const r = el.getBoundingClientRect();
                 const label = el.id ? '#' + el.id : `${el.tagName.toLowerCase()}.${el.className}`;
                 const key = label + '|' + (el.getAttribute('aria-label') || el.textContent.trim().slice(0, 30));
-                return { key, label, visible: op > 0.5 && getComputedStyle(el).visibility !== 'hidden'
+                const state = `body.${document.body.className.replace(/ /g, '.') || '-'} header.inert=${document.querySelector('header')?.inert}`;
+                return { key, label, state, visible: op > 0.5 && getComputedStyle(el).visibility !== 'hidden'
                     && r.width > 0 && r.bottom > 0 && r.right > 0 && r.top < innerHeight && r.left < innerWidth };
             });
             if (!f) continue;
             if (seen.has(f.key)) break;        // wrapped around
             seen.add(f.key);
-            if (!f.visible) F('focus-hidden', `${where}: Tab reached ${f.key.replace('|', ' ')}, which is not visible`);
+            if (!f.visible) F('focus-hidden', `${where}: Tab reached ${f.key.replace('|', ' ')}, which is not visible (${f.state})`);
         }
         cov.tabStops = (cov.tabStops || 0) + seen.size;
         if (!seen.size) F('tested-nothing', `${where}: Tab reached nothing`);
@@ -517,12 +518,15 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
                     reachable,
                     current: dots.findIndex(d => d.getAttribute('aria-current')),
                     inside: !!document.activeElement?.closest('#cvSection'),
+                    pageInert: ['header', 'footer', '#hero', '#about', '#portfolio', '#contact', '#cvIntro']
+                        .filter(sel => document.querySelector(sel) && !document.querySelector(sel).inert),
                 };
             }, i);
             if (!a11y.announce.startsWith(`Slide ${i + 1} of ${expect.slides}`)) F('a11y-announce', `slide ${i}: live region says "${a11y.announce}"`);
             if (a11y.reachable.length !== 1 || a11y.reachable[0] !== i) F('a11y-inert', `slide ${i}: slides reachable by assistive tech: [${a11y.reachable}]`);
             if (a11y.current !== expect.slideProject[i]) F('a11y-current', `slide ${i}: aria-current on dot ${a11y.current}, expected ${expect.slideProject[i]}`);
             if (i === 0 && !a11y.inside) F('a11y-focus', 'entering the timeline did not move focus into it');
+            if (a11y.pageInert.length) F('a11y-inert', `slide ${i}: page parts still reachable behind the timeline: ${a11y.pageInert.join(', ')}`);
             if (i === 0 || i === 1) await checkTabStops(`slide ${i}`);
             await axe(`slide ${i}`, '#cvSection');
             cov.slides++;
@@ -578,6 +582,49 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
     }
 
     if (variant === 'default' && vp === viewports[0]) expect.refs = await page.evaluate(collectRefs);
+    await ctx.close();
+}
+
+// ── 404 page ─────────────────────────────────────────────────────────────────
+// GitHub Pages answers a missing path at any depth with /404.html, so the page
+// must work from a deep URL (root-absolute assets) — the test server mimics it.
+
+async function walk404(browser, base, cache, vp) {
+    const [w, h] = vp.split('x').map(Number);
+    const phone = Math.min(w, h) <= 430;
+    const ctx = await browser.newContext({ viewport: { width: w, height: h }, isMobile: phone, hasTouch: phone });
+    await ctx.route(url => !url.href.startsWith(base), r => cache.handleRoute(r));
+    const page = await ctx.newPage();
+    const F = (code, msg, shot) => fail('404', vp, code, msg, shot);
+    page.on('console', m => { if (['error', 'warning'].includes(m.type()) && !BROWSER_NOISE.some(re => re.test(m.text()))) F('console-error', m.text()); });
+    page.on('pageerror', e => F('page-error', e.message));
+    const failed = [];
+    page.on('response', r => { if (r.url().startsWith(base) && r.status() >= 400 && r.request().resourceType() !== 'document') failed.push(`${r.status()} ${r.url().slice(base.length)}`); });
+    const res = await page.goto(base + 'no/such/deep/page', { waitUntil: 'networkidle' });
+    const dir = path.join(OUT, '404', vp);
+    fs.mkdirSync(dir, { recursive: true });
+    const file = path.join(dir, '00-not-found.jpg');
+    await page.screenshot({ path: file, type: 'jpeg', quality: 70 });
+    const shot = path.relative(OUT, file);
+    shots.push({ variant: '404', vp, label: 'not-found', file: shot });
+    if (res.status() !== 404) F('404', `missing path answered ${res.status()}, expected 404`, shot);
+    const info404 = await page.evaluate(() => ({
+        h1: document.querySelector('h1')?.textContent.trim() || '',
+        home: !!document.querySelector('a[href="/"]'),
+        overflow: document.documentElement.scrollWidth - innerWidth,
+        fontsOk: [...document.fonts].some(f => f.status === 'loaded'),
+    }));
+    if (!info404.h1) F('404', 'no heading on the 404 page', shot);
+    if (!info404.home) F('404', 'no link back to "/" on the 404 page', shot);
+    if (info404.overflow > 0) F('h-overflow', `404 page scrolls horizontally by ${info404.overflow}px`, shot);
+    if (!info404.fontsOk) F('404', 'web fonts did not load from a deep URL (relative asset paths?)', shot);
+    for (const f of failed) F('404', `asset failed from a deep URL: ${f}`, shot);
+    if (AXE_VIEWPORTS.includes(vp)) {
+        await page.addScriptTag({ path: AXE_PATH });
+        const v = await page.evaluate(async () => (await window.axe.run(document, { runOnly: { type: 'tag', values: ['wcag2a', 'wcag2aa', 'wcag21a', 'wcag21aa', 'best-practice'] } }))
+            .violations.filter(x => x.impact === 'serious' || x.impact === 'critical').map(x => x.id));
+        for (const id of v) F('axe', `404 page: ${id}`, shot);
+    }
     await ctx.close();
 }
 
@@ -822,7 +869,7 @@ function writeContactSheet(report) {
 ${report.unexpected.length ? `<h2>Unexpected failures</h2><table>${rows(report.unexpected)}</table>` : ''}
 ${report.known.length ? `<details><summary>Known failures (${report.known.length})</summary><table>${rows(report.known)}</table></details>` : ''}
 ${budgets.length ? `<h2>Initial-load transfer (KiB, video excluded)</h2><table><tr><th>viewport</th>${Object.keys(budgets[0].kib).map(k => `<th>${k}</th>`).join('')}</tr>${budgets.map(b => `<tr><td>${b.vp}</td>${Object.values(b.kib).map(v => `<td>${v}</td>`).join('')}</tr>`).join('')}</table>` : ''}`;
-    for (const variant of variants) {
+    for (const variant of [...variants, '404']) {
         body += `<h2>${esc(variant)}</h2>`;
         for (const vp of viewports) {
             const list = shots.filter(s => s.variant === variant && s.vp === vp);
@@ -896,6 +943,10 @@ async function main() {
             console.log(`  ${variant.padEnd(14)} ${vp.padEnd(9)} ${((Date.now() - t) / 1000).toFixed(0)}s`);
         }
     }));
+
+    if (variants.includes('default')) {
+        for (const vp of viewports) await walk404(browser, base, cache, vp);
+    }
 
     // Anchors resolve against the real DOM ids.
     if (variants.includes('default')) {

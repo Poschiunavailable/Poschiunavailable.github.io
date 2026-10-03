@@ -184,7 +184,8 @@ directions.
   labelled `role=group` and all but the focused one are `inert` (the slides are
   stacked, so without it Tab walked into invisible links); `#cvAnnounce` (polite
   live region) reads "Slide x of N: …" on each step; the active nav dot carries
-  `aria-current`; entering moves focus to `#projectStage`, leaving hands it back
+  `aria-current`; while open, header/footer/other sections/CV intro are `inert`
+  (visibility alone left a timing window); entering moves focus to `#projectStage`, leaving hands it back
   to the opener two frames later (the sections return from `visibility:hidden`
   through a transition, so the opener isn't focusable sooner), else to
   `#cvEnter`.

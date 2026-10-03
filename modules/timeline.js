@@ -316,6 +316,7 @@ export function initTimeline(projects) {
         S.targetPos  = S.virtualPos;
 
         bindVirtualScroll();
+        setPageInert(true);
         els.stage.focus({ preventScroll: true });
         // `silent` during a warp jump — flyToProject() owns the warp level
         // there and must not have it overwritten mid-burst.
@@ -358,8 +359,18 @@ export function initTimeline(projects) {
         setWarp(1.0);
 
         S.slides.forEach(({ el }) => { el.inert = true; });
+        setPageInert(false);
         if (els.announce) els.announce.textContent = '';
         restoreFocus();
+    }
+
+    // While the timeline is open the rest of the page is hidden by CSS
+    // (visibility), but that alone left a window where a header link could
+    // still take focus (seen once in the walk under load). `inert` makes the
+    // page unreachable for keyboard and assistive tech regardless of timing.
+    function setPageInert(on) {
+        document.querySelectorAll('header, footer, main > section:not(#cv), #cvSectionLabel, #cvIntro')
+            .forEach(el => { el.inert = on; });
     }
 
     // The page sections come back from visibility:hidden through a CSS
