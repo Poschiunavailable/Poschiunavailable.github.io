@@ -158,7 +158,9 @@
                 <button id="cvEnter" class="cta-button" type="button">Enter the time machine</button>
                 <p class="cv-note">Takes over scrolling — leave any time with Esc or the exit button.</p>
             </div>
-            <div id="projectStage"></div>
+            <div id="projectStage" tabindex="-1" role="region" aria-roledescription="timeline"
+                aria-label="CV timeline — arrow keys or Page Up/Down to move, Escape to leave"></div>
+            <p id="cvAnnounce" class="visually-hidden" aria-live="polite" aria-atomic="true"></p>
             <button id="cvExit" type="button" aria-label="Exit the timeline">&#10005;<span>Exit timeline</span></button>
             <div id="timeMachine" aria-label="Current timeline date">
                 <div id="tmLabel">TIME MACHINE</div>

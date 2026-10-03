@@ -83,6 +83,7 @@ export function initTimeline(projects) {
         lastWheelEventTs: 0,
         touchActive:      false,
         flying:           false,   // a warp jump is in progress
+        returnFocus:      null,    // element to refocus when leaving the timeline
         arriveTimer:      0,
         touchStartY:      0,
         touchStartPos:    0,
@@ -98,6 +99,8 @@ export function initTimeline(projects) {
         tmMonth:   document.getElementById('tmMonth'),
         tmFill:    document.getElementById('tmProgressFill'),
         navEl:     document.getElementById('cvProjectNav'),
+        announce:  document.getElementById('cvAnnounce'),
+        enterBtn:  document.getElementById('cvEnter'),
     };
 
     if (!els.cvSection || !els.stage) {
@@ -126,6 +129,17 @@ export function initTimeline(projects) {
 
             if (data.type === 'hero') buildHeroSlide(el, data.project);
             else                      buildTopicSlide(el, data.project, data.topic);
+
+            // Screen readers: each slide is a labelled group; only the focused
+            // one is reachable (render() lifts `inert` from it). Without this,
+            // Tab walked into the links of all 15 invisible slides.
+            data.label = data.type === 'hero'
+                ? data.project.title
+                : `${data.project.title} — ${data.topic.title}`;
+            el.setAttribute('role', 'group');
+            el.setAttribute('aria-roledescription', 'slide');
+            el.setAttribute('aria-label', `${i + 1} of ${slideData.length}: ${data.label}`);
+            el.inert = true;
 
             els.stage.appendChild(el);
             S.slides.push({ el, data });
@@ -290,6 +304,10 @@ export function initTimeline(projects) {
 
         S.immersive     = true;
         S.lastScrollDir = 0;
+        // Keyboard and screen-reader users land inside the timeline, and go
+        // back to whatever opened it on exit (button, nav link, card, dot).
+        S.returnFocus = document.activeElement !== document.body ? document.activeElement : null;
+        S.focusSlideIdx = -1;   // re-announce and un-inert on the next render
         document.body.classList.add('timeline-immersive');
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
@@ -298,6 +316,7 @@ export function initTimeline(projects) {
         S.targetPos  = S.virtualPos;
 
         bindVirtualScroll();
+        els.stage.focus({ preventScroll: true });
         // `silent` during a warp jump — flyToProject() owns the warp level
         // there and must not have it overwritten mid-burst.
         if (!REDUCED && !silent) setWarp(WARP_IMMERSIVE);
@@ -337,6 +356,24 @@ export function initTimeline(projects) {
 
         S.lastExitTs = performance.now();
         setWarp(1.0);
+
+        S.slides.forEach(({ el }) => { el.inert = true; });
+        if (els.announce) els.announce.textContent = '';
+        restoreFocus();
+    }
+
+    // The page sections come back from visibility:hidden through a CSS
+    // transition, so the opener only becomes focusable a frame or two later.
+    // If it still can't take focus (gone, or a link in the closed mobile
+    // menu), the section's own button can.
+    function restoreFocus() {
+        const t = S.returnFocus;
+        S.returnFocus = null;
+        requestAnimationFrame(() => requestAnimationFrame(() => {
+            if (S.immersive) return;            // re-entered in the meantime
+            if (t?.isConnected) t.focus({ preventScroll: true });
+            if (document.activeElement !== t) els.enterBtn?.focus({ preventScroll: true });
+        }));
     }
 
     // ── Virtual Scroll ─────────────────────────────────────────────────────────
@@ -618,6 +655,10 @@ export function initTimeline(projects) {
         const nowMs    = performance.now();
         if (focusIdx !== S.focusSlideIdx) {
             S.focusSlideIdx  = focusIdx;
+            S.slides.forEach((sl, j) => { sl.el.inert = !S.immersive || j !== focusIdx; });
+            if (S.immersive && els.announce) {
+                els.announce.textContent = `Slide ${focusIdx + 1} of ${N}: ${slideData[focusIdx].label}`;
+            }
             S.focusArrivedTs = nowMs;
         }
         const focusElapsedMs = nowMs - S.focusArrivedTs;
@@ -711,7 +752,11 @@ export function initTimeline(projects) {
         const newProjIdx  = timelineProjects.indexOf(currentProj);
         if (newProjIdx !== S.activeProjIdx) {
             S.activeProjIdx = newProjIdx;
-            S.dots.forEach((dot, i) => dot.classList.toggle('active', i === newProjIdx));
+            S.dots.forEach((dot, i) => {
+                dot.classList.toggle('active', i === newProjIdx);
+                if (i === newProjIdx) dot.setAttribute('aria-current', 'step');
+                else dot.removeAttribute('aria-current');
+            });
         }
     }
 }

@@ -413,16 +413,46 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
     await page.evaluate(`window.__timelineState = ${timelineState.toString()}`);
     const state = () => page.evaluate(() => window.__timelineState());
 
+    // Every Tab stop inside the timeline must be something you can see.
+    const checkTabStops = async (where) => {
+        const seen = new Set();
+        for (let t = 0; t < 30; t++) {
+            await page.keyboard.press('Tab');
+            const f = await page.evaluate(() => {
+                const el = document.activeElement;
+                if (!el || el === document.body) return null;
+                let op = 1;
+                for (let e = el; e; e = e.parentElement) op *= parseFloat(getComputedStyle(e).opacity);
+                const r = el.getBoundingClientRect();
+                const label = el.id ? '#' + el.id : `${el.tagName.toLowerCase()}.${el.className}`;
+                const key = label + '|' + (el.getAttribute('aria-label') || el.textContent.trim().slice(0, 30));
+                return { key, label, visible: op > 0.5 && getComputedStyle(el).visibility !== 'hidden'
+                    && r.width > 0 && r.bottom > 0 && r.right > 0 && r.top < innerHeight && r.left < innerWidth };
+            });
+            if (!f) continue;
+            if (seen.has(f.key)) break;        // wrapped around
+            seen.add(f.key);
+            if (!f.visible) F('focus-hidden', `${where}: Tab reached ${f.key.replace('|', ' ')}, which is not visible`);
+        }
+        cov.tabStops = (cov.tabStops || 0) + seen.size;
+        if (!seen.size) F('tested-nothing', `${where}: Tab reached nothing`);
+    };
+
     const exitTimeline = async (how) => {
         await page.keyboard.press('Escape');
         const ok = await page.waitForFunction(() => !document.body.classList.contains('timeline-immersive')
             && getComputedStyle(document.documentElement).overflow !== 'hidden', null, { timeout: 3000 })
             .then(() => true).catch(() => false);
         if (!ok) F('timeline-exit', `Escape did not leave the timeline (${how})`);
+        // Focus is handed back a couple of frames after exit.
+        await page.waitForFunction(() => document.activeElement && document.activeElement !== document.body
+            && !document.activeElement.closest('#projectStage, #cvExit, #cvProjectNav'), null, { timeout: 1000, polling: 'raf' }).catch(() => {});
         return ok;
     };
 
-    await page.locator('#cvEnter').click();
+    // Enter by keyboard, as a keyboard user would.
+    await page.locator('#cvEnter').focus();
+    await page.keyboard.press('Enter');
     if (!(await waitFocus(0))) {
         const s = await state();
         F('timeline-enter', `"Enter the time machine" did not settle on slide 0 (state ${JSON.stringify(s)})`, await shoot('enter-failed'));
@@ -448,12 +478,30 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
                     : is.kind === 'clipped' ? `hides ${is.px}px of text` : `under ${is.with}`}`, shot);
             }
             if (!hud) F('timeline-hud', `slide ${i}: time-machine year not shown`, shot);
+            const a11y = await page.evaluate(i => {
+                const reachable = [...document.querySelectorAll('.project-slide')].filter(s => !s.inert).map(s => +s.dataset.idx);
+                const dots = [...document.querySelectorAll('#cvProjectNav .nav-dot')];
+                return {
+                    announce: document.getElementById('cvAnnounce')?.textContent || '',
+                    reachable,
+                    current: dots.findIndex(d => d.getAttribute('aria-current')),
+                    inside: !!document.activeElement?.closest('#cvSection'),
+                };
+            }, i);
+            if (!a11y.announce.startsWith(`Slide ${i + 1} of ${expect.slides}`)) F('a11y-announce', `slide ${i}: live region says "${a11y.announce}"`);
+            if (a11y.reachable.length !== 1 || a11y.reachable[0] !== i) F('a11y-inert', `slide ${i}: slides reachable by assistive tech: [${a11y.reachable}]`);
+            if (a11y.current !== expect.slideProject[i]) F('a11y-current', `slide ${i}: aria-current on dot ${a11y.current}, expected ${expect.slideProject[i]}`);
+            if (i === 0 && !a11y.inside) F('a11y-focus', 'entering the timeline did not move focus into it');
+            if (i === 0 || i === 1) await checkTabStops(`slide ${i}`);
             cov.slides++;
             if (i < expect.slides - 1) await page.keyboard.press('ArrowDown');
         }
         await page.keyboard.press('Home');
         if (!(await waitFocus(0))) F('slide-sequence', 'Home did not return to slide 0');
-        await exitTimeline('after stepping');
+        if (await exitTimeline('after stepping')) {
+            const back = await page.evaluate(() => document.activeElement?.id);
+            if (back !== 'cvEnter') F('a11y-focus', `leaving the timeline left focus on "${back || document.activeElement?.tagName}", not the button that opened it`);
+        }
     }
 
     // ── Warp jumps: every portfolio card ──
@@ -482,6 +530,8 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
             cov.warps++;
         }
         if (!(await exitTimeline(`card ${card.id}`))) break;
+        const back = await page.evaluate(() => document.activeElement?.id);
+        if (back !== `item-${card.id}`) F('a11y-focus', `card ${card.id}: focus after leaving is on "${back}", not the card`);
     }
 
     // ── The CV nav link is the third entry point ──
@@ -691,7 +741,9 @@ async function main() {
     const heroIdx = {};
     const topicIdx = {};
     const slideLabels = [];
-    for (const p of timeline) {
+    const slideProject = [];
+    for (const [pi, p] of timeline.entries()) {
+        slideProject.push(pi, ...(p.workTopics || []).map(() => pi));
         heroIdx[p.id] = slideLabels.length;
         slideLabels.push(`${p.id} hero`);
         (p.workTopics || []).forEach(t => { topicIdx[`${p.id}/${t.title}`] = slideLabels.length; slideLabels.push(`${p.id}: ${t.title}`); });
@@ -705,6 +757,7 @@ async function main() {
         cards: projects.filter(p => p.showInPortfolio).map(p => ({ id: p.id, targetIdx: landing(p) })),
         slides: slideLabels.length,
         slideLabels,
+        slideProject,
         contentTitles: projects.filter(p => p.showInPortfolio || p.showInTimeline).map(p => p.title),
         refs: [],
     };

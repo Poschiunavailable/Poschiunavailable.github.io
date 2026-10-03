@@ -180,6 +180,14 @@ directions.
   project fades in. It jumps `virtualPos` straight to the target rather than
   lerping through intervening slides — the starfield expresses the travel.
   Input is locked via `S.flying` for the ~750ms duration (Escape still exits).
+- **Timeline accessibility contract** (walk-enforced): every slide is a
+  labelled `role=group` and all but the focused one are `inert` (the slides are
+  stacked, so without it Tab walked into invisible links); `#cvAnnounce` (polite
+  live region) reads "Slide x of N: …" on each step; the active nav dot carries
+  `aria-current`; entering moves focus to `#projectStage`, leaving hands it back
+  to the opener two frames later (the sections return from `visibility:hidden`
+  through a transition, so the opener isn't focusable sooner), else to
+  `#cvEnter`.
 - **Immersive mode is entered explicitly, never by scroll position.** There
   used to be an IntersectionObserver that hijacked scrolling the moment the CV
   section filled half the viewport. It is gone on purpose. The three entry
