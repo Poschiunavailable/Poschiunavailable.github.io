@@ -1,0 +1,71 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Off the map — Patrick Temborius</title>
+    <meta name="description" content="This page doesn't exist. Head back to Patrick Temborius's portfolio.">
+    <meta name="robots" content="noindex">
+    <meta name="theme-color" content="#212836">
+    <!-- GitHub Pages serves this file for a missing path at any depth
+         (/a/b/c), so every URL here is root-absolute. -->
+    <link rel="icon" href="/favicon.ico" sizes="16x16 32x32 48x48">
+    <link rel="apple-touch-icon" href="/assets/icons/apple-touch-icon.png">
+    <link rel="preload" href="/assets/fonts/lora-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
+    <link rel="stylesheet" href="/styles/fonts.css">
+    <link rel="stylesheet" href="/styles/base.css">
+    <style>
+        body {
+            min-height: 100vh;
+            min-height: 100svh;
+            display: grid;
+            place-items: center;
+            padding: 24px 16px;
+            font-family: var(--primary-font);
+            color: var(--primary-color);
+            background:
+                url('/assets/starfield-static.svg') 0 0 / 600px 600px,
+                radial-gradient(ellipse 80% 70% at 50% 45%, #2a3346 0%, var(--background-color) 45%, #0d1018 100%);
+        }
+        main { max-width: 34rem; text-align: center; }
+        .code {
+            font-family: var(--tertiary-font);
+            font-size: 0.8rem;
+            letter-spacing: 0.3em;
+            color: var(--highlight-color);
+            margin-bottom: 14px;
+        }
+        h1 { font-family: var(--secondary-font); font-size: clamp(2.2rem, 7vw, 3.4rem); line-height: 1.1; }
+        p.lead { margin: 18px auto 32px; line-height: 1.7; color: #b9c4d3; max-width: 28rem; }
+        .actions { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
+        .ghost {
+            display: inline-block;
+            padding: 0.75em 1.5em;
+            border-radius: 5px;
+            border: 1px solid rgba(129, 168, 209, 0.45);
+            color: var(--primary-color);
+            transition: border-color var(--transition-duration), color var(--transition-duration);
+        }
+        .ghost:hover { border-color: var(--highlight-color); color: var(--highlight-color); }
+        a:focus-visible { outline: 2px solid var(--tertiary-color); outline-offset: 3px; }
+        @media (prefers-reduced-motion: reduce) {
+            .ghost { transition: none; }
+        }
+    </style>
+</head>
+
+<body>
+    <main>
+        <p class="code">Error 404</p>
+        <h1>Off the map</h1>
+        <p class="lead">Nothing exists at these coordinates. The page may have moved, or the
+            link was mistyped — the timeline is still where you left it.</p>
+        <div class="actions">
+            <a class="cta-button" href="/">Back to the homepage</a>
+            <a class="ghost" href="/#portfolio">See the work</a>
+        </div>
+    </main>
+</body>
+
+</html>

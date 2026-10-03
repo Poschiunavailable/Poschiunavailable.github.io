@@ -548,7 +548,23 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
         const loc = page.locator(`#item-${card.id}`);
         await loc.scrollIntoViewIfNeeded();
         await page.waitForTimeout(150);
-        await loc.click();
+        // A click that can't land is a finding, not a crash: record what sat
+        // on top of the card (Playwright's reason + elementFromPoint) and move on.
+        const clicked = await loc.click({ timeout: 8000 }).then(() => true).catch(async e => {
+            const box = await loc.boundingBox().catch(() => null);
+            const onTop = box && await page.evaluate(({ x, y }) => {
+                const el = document.elementFromPoint(x, y);
+                return el ? (el.id ? '#' + el.id : el.tagName.toLowerCase() + '.' + String(el.className).trim().replace(/\s+/g, '.')) : 'nothing';
+            }, { x: box.x + box.width / 2, y: box.y + box.height / 2 });
+            const why = String(e.message).split('\n').filter(l => /intercepts|not visible|not stable|outside|detached|waiting/.test(l)).slice(-2).join(' | ');
+            const body = await page.evaluate(() => document.body.className);
+            F('warp-click', `card ${card.id}: click did not land (${why || 'timeout'}); at card centre: ${onTop}; body.${body || '-'}`, await shoot(`warp-${card.id}-click`));
+            return false;
+        });
+        if (!clicked) {
+            if ((await state()).immersive) await exitTimeline(`card ${card.id} after failed click`);
+            continue;
+        }
         if (k === 0 && variant !== 'reduced-motion') {
             await page.waitForFunction(() => document.body.classList.contains('timeline-warping'), null, { timeout: 1500 }).catch(() => {});
             await page.waitForTimeout(250);
@@ -598,11 +614,17 @@ async function walk404(browser, base, cache, vp) {
     await ctx.route(url => !url.href.startsWith(base), r => cache.handleRoute(r));
     const page = await ctx.newPage();
     const F = (code, msg, shot) => fail('404', vp, code, msg, shot);
-    page.on('console', m => { if (['error', 'warning'].includes(m.type()) && !BROWSER_NOISE.some(re => re.test(m.text()))) F('console-error', m.text()); });
+    const deepUrl = base + 'no/such/deep/page';
+    page.on('console', m => {
+        if (!['error', 'warning'].includes(m.type()) || BROWSER_NOISE.some(re => re.test(m.text()))) return;
+        // Chrome logs the document's own 404 status; that one is the point.
+        if (m.location()?.url === deepUrl && /status of 404/.test(m.text())) return;
+        F('console-error', m.text());
+    });
     page.on('pageerror', e => F('page-error', e.message));
     const failed = [];
     page.on('response', r => { if (r.url().startsWith(base) && r.status() >= 400 && r.request().resourceType() !== 'document') failed.push(`${r.status()} ${r.url().slice(base.length)}`); });
-    const res = await page.goto(base + 'no/such/deep/page', { waitUntil: 'networkidle' });
+    const res = await page.goto(deepUrl, { waitUntil: 'networkidle' });
     const dir = path.join(OUT, '404', vp);
     fs.mkdirSync(dir, { recursive: true });
     const file = path.join(dir, '00-not-found.jpg');

@@ -14,12 +14,24 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | B4 — Favicon set |
+| **Unit** | B5 — Designed 404 page |
 | **Phase** | B |
-| **Goal** | Proper icons everywhere from Patrick's own PT logo, at the weight icons should have. Today: a single-size 256 px ICO (43 KiB) and the 512 px logo PNG (129 KiB) as both tab and apple-touch icon. |
-| **Acceptance check** | Walk icon checks (self-test fault #8) green; ICO 16/32/48 ≤ 15 KiB; apple-touch 180×180 on navy (iOS paints transparency black); manifest 192/512/maskable; icons legible on light and dark tab bars (preview checked); Lighthouse BP/SEO stay 100. |
-| **Files** | `tools/make-icons.py`, `favicon.ico`, `assets/icons/`, `assets/brand/pt-logo-512.png` (moved), `site.webmanifest`, `index.html`, `tests/site-walk.mjs`, `Docs/QUALITY.md` |
-| **Step reached** | Icons generated (ICO 7 KiB, PNGs 8–24 KiB; was 43 + 129 KiB), linked, manifest added; self-test 8/8. Full walk + Lighthouse running. |
+| **Goal** | A missing URL lands on an on-brand page with a way back, at any path depth. |
+| **Acceptance check** | Walk 404 pass at all 10 viewports: deep missing URL answers 404, heading, link to `/`, fonts and assets load from the deep path (root-absolute URLs), no overflow, no console errors, axe clean at phone + desktop; screenshots checked. Before `404.html` existed the pass failed at every viewport (checks proven). |
+| **Files** | `404.html`, `tests/site-walk.mjs`, `Docs/STATUS.md` |
+| **Step reached** | Page in place; 3-viewport walk green; screenshots at 320×568 and 1920×1080 checked. Eyebrow is plain "Error 404" (no brackets, per Patrick); restyle with the chosen heading direction. Full walk running. |
+
+### B4 — Favicon set (done 2026-10-03, `d0b40ac`)
+
+Icon set from the PT logo via `tools/make-icons.py`; ICO 7 KiB (was 43),
+PNG icons 8–24 KiB (logo PNG was 129 KiB); manifest added; walk icon checks
+(self-test 8/8). Lighthouse median perf 98, a11y 100, BP 100, SEO 100. The
+B4 walks surfaced two focus bugs, fixed: hidden header reachable by Tab under
+load (page now `inert` behind the timeline) and focus return falling back to
+`#cvEnter` under load (retry loop; reproduced 3/3 stressed, clean after). One
+full run also hit a card click timeout at 667×375 that 12 loaded re-runs did
+not reproduce; the walk now records such a click as a `warp-click` finding
+(what covered the card, Playwright's reason, screenshot) instead of crashing.
 
 ### B3 — Metadata, social preview, robots, sitemap (done 2026-10-03, `92b3540`)
 
@@ -205,9 +217,9 @@ B2. ~~Timeline accessibility~~ — done 2026-10-03: slides announced (live regio
    control.
 B3. ~~Metadata~~ — done 2026-10-03: absolute `og:image`, Twitter card fields, designed 1200×630
    social preview, canonical URL, `robots.txt`, `sitemap.xml`.
-B4. (card above) Favicon set (SVG + 32 px ICO + 180 px apple-touch + manifest icons);
+B4. ~~Favicon set~~ — done 2026-10-03 (SVG + 32 px ICO + 180 px apple-touch + manifest icons);
     today a 129 KB 2048²-derived PNG is linked as the icon.
-B5. Designed `404.html`.
+B5. (card above) Designed `404.html`.
 B6. Responsive images (`srcset`/`sizes`) for card and slide art.
 B7. Lighthouse mobile Performance ≥ 90 and the transfer budget in QUALITY.md.
 
