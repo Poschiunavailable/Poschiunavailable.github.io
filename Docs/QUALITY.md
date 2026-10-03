@@ -56,7 +56,7 @@ Lighthouse numbers are the **median of 3 runs**.
 | Bar | Measured by |
 |---|---|
 | Meta description, Open Graph, Twitter card with a designed preview | Walk checks `<head>`: description, `og:title/description/image/url/type`, `twitter:card/title/description/image`; `og:image` is an absolute URL that returns 200 and is 1200×630. |
-| Favicon set | SVG icon, 32 px ICO, 180 px apple-touch, 192/512 manifest icons all exist and return 200; icon total ≤ 60 KiB. |
+| Favicon set | Walk: `.ico` (16/32/48) linked and ≤ 15 KiB; 180×180 apple-touch icon; `site.webmanifest` parses and declares 192 and 512 icons whose files exist at the declared size, each ≤ 30 KiB. No SVG icon: the PT logo is a raster brush mark, and a traced SVG would not be the same mark (STATUS D8). |
 | `robots.txt` and `sitemap.xml` | Both exist, sitemap lists the canonical URL, robots references the sitemap. |
 | Consistent type and spacing scale | Font sizes and spacing come from tokens in `base.css`; a grep check counts raw `font-size`/`margin`/`padding`/`gap` values outside the token set and must report 0 (exceptions listed inline with a reason). Added in Phase C. |
 | Every interactive element has hover, focus and pressed states with eased motion | Walk forces `:hover`, `:focus-visible`, `:active` per element (CDP `CSS.forcePseudoState`) and asserts each state's computed style differs from rest; transitions use the easing tokens. Added in Phase C. |

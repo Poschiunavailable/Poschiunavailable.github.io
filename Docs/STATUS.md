@@ -14,12 +14,22 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | B3 — Metadata, social preview, robots, sitemap |
+| **Unit** | B4 — Favicon set |
 | **Phase** | B |
-| **Goal** | Links to the site unfurl as a designed card everywhere (LinkedIn, Slack, X, Mastodon), and crawlers get a canonical URL, robots.txt and a sitemap. |
-| **Acceptance check** | `<head>`: description, canonical, `og:type/site_name/title/description/url/image(+width/height/alt)`, `twitter:card/title/description/image`; `og:image` absolute on the canonical origin, its local file exists and is a 1200×630 PNG under 300 KB; `robots.txt` names the sitemap; `sitemap.xml` lists the canonical URL. The walk checks all of it. Card looked at; P5 leaves the placeholder register. Lighthouse SEO stays 100. |
-| **Files** | `index.html`, `assets/social/`, `tools/render-social-card.mjs`, `robots.txt`, `sitemap.xml`, `tests/site-walk.mjs`, `Docs/STATUS.md`, `AGENTS.md` |
-| **Step reached** | Not started. |
+| **Goal** | Proper icons everywhere from Patrick's own PT logo, at the weight icons should have. Today: a single-size 256 px ICO (43 KiB) and the 512 px logo PNG (129 KiB) as both tab and apple-touch icon. |
+| **Acceptance check** | Walk icon checks (self-test fault #8) green; ICO 16/32/48 ≤ 15 KiB; apple-touch 180×180 on navy (iOS paints transparency black); manifest 192/512/maskable; icons legible on light and dark tab bars (preview checked); Lighthouse BP/SEO stay 100. |
+| **Files** | `tools/make-icons.py`, `favicon.ico`, `assets/icons/`, `assets/brand/pt-logo-512.png` (moved), `site.webmanifest`, `index.html`, `tests/site-walk.mjs`, `Docs/QUALITY.md` |
+| **Step reached** | Icons generated (ICO 7 KiB, PNGs 8–24 KiB; was 43 + 129 KiB), linked, manifest added; self-test 8/8. Full walk + Lighthouse running. |
+
+### B3 — Metadata, social preview, robots, sitemap (done 2026-10-03, `92b3540`)
+
+Designed 1200×630 card (`assets/social/og-card.jpg`, 91 KiB) rendered from
+`tools/social-card/card.html`; canonical, full Open Graph and Twitter tags
+with absolute image URLs and alt text; `robots.txt` → `sitemap.xml`. The walk
+checks the head, reads the image dimensions from the file, checks robots and
+sitemap (self-test fault #7) and resolves canonical-origin URLs locally. Full
+walk PASSED; Lighthouse median perf 97, a11y 100, BP 100, SEO 100. Placeholder
+P5 resolved.
 
 ### B2 — Timeline accessibility (done 2026-10-03, `0471b36`, `3a8ad32`)
 
@@ -193,9 +203,9 @@ B1. No-JS fallback that still shows all content. Seen in the U10 no-JS
 B2. ~~Timeline accessibility~~ — done 2026-10-03: slides announced (live region "slide x of N"),
    controls named, focus management on enter/exit, keyboard reaches every
    control.
-B3. (card above) Metadata: absolute `og:image`, Twitter card fields, designed 1200×630
+B3. ~~Metadata~~ — done 2026-10-03: absolute `og:image`, Twitter card fields, designed 1200×630
    social preview, canonical URL, `robots.txt`, `sitemap.xml`.
-B4. Favicon set (SVG + 32 px ICO + 180 px apple-touch + manifest icons);
+B4. (card above) Favicon set (SVG + 32 px ICO + 180 px apple-touch + manifest icons);
     today a 129 KB 2048²-derived PNG is linked as the icon.
 B5. Designed `404.html`.
 B6. Responsive images (`srcset`/`sizes`) for card and slide art.
@@ -313,3 +323,4 @@ Collected here; asked together rather than one by one.
 | D5 | 2026-10-03 | `TODO.md` became `Docs/HISTORY.md`: a dated, append-only log. Its "Still open" items moved to the questions above; its "Testing" section was a third copy of the viewport list and was dropped (home: QUALITY.md). Dead `.contact-form`/`.form-group`/`.form-note` CSS removed. | One home per fact. History keeps its value (measurement notes, past bugs) without competing with STATUS for "what is true now". |
 | D6 | 2026-10-03 | Phase A grows from the first walk: U3 broken link, U8 Cold Comfort card, U9 HUD collisions, U10 no-WebGL error. Phase B items are numbered B1–B7. | The walk found them; small, user-visible breakage stays in Phase A. |
 | D7 | 2026-10-03 | Real bugs the walk finds but a later unit fixes go in `tests/known-failures.json` with that unit's id. They are reported, don't fail the run, and a full run flags entries that stop matching. | Keeps the walk green-meaningful without hiding bugs or deleting checks. |
+| D8 | 2026-10-03 | Icons are a raster set made from Patrick's PT brush logo (`tools/make-icons.py`), not an SVG; QUALITY.md's favicon bar changed accordingly. | The logo is a brush mark; a traced SVG would be a different mark. Keeping his own logo beats a cleaner generic icon. |

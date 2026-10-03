@@ -228,7 +228,10 @@ Dev-only scripts whose output is committed (nothing runs at deploy time):
   Re-run after changing the name, role or tagline. Uses Playwright from
   `tests/node_modules`.
 
-`robots.txt` and `sitemap.xml` sit at the root; the canonical URL is
+- `make-icons.py` — favicon set (`favicon.ico`, `assets/icons/*`) from
+  `assets/brand/pt-logo-512.png`, Patrick's PT logo. Needs Pillow.
+
+`robots.txt`, `sitemap.xml` and `site.webmanifest` sit at the root; the canonical URL is
 `https://poschiunavailable.github.io/` (also in `index.html`).
 
 ## Testing (`tests/`)

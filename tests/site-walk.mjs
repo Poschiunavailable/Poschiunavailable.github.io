@@ -89,6 +89,7 @@ const SELF_TEST_FAULTS = {
     'cls':            ['/modules/scripts.js', s => s + "\naddEventListener('load', () => setTimeout(() => { document.querySelector('.hero-content').style.marginTop = '320px'; }, 150));\n", /layout shift during load/],
     'placeholder-data': ['/projects.json', s => { const d = JSON.parse(s); delete d[0].placeholders.image; return JSON.stringify(d); }, /UniversityProjects\.image .*not marked/],
     'metadata':       ['/index.html', s => s.replace('content="1200"', 'content="1201"'), /disagree with the file/],
+    'icons':          ['/site.webmanifest', s => s.replace('"192x192"', '"193x193"'), /declared 193x193/],
     'slide-overflow': ['/styles/cvstyle.css', s => s + '\n.project-slide[data-idx="1"] .topic-desc { padding-bottom: 150vh; }\n', /^slide 1 /],
 };
 function selfTestTransform(urlPath, buf) {
@@ -749,6 +750,33 @@ async function checkHead(page, base) {
         else if (+head.og['image:width'] !== size.w || +head.og['image:height'] !== size.h) H(`og:image:width/height (${head.og['image:width']}×${head.og['image:height']}) disagree with the file (${size.w}×${size.h})`);
         if (buf.length > 300 * 1024) H(`${img}: ${Math.round(buf.length / 1024)} KiB, over 300 KiB`);
     }
+    // Icons: manifest icons exist at their declared sizes; files stay small.
+    const I = msg => fail('-', '-', 'icons', msg);
+    const iconLinks = await page.evaluate(() => ({
+        manifest: document.querySelector('link[rel="manifest"]')?.getAttribute('href'),
+        apple: document.querySelector('link[rel="apple-touch-icon"]')?.getAttribute('href'),
+        ico: document.querySelector('link[rel="icon"][href$=".ico"]')?.getAttribute('href'),
+    }));
+    const local = u => base + String(u).replace(/^\//, '');
+    const getBuf = async u => { const r = await fetch(local(u)); return r.ok ? Buffer.from(await r.arrayBuffer()) : null; };
+    if (!iconLinks.ico) I('no .ico favicon linked');
+    else { const b = await getBuf(iconLinks.ico); if (!b) I(`${iconLinks.ico} missing`); else if (b.length > 15 * 1024) I(`${iconLinks.ico}: ${Math.round(b.length / 1024)} KiB > 15 KiB`); }
+    if (!iconLinks.apple) I('no apple-touch-icon linked');
+    else { const b = await getBuf(iconLinks.apple); const sz = b && jpegOrPngSize(b);
+        if (!sz || sz.w !== 180 || sz.h !== 180) I(`${iconLinks.apple}: expected a 180×180 image, got ${sz ? sz.w + '×' + sz.h : 'nothing'}`); }
+    let manifest = null;
+    try { manifest = JSON.parse((await getBuf(iconLinks.manifest || 'missing'))?.toString() || ''); } catch { I(`manifest ${iconLinks.manifest} missing or not JSON`); }
+    if (manifest) {
+        const declared = (manifest.icons || []).map(i => i.sizes);
+        for (const need of ['192x192', '512x512']) if (!declared.includes(need)) I(`manifest has no ${need} icon`);
+        for (const icon of manifest.icons || []) {
+            const b = await getBuf(icon.src); const sz = b && jpegOrPngSize(b);
+            if (!sz) { I(`manifest icon ${icon.src} missing`); continue; }
+            if (`${sz.w}x${sz.h}` !== icon.sizes) I(`manifest icon ${icon.src}: file is ${sz.w}x${sz.h}, declared ${icon.sizes}`);
+            if (b.length > 30 * 1024) I(`manifest icon ${icon.src}: ${Math.round(b.length / 1024)} KiB > 30 KiB`);
+        }
+    }
+
     const robots = await (await fetch(base + 'robots.txt')).text().catch(() => '');
     if (!robots.includes(`Sitemap: ${CANONICAL}sitemap.xml`)) H('robots.txt missing or does not name the sitemap');
     const sitemap = await fetch(base + 'sitemap.xml');
