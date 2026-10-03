@@ -14,12 +14,17 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | U3 — Broken AURELION link |
+| **Unit** | U4 — CTA contrast |
 | **Phase** | A |
-| **Goal** | The AURELION link on the timeline hero slide reaches dSPACE's public product page. |
-| **Acceptance check** | Walk: no `external-link` failure; the U3 entry is removed from `tests/known-failures.json` and the full run reports no stale entries. |
-| **Files** | `projects.json`, `tests/known-failures.json`, `Docs/STATUS.md` |
-| **Step reached** | Not started. |
+| **Goal** | Every button's text meets 4.5:1 in rest and hover state. Today white on `--highlight-color` is 1.89:1 (Lighthouse `color-contrast` on "View My Work" and "Enter the time machine"). |
+| **Acceptance check** | Lighthouse: `color-contrast` passes, Accessibility ≥ 97 (target 100). Walk green. Screenshots of hero, about, cv intro and contact show the buttons legible. Rest 8.5:1 (#1c212e on #eab180), hover 5.7:1 (on #ff6a53), computed by the WCAG formula. |
+| **Files** | `styles/base.css`, `Docs/STATUS.md` |
+| **Step reached** | Change made: `.cta-button` text is `--secondary-background-color`. Walk + Lighthouse next. |
+
+### U3 — Broken AURELION link (done 2026-10-03, `bdd73ea`)
+
+Link points at the current product page (200). Full walk PASSED apart from
+known failures; no `external-link` failures; no stale known entries.
 
 ### U2 — Site-walk test (done 2026-10-03)
 
@@ -53,8 +58,8 @@ Phases are strict: A before B before C.
 
 1. ~~**U1** Stale docs + README email~~ — done 2026-10-03.
 2. ~~**U2** Site-walk test~~ — done 2026-10-03.
-3. **U3** (card above) Broken AURELION link → `products/sw/experimentandvisualization/aurelion_sensor-realistic_sim.cfm` (public product page, verified 200).
-4. **U4** CTA contrast: white on `--highlight-color` (#eab180) is **1.89:1**
+3. ~~**U3** Broken AURELION link~~ — done 2026-10-03. → `products/sw/experimentandvisualization/aurelion_sensor-realistic_sim.cfm` (public product page, verified 200).
+4. **U4** (card above) CTA contrast: white on `--highlight-color` (#eab180) is **1.89:1**
    (Lighthouse `color-contrast`, `.cta-button` and `#cvEnter`). AGENTS.md's
    "7.8–11.0:1" only covered body text on section fills.
 5. **U5** Render-blocking CSS: every stylesheet `@import`s `base.css` again and

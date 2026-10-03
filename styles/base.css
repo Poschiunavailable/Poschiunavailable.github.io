@@ -77,7 +77,9 @@ a:hover { color: var(--senary-color); }
   display: inline-block;
   padding: 0.75em 1.5em;
   font-size: 1rem;
-  color: #fff;
+  /* Dark text on the light accent: 8.5:1 on --highlight-color and 5.7:1 on
+     the --senary-color hover. White text here measured 1.89:1. */
+  color: var(--secondary-background-color);
   background-color: var(--highlight-color);
   border: none;
   border-radius: 5px;
