@@ -7,7 +7,15 @@ browser. Hosted on GitHub Pages (`Poschiunavailable.github.io`).
 Content is **real** as of 2026-08-07: `projects.json` and the hero/about copy
 come from Patrick's CV. The game key art in `assets/` is the genuine art for
 each title. The one synthetic asset is `assets/sensor_simulation.svg`, drawn
-for the dSPACE/AURELION entry (see "Publishing rules" below).
+for the dSPACE/AURELION entry (see "Publishing rules" below). Where real
+content is still missing, a placeholder stands in; every one is listed in the
+placeholder register in [`Docs/STATUS.md`](Docs/STATUS.md).
+
+Process docs: [`Docs/STATUS.md`](Docs/STATUS.md) (current unit, what's next,
+placeholder register, decisions, open questions) and
+[`Docs/QUALITY.md`](Docs/QUALITY.md) (quality bars, how each is measured,
+the test viewports). [`Docs/HISTORY.md`](Docs/HISTORY.md) is the dated log of
+past rounds and their measurements — read it before re-fixing something.
 
 ## Publishing rules — read before adding content
 
@@ -49,7 +57,7 @@ These are deliberate decisions, not oversights. Don't "fix" them:
 |---|---|
 | `main.js` | Entry point / orchestration. |
 | `dataManager.js` | Fetches + memoizes `projects.json`. |
-| `scripts.js` | Generic site chrome: mobile nav toggle, smooth-scroll nav, lazy hero video, typing-effect headers (`.typing-target`), scroll-in reveal (`.animate` + IntersectionObserver), contact-form mailto handler. Also exports `prefersReducedMotion()`, which the other modules import. |
+| `scripts.js` | Generic site chrome: mobile nav toggle, smooth-scroll nav, lazy hero video, typing-effect headers (`.typing-target`), scroll-in reveal (`.animate` + IntersectionObserver). Also exports `prefersReducedMotion()`, which the other modules import. |
 | `portfolio.js` | Builds portfolio cards from `projects.json` into `#portfolioGrid`. 3D tilt/scale hover effect. Clicking a card doesn't open a modal — it dispatches `portfolio:selectProject` (`{id}`), which `timeline.js` listens for. |
 | `timeline.js` | The CV/timeline section (`#cv`). Biggest/most complex module — a custom slide-based "virtual scroll" (like apple.com product pages): each project becomes one hero slide + one slide per `workTopics[]` entry, all flattened into `slideData`. Wheel/touch/keyboard input moves a `virtualPos` that LERPs toward an integer `targetPos`; scrolling into `#cv` far enough triggers "immersive mode" which locks page scroll and takes over input. Drives the `#timeMachine` date HUD by interpolating each project's `startDate`/`endDate` across its slides. |
 | `background.js` | Three.js starfield background (`#canvas-container`), independent of the rest — reacts to mouse/gyro tilt and scroll position, and listens for `timeline:warpSpeed` (dispatched by `timeline.js` on entering/exiting immersive mode) to trigger a hyperspace streak effect. |
@@ -99,15 +107,16 @@ Every stylesheet that animates carries a `prefers-reduced-motion` block, and
 the JS modules check `prefersReducedMotion()` too (so they can skip work
 rather than just its animation). Keep both in sync when adding motion.
 
-Layout is validated at 320×568, 360×640, 375×667, 375×812, 414×896, 667×375,
-844×390, 768×1024, 1024×768, 1920×1080. **360×640 and 667×375 are the tight
-cases** — they catch clipping that 375×812 does not. See `TODO.md`.
+Layout is validated at the viewports listed in `Docs/QUALITY.md`. **360×640 and
+667×375 are the tight cases** — they catch clipping that 375×812 does not.
 
 ## Assets (`assets/`)
 
-Images/video referenced by `projects.json` and `index.html`. All placeholder
-content (stock-ish splash art, a generic profile photo, a generic portfolio
-reel video in two resolutions).
+Images/video referenced by `projects.json` and `index.html`: genuine key art
+for each game, Patrick's profile photo, the hero reel (`portfolio_reel.mp4` +
+poster) and the original AURELION artwork. Some assets are reused as
+placeholders for entries that lack their own — the register in
+`Docs/STATUS.md` says which.
 
 ## Editing content
 
@@ -115,8 +124,8 @@ To add/edit a project: edit `projects.json` only — no code changes needed
 for a straightforward new entry. To change what shows where, toggle
 `showInPortfolio` / `showInTimeline`. `workTopics[]` entries become
 additional timeline slides (image + description + `highlights[]` bullets).
-`details` (`about`/`work`/`technologies`) is currently unused by any module
-in `modules/` — check before assuming it renders anywhere.
+`details` is the fact list on the project's timeline hero slide (see the quirk
+below).
 
 ## Known quirks worth knowing before touching things
 
@@ -175,8 +184,6 @@ in `modules/` — check before assuming it renders anywhere.
   the next frame — translateX diverged ±446px, which is the "cards flash and
   zoom" bug. Measure with the transform cleared, cache it, drive from the cache.
   Card scale is also clamped to what the viewport can hold.
-- The contact form has **no backend** — the JS handler just composes a
-  `mailto:` draft. Needs a real endpoint before it's useful.
 
 ## Local preview
 

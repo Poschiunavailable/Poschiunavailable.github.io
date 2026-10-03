@@ -1,16 +1,21 @@
-# Issues & Roadmap
+# History
+
+Dated log of past rounds: what was broken, how it was fixed, and how it was
+measured. Append-only and historical — statements here describe the site *at
+that date*. Current state, open work and questions live in `STATUS.md`; the
+quality bars and test viewports live in `QUALITY.md`.
+
+## Audit (2026-08-07)
 
 Audit 2026-08-07; fixes applied same day. Everything under **Fixed** was
 re-tested in a browser at 320×568, 360×640, 375×667, 375×812, 414×896,
 667×375, 844×390, 768×1024, 1024×768, 1920×1080 — all pass.
 
-Content and assets are still placeholders; this file tracks code and layout.
-
 ---
 
-## Fixed
+### Fixed
 
-### P0
+#### P0
 1. **Mobile navbar** — `navbar.css` had no media queries at all; at 375px the
    bar overflowed by 116px and "CV"/"Contact" rendered off-screen. Added a
    hamburger toggle (44×44 target, `aria-expanded`, closes on link click,
@@ -40,7 +45,7 @@ Content and assets are still placeholders; this file tracks code and layout.
    - Slide videos no longer set `src` up front: **12 requests for a 38 MB file
      on page load → 0**. Sources attach one slide ahead of the focus.
 
-### P1
+#### P1
 6. **Portfolio cards stuck tilted on touch** — `touchmove` applied the tilt but
    only `mouseleave` removed it, so a card kept `scale(1.35)` forever after any
    scroll that grazed it. The whole effect is now gated behind
@@ -69,10 +74,10 @@ Content and assets are still placeholders; this file tracks code and layout.
 12. **Portfolio grid** — `repeat(3,1fr)` with two visible projects left an empty
     column; now `auto-fit`, and the cards span the full grid width.
 13. **Contact form** — `action="mailto:" method="post"` does nothing in modern
-    browsers. Now a JS submit handler that composes a mail draft. **Still needs
-    a real endpoint** (see below).
+    browsers. Now a JS submit handler that composes a mail draft. *(Later
+    removed entirely: contact runs through LinkedIn, see AGENTS.md.)*
 
-### P2
+#### P2
 - `prefers-reduced-motion` support added across `animation.css`, `navbar.css`,
   `portfolio.css`, `cvstyle.css` (10 rules) **and** in JS — the starfield stops
   animating, parallax translations go to zero, the warp effect is suppressed,
@@ -243,42 +248,3 @@ stand-in for the CSS ellipse, which reported the top and bottom edges as fully
 covered. That was wrong — CSS `radial-gradient(ellipse X% Y% …)` normalises the
 two axes independently. Recomputed with the correct formula; the numbers above
 are from that.
-
-## Still open
-
-- **No contact form.** By design — there's no published address to send to.
-  If one is ever wanted, GitHub Pages is static and needs an external endpoint
-  (Formspree / Getform / Netlify Forms). Note `README.md` still lists an email
-  address; the site itself does not.
-- **Optional: Rough Justice press-kit screenshots.** An official kit exists at
-  `rough-justice.com/press-kit/` (Gamma Minus, Patrick's own former employer) —
-  16 screenshots at 1030×579 (~260–365 KB each), a Header Capsule and a banner
-  (~690 KB each). Not downloaded; the current key art already covers the
-  layout. No explicit press licence is stated on that page — the contact for
-  rights is office@gammaminus.com.
-- **Everslaught has no public press kit.** `everslaught.com` (MobX GmbH) is
-  official but serves no direct asset URLs; Meta Quest store imagery is
-  JS-rendered behind unstable CDN URLs.
-- **Master's thesis** is listed on the CV as planned for 2027/28 — not
-  mentioned on the site. Add if wanted.
-- **Deleted videos remain in git history** — the repo still carries ~132 MB in
-  past commits. Only `git filter-repo` (rewriting history) would reclaim it;
-  worth doing before this grows, but it rewrites SHAs.
-- **Individual university game titles** — supply them and I'll name each
-  collaborative project rather than describing them by theme.
-- **Per-project preview clips.** Every card currently points `cardVideo` at the
-  same generic `portfolio_reel.mp4`. Real per-project footage would make the
-  hover preview meaningful; drop files in and change that one field.
-
-## Testing
-
-`.claude/launch.json` serves the site locally (`fetch('projects.json')` fails
-under `file://`):
-
-```bash
-python -m http.server 4173
-```
-
-Re-test at 320×568, 360×640, 375×667, 375×812, 414×896, 667×375, 844×390,
-768×1024, 1024×768, 1920×1080 after layout changes — 360×640 and 667×375 are
-the tightest and caught real bugs that 375×812 did not.

@@ -14,12 +14,12 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | U1 — Stale docs and README email |
-| **Phase** | A (fix what is broken or stale) |
-| **Goal** | Every fact has one home and is true: AGENTS.md no longer describes the removed contact form / mailto handler; "all content is placeholder" statements are gone (content is real since 2026-08-07); `.claude/launch.json` and the docs agree on one port; README.md carries no email address. TODO.md's open items move here, its change history gets one home. |
-| **Acceptance check** | `grep -rniE "contact.form\|mailto\|@g(oogle)?mail" --include=*.md --include=*.json --include=*.html --include=*.js .` finds only statements that say there is *no* form; `grep -rn 4201` finds nothing; no doc claims the content is placeholder except the register below. |
-| **Files** | `AGENTS.md`, `TODO.md`, `README.md`, `.claude/launch.json`, `Docs/STATUS.md` |
-| **Step reached** | Not started (baseline + process docs done first, see Decisions D1–D4). |
+| **Unit** | U2 — Site-walk test |
+| **Phase** | A |
+| **Goal** | A repeatable Node + Playwright walk that exercises the whole site at all 10 viewports and fails loudly, so every later change is checked the same way. |
+| **Acceptance check** | `npm test` in `tests/` serves the site, and per viewport: loads, visits 5 sections, runs every card's warp jump and asserts it lands on that project's hero slide, steps every slide, checks horizontal and slide overflow, fails on site console/page errors, checks every link; variants reduced-motion and no-WebGL; writes screenshots + `index.html` contact sheet. Self-tests: an injected overflow, an injected console error and a broken link each make it fail. Third-party requests served from a pinned local cache so proxy flakes cannot fail or pass it. |
+| **Files** | `tests/package.json`, `tests/site-walk.mjs`, `.gitignore`, `Docs/QUALITY.md`, `AGENTS.md` |
+| **Step reached** | Not started. |
 
 ## What to do next
 
@@ -27,8 +27,8 @@ Phases are strict: A before B before C.
 
 **Phase A — fix what is broken or stale**
 
-1. **U1** Stale docs + README email (card above).
-2. **U2** Site-walk test (`tests/`): Node + Playwright, all 10 viewports, every
+1. ~~**U1** Stale docs + README email~~ — done 2026-10-03.
+2. **U2** Site-walk test (card above) (`tests/`): Node + Playwright, all 10 viewports, every
    section, every card's warp jump, every slide, overflow check, console/page
    errors, link check, screenshots + contact sheet; variants for reduced motion
    and no WebGL. Third-party fetches must be deterministic (the sandbox proxy
@@ -129,13 +129,17 @@ Collected here; asked together rather than one by one.
    Proposal: `git filter-repo` on a fresh clone, force-push `main` and
    `prototype`, everyone re-clones. Rewrites every SHA. Not doing it without a
    yes.
-3. **Rough Justice press kit** — official screenshots exist, no licence
-   stated. Use them or not?
+3. **Rough Justice press kit** — official screenshots exist at
+   `rough-justice.com/press-kit/`, no licence stated (rights contact is listed
+   on that page). Use them or not? (Everslaught has no public press kit; its
+   store imagery sits behind unstable CDN URLs, so nothing to use there.)
 4. **University game titles** (P6) and **per-project clips** (P3) — whenever
    you have them.
 5. **Hero reel** (`portfolio_reel.mp4`) — what does it show? Docs call it
    "generic"; if it is not your own work it belongs in the placeholder
    register.
+6. **Master's thesis** — your CV lists it as planned for 2027/28, research
+   topic machine learning in real-time strategy games. Not on the site; add it?
 
 ## Decisions
 
@@ -145,3 +149,4 @@ Collected here; asked together rather than one by one.
 | D2 | 2026-10-03 | Test tooling goes in `tests/` with its own `package.json` (Playwright, Lighthouse); `node_modules` is git-ignored. The site itself stays build-free. | A dev-only test harness is not a build step: nothing it produces ships. |
 | D3 | 2026-10-03 | Local server port is **4173** everywhere. | Both docs already say 4173; only `.claude/launch.json` says 4201. |
 | D4 | 2026-10-03 | Phase A order is docs → walk → contrast → CSS/fonts → three.js vendoring → art. | The walk has to exist before behaviour changes; the remaining A items are ordered by measured impact (a11y fail, then 1.45 s render-blocking). |
+| D5 | 2026-10-03 | `TODO.md` became `Docs/HISTORY.md`: a dated, append-only log. Its "Still open" items moved to the questions above; its "Testing" section was a third copy of the viewport list and was dropped (home: QUALITY.md). Dead `.contact-form`/`.form-group`/`.form-note` CSS removed. | One home per fact. History keeps its value (measurement notes, past bugs) without competing with STATUS for "what is true now". |

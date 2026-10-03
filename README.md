@@ -1,6 +1,6 @@
 # Poschiunavailable.github.io
 
-Portfolio Webiste for Patrick Temborius
+Portfolio website for Patrick Temborius — https://poschiunavailable.github.io
 
-Contact:
-patricktemborius@gmail.com
+Contact: [LinkedIn](https://www.linkedin.com/in/patrick-temborius).
+Working on the site? Start with [AGENTS.md](AGENTS.md).

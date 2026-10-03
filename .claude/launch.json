@@ -7,9 +7,9 @@
       "runtimeArgs": [
         "-m",
         "http.server",
-        "4201"
+        "4173"
       ],
-      "port": 4201
+      "port": 4173
     }
   ]
 }
