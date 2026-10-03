@@ -471,11 +471,26 @@ export function initTimeline(projects) {
 
     function listenPortfolioSelect() {
         window.addEventListener('portfolio:selectProject', e => {
-            const id      = e.detail?.id;
-            const heroIdx = slideData.findIndex(s => s.type === 'hero' && s.project.id === id);
-            if (heroIdx < 0) return;
-            flyToProject(heroIdx);
+            const idx = targetSlideFor(e.detail?.id);
+            if (idx < 0) {
+                console.warn(`[timeline] No timeline slide for project "${e.detail?.id}" — give it showInTimeline or a timelineTarget.`);
+                return;
+            }
+            flyToProject(idx);
         });
+    }
+
+    // A project with its own timeline entry lands on its hero slide. One
+    // without (a card-only project) names where its story is told instead:
+    // "timelineTarget": { "project": "<id>", "topic": "<workTopics title>" }
+    // — topic optional, defaulting to that project's hero slide.
+    function targetSlideFor(id) {
+        const own = slideData.findIndex(s => s.type === 'hero' && s.project.id === id);
+        if (own >= 0) return own;
+        const t = projects.find(p => p.id === id)?.timelineTarget;
+        if (!t) return -1;
+        return slideData.findIndex(s => s.project.id === t.project
+            && (t.topic ? s.type === 'topic' && s.topic.title === t.topic : s.type === 'hero'));
     }
 
     // Warp jump: fade the page out around the starfield, push the field to

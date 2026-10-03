@@ -456,16 +456,16 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
             await page.waitForTimeout(250);
             await shoot('warp-mid');
         }
-        if (card.heroIdx < 0) {
+        if (card.targetIdx < 0) {
             await page.waitForTimeout(1500);
             const s = await state();
-            if (!s.immersive) F('warp-noop', `card ${card.id}: clicking does nothing (project is not in the timeline)`);
+            if (!s.immersive) F('warp-noop', `card ${card.id}: clicking does nothing (no timeline entry and no timelineTarget)`);
             else if (!(await exitTimeline(`card ${card.id}`))) break;
             continue;
         }
-        if (!(await waitFocus(card.heroIdx))) {
+        if (!(await waitFocus(card.targetIdx))) {
             const s = await state();
-            F('warp-target', `card ${card.id}: expected hero slide ${card.heroIdx}, state ${JSON.stringify(s)}`, await shoot(`warp-${card.id}-failed`));
+            F('warp-target', `card ${card.id}: expected slide ${card.targetIdx} (${expect.slideLabels[card.targetIdx]}), state ${JSON.stringify(s)}`, await shoot(`warp-${card.id}-failed`));
         } else {
             cov.warps++;
         }
@@ -677,14 +677,20 @@ async function main() {
     const timeline = projects.filter(p => p.showInTimeline)
         .sort((a, b) => String(a.startDate || '').localeCompare(String(b.startDate || '')));
     const heroIdx = {};
+    const topicIdx = {};
     const slideLabels = [];
     for (const p of timeline) {
         heroIdx[p.id] = slideLabels.length;
         slideLabels.push(`${p.id} hero`);
-        (p.workTopics || []).forEach(t => slideLabels.push(`${p.id}: ${t.title}`));
+        (p.workTopics || []).forEach(t => { topicIdx[`${p.id}/${t.title}`] = slideLabels.length; slideLabels.push(`${p.id}: ${t.title}`); });
     }
+    // Where a card's warp jump must land: its own hero slide, or the slide its
+    // timelineTarget names (independent re-implementation of timeline.js).
+    const landing = p => heroIdx[p.id] ?? (p.timelineTarget
+        ? (p.timelineTarget.topic ? topicIdx[`${p.timelineTarget.project}/${p.timelineTarget.topic}`] : heroIdx[p.timelineTarget.project])
+        : undefined) ?? -1;
     const expect = {
-        cards: projects.filter(p => p.showInPortfolio).map(p => ({ id: p.id, heroIdx: heroIdx[p.id] ?? -1 })),
+        cards: projects.filter(p => p.showInPortfolio).map(p => ({ id: p.id, targetIdx: landing(p) })),
         slides: slideLabels.length,
         slideLabels,
         contentTitles: projects.filter(p => p.showInPortfolio || p.showInTimeline).map(p => p.title),
@@ -742,7 +748,7 @@ async function main() {
         if (c.sections !== SECTIONS.length) fail(variant, vp, 'tested-nothing', `visited ${c.sections}/${SECTIONS.length} sections`);
         if (variant === 'no-js') continue;
         if (c.slides !== expect.slides) fail(variant, vp, 'tested-nothing', `checked ${c.slides}/${expect.slides} slides`);
-        const reachable = expect.cards.filter(c => c.heroIdx >= 0).length;
+        const reachable = expect.cards.filter(c => c.targetIdx >= 0).length;
         if (c.warps !== reachable) fail(variant, vp, 'tested-nothing', `${c.warps}/${reachable} warp jumps landed`);
     }
 

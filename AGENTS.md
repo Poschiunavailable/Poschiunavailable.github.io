@@ -133,6 +133,10 @@ for a straightforward new entry. To change what shows where, toggle
 additional timeline slides (image + description + `highlights[]` bullets).
 `details` is the fact list on the project's timeline hero slide (see the quirk
 below).
+A card-only project (`showInPortfolio` without `showInTimeline`) must say where
+its warp jump lands: `"timelineTarget": { "project": "<id>", "topic": "<workTopics
+title>" }` (`topic` optional → that project's hero slide). Without it the card
+does nothing and the timeline logs a warning, which fails the walk.
 `placeholders` maps field paths (`"image"`, `"workTopics[0].image"`) to the
 real content still needed. Mark every placeholder there; when real content
 arrives, replace the value and delete its key. The walk enforces both

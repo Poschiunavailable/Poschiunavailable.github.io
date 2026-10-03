@@ -1,11 +1,5 @@
 [
   {
-    "code": "warp-noop",
-    "match": "ColdComfort",
-    "unit": "U8",
-    "reason": "Cold Comfort has a card but no timeline entry, so its 'View in CV' click does nothing."
-  },
-  {
     "code": "slide-overlap",
     "match": "under #(timeMachine|cvProjectNav)",
     "unit": "U9",
