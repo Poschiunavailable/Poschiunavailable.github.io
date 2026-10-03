@@ -1,11 +1,5 @@
 [
   {
-    "code": "external-link",
-    "match": "aurelion_sensor-realistic_simulation\\.cfm",
-    "unit": "U3",
-    "reason": "dSPACE moved the AURELION product page; the link in projects.json 404s."
-  },
-  {
     "code": "warp-noop",
     "match": "ColdComfort",
     "unit": "U8",
@@ -20,7 +14,9 @@
   {
     "code": "page-error",
     "match": "Error creating WebGL context",
-    "variants": ["no-webgl"],
+    "variants": [
+      "no-webgl"
+    ],
     "unit": "U10",
     "reason": "background.js assumes WebGL; without it three.js throws and there is no static background."
   },
@@ -31,7 +27,9 @@
   },
   {
     "code": "nojs-content",
-    "variants": ["no-js"],
+    "variants": [
+      "no-js"
+    ],
     "unit": "B1",
     "reason": "Portfolio and timeline are rendered from projects.json by JS; without JS they are empty."
   }
