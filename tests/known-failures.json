@@ -1,1 +1,38 @@
-[]
+[
+  {
+    "code": "external-link",
+    "match": "aurelion_sensor-realistic_simulation\\.cfm",
+    "unit": "U3",
+    "reason": "dSPACE moved the AURELION product page; the link in projects.json 404s."
+  },
+  {
+    "code": "warp-noop",
+    "match": "ColdComfort",
+    "unit": "U8",
+    "reason": "Cold Comfort has a card but no timeline entry, so its 'View in CV' click does nothing."
+  },
+  {
+    "code": "slide-overlap",
+    "match": "under #(timeMachine|cvProjectNav)",
+    "unit": "U9",
+    "reason": "The time-machine HUD covers the last bullet and the nav dots sit on text at narrow/short viewports."
+  },
+  {
+    "code": "page-error",
+    "match": "Error creating WebGL context",
+    "variants": ["no-webgl"],
+    "unit": "U10",
+    "reason": "background.js assumes WebGL; without it three.js throws and there is no static background."
+  },
+  {
+    "code": "budget",
+    "unit": "U5/U6/B6",
+    "reason": "Initial load over budget: render-blocking fonts, three.js from CDN, oversized icons and images."
+  },
+  {
+    "code": "nojs-content",
+    "variants": ["no-js"],
+    "unit": "B1",
+    "reason": "Portfolio and timeline are rendered from projects.json by JS; without JS they are empty."
+  }
+]

@@ -19,7 +19,23 @@ only merged into with Patrick's go-ahead.
 | **Goal** | A repeatable Node + Playwright walk that exercises the whole site at all 10 viewports and fails loudly, so every later change is checked the same way. |
 | **Acceptance check** | `npm test` in `tests/` serves the site, and per viewport: loads, visits 5 sections, runs every card's warp jump and asserts it lands on that project's hero slide, steps every slide, checks horizontal and slide overflow, fails on site console/page errors, checks every link; variants reduced-motion and no-WebGL; writes screenshots + `index.html` contact sheet. Self-tests: an injected overflow, an injected console error and a broken link each make it fail. Third-party requests served from a pinned local cache so proxy flakes cannot fail or pass it. |
 | **Files** | `tests/package.json`, `tests/site-walk.mjs`, `.gitignore`, `Docs/QUALITY.md`, `AGENTS.md` |
-| **Step reached** | Not started. |
+| **Step reached** | Built and committed (`7609f1d`). Self-test passes (4/4 injected faults caught). First full run (813 s, 721 screenshots) found real bugs, triaged below and recorded in `tests/known-failures.json`; harness fixes from triage applied; confirming re-run in progress. |
+
+**First full walk — triage (2026-10-03).** 413 failures, 7 causes:
+
+| Cause | Verdict | Goes to |
+|---|---|---|
+| Time-machine HUD covers the last bullet (375×812, 667×375, 844×390); nav dots sit on text (320–414 px wide) | Real — seen in screenshots: "C++17 on Unreal Engine 4" unreadable at 667×375 | U9 |
+| Cold Comfort card click does nothing (×30: every viewport × 3 JS variants) | Real — no timeline entry to jump to | U8 |
+| `Error creating WebGL context` page error without WebGL | Real — `background.js` assumes WebGL | U10 |
+| AURELION product link 404 | Real — dSPACE moved the page; current URL verified 200 | U3 |
+| Initial load 651 KiB (375×812) / 880 KiB (1920×1080) vs 600 KiB; fonts 114 vs 100; images 234/462 vs 200 | Real — the budget QUALITY.md sets | U5, U6, B12 |
+| 5/6 project titles absent without JS | Real | B7 |
+| `github.com/Poschiunavailable` 403 | Harness — the sandbox proxy blocks github.com outside this repo; now reported as "unverifiable", identified by the proxy's message | — |
+| `fonts.gstatic.com` 404 | Harness — a `preconnect` hint was link-checked; now skipped | — |
+| No-JS titles check passed for Cologne Game Lab only because the about text names it | Harness — now only looks inside `#portfolio` / `#cv` | — |
+
+
 
 ## What to do next
 
@@ -28,45 +44,49 @@ Phases are strict: A before B before C.
 **Phase A — fix what is broken or stale**
 
 1. ~~**U1** Stale docs + README email~~ — done 2026-10-03.
-2. **U2** Site-walk test (card above) (`tests/`): Node + Playwright, all 10 viewports, every
-   section, every card's warp jump, every slide, overflow check, console/page
-   errors, link check, screenshots + contact sheet; variants for reduced motion
-   and no WebGL. Third-party fetches must be deterministic (the sandbox proxy
-   drops CDN requests intermittently — see Baseline). Must be able to fail:
-   include a self-test that a deliberately overflowing slide is caught.
-3. **U3** CTA contrast: white on `--highlight-color` (#eab180) is **1.89:1**
+2. **U2** Site-walk test (card above).
+3. **U3** Broken AURELION link → `products/sw/experimentandvisualization/aurelion_sensor-realistic_sim.cfm` (public product page, verified 200).
+4. **U4** CTA contrast: white on `--highlight-color` (#eab180) is **1.89:1**
    (Lighthouse `color-contrast`, `.cta-button` and `#cvEnter`). AGENTS.md's
    "7.8–11.0:1" only covered body text on section fills.
-4. **U4** Render-blocking CSS: every stylesheet `@import`s `base.css` again and
+5. **U5** Render-blocking CSS: every stylesheet `@import`s `base.css` again and
    `base.css` `@import`s three Google Fonts stylesheets → 1.45 s of
    render-blocking on mobile, LCP 6.5 s. Remove the `@import` chains,
    self-host the fonts (woff2, `preload`, metric-matched fallback so there is no
    font shift).
-5. **U5** Vendor three.js (one pinned file) and drop `es-module-shims`
+6. **U6** Vendor three.js (one pinned file) and drop `es-module-shims`
    (import maps are native in every current browser). Removes a third-party
-   origin from the critical path and makes the walk deterministic.
-6. **U6** Wrong art on the Cologne Game Lab entry: its card/hero uses the
-   AURELION artwork and its three topic slides use Cold Comfort / Everslaught /
-   Rough Justice art, which reads as if those games were university projects.
-   Replace with clearly-marked neutral placeholder art and mark every
-   placeholder in `projects.json` (schema decided in that unit).
+   origin from the critical path.
+7. **U7** Placeholder art: the Cologne Game Lab card/hero uses the AURELION
+   artwork and its three topic slides use Cold Comfort / Everslaught / Rough
+   Justice art, which reads as if those games were university projects.
+   Replace with simple, clearly labelled placeholder images (Patrick OK'd
+   placeholder assets, 2026-10-03) and mark every placeholder in
+   `projects.json` (schema decided in that unit).
+8. **U8** Cold Comfort card does nothing on click. Give a card without its own
+   timeline entry a target (the Freelance "Cold Comfort — Prototype" slide is the
+   natural one) via data, not a special case in code.
+9. **U9** Timeline HUD collisions: time-machine box over the last bullet, nav
+   dots over text at narrow widths.
+10. **U10** Starfield without WebGL: no uncaught error, a static star
+    background instead.
 
 **Phase B — finish what is missing**
 
-7. No-JS and no-WebGL fallback that still shows all content (today the
+B1. No-JS fallback that still shows all content (today the
    portfolio and timeline are injected from `projects.json` by JS — with JS off
    they are empty). Needs a design decision that keeps `projects.json` the
    single source; record it here before building.
-8. Timeline accessibility: slides announced (live region "slide x of N"),
+B2. Timeline accessibility: slides announced (live region "slide x of N"),
    controls named, focus management on enter/exit, keyboard reaches every
    control.
-9. Metadata: absolute `og:image`, Twitter card fields, designed 1200×630
+B3. Metadata: absolute `og:image`, Twitter card fields, designed 1200×630
    social preview, canonical URL, `robots.txt`, `sitemap.xml`.
-10. Favicon set (SVG + 32 px ICO + 180 px apple-touch + manifest icons);
+B4. Favicon set (SVG + 32 px ICO + 180 px apple-touch + manifest icons);
     today a 129 KB 2048²-derived PNG is linked as the icon.
-11. Designed `404.html`.
-12. Responsive images (`srcset`/`sizes`) for card and slide art.
-13. Lighthouse mobile Performance ≥ 90 and the transfer budget in QUALITY.md.
+B5. Designed `404.html`.
+B6. Responsive images (`srcset`/`sizes`) for card and slide art.
+B7. Lighthouse mobile Performance ≥ 90 and the transfer budget in QUALITY.md.
 
 **Phase C — polish** (only after A and B): type and spacing scale as tokens,
 hover/focus/pressed states everywhere, motion and art direction refinement
@@ -115,7 +135,7 @@ Not placeholders, recorded so they are not "fixed" by mistake:
 (no employer imagery); the game key art is genuine.
 
 Not yet marked in the data: the `"placeholder"` markers in `projects.json`
-land with U6.
+land with U7.
 
 ## Questions for Patrick
 
@@ -150,3 +170,5 @@ Collected here; asked together rather than one by one.
 | D3 | 2026-10-03 | Local server port is **4173** everywhere. | Both docs already say 4173; only `.claude/launch.json` says 4201. |
 | D4 | 2026-10-03 | Phase A order is docs → walk → contrast → CSS/fonts → three.js vendoring → art. | The walk has to exist before behaviour changes; the remaining A items are ordered by measured impact (a11y fail, then 1.45 s render-blocking). |
 | D5 | 2026-10-03 | `TODO.md` became `Docs/HISTORY.md`: a dated, append-only log. Its "Still open" items moved to the questions above; its "Testing" section was a third copy of the viewport list and was dropped (home: QUALITY.md). Dead `.contact-form`/`.form-group`/`.form-note` CSS removed. | One home per fact. History keeps its value (measurement notes, past bugs) without competing with STATUS for "what is true now". |
+| D6 | 2026-10-03 | Phase A grows from the first walk: U3 broken link, U8 Cold Comfort card, U9 HUD collisions, U10 no-WebGL error. Phase B items are numbered B1–B7. | The walk found them; small, user-visible breakage stays in Phase A. |
+| D7 | 2026-10-03 | Real bugs the walk finds but a later unit fixes go in `tests/known-failures.json` with that unit's id. They are reported, don't fail the run, and a full run flags entries that stop matching. | Keeps the walk green-meaningful without hiding bugs or deleting checks. |

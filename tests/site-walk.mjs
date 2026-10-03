@@ -50,6 +50,10 @@ const BROWSER_NOISE = [
 // Hosts that answer automated requests with a non-standard code. Accepted
 // only with exactly that code; anything else from them still fails.
 const BOT_BLOCKING = { 'www.linkedin.com': [999], 'linkedin.com': [999] };
+// The cloud sandbox's proxy refuses github.com paths outside the session's
+// repositories with its own 403. Such a link is neither passed nor failed:
+// it is reported as unverifiable, identified by the proxy's message.
+const SANDBOX_BLOCK = /sessions are bound to their configured repositories/;
 
 const args = Object.fromEntries(process.argv.slice(2).map(a => {
     const [k, v] = a.replace(/^--/, '').split('=');
@@ -184,7 +188,9 @@ const collectRefs = () => {
     const refs = [];
     const add = (kind, v, where) => { if (v) refs.push({ kind, v, where }); };
     document.querySelectorAll('a[href]').forEach(a => add('href', a.getAttribute('href'), 'a'));
-    document.querySelectorAll('link[href]').forEach(l => add('href', l.getAttribute('href'), `link[rel=${l.rel}]`));
+    // preconnect/dns-prefetch name an origin, not a resource; there is nothing to fetch.
+    document.querySelectorAll('link[href]:not([rel~=preconnect]):not([rel~=dns-prefetch])')
+        .forEach(l => add('href', l.getAttribute('href'), `link[rel=${l.rel}]`));
     document.querySelectorAll('img[src], source[src], script[src]').forEach(e => add('src', e.getAttribute('src'), e.tagName.toLowerCase()));
     document.querySelectorAll('video[poster]').forEach(v => add('src', v.getAttribute('poster'), 'video[poster]'));
     document.querySelectorAll('[data-src]').forEach(v => add('src', v.getAttribute('data-src'), '[data-src]'));
@@ -265,7 +271,9 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
 
     // ── No-JS: the content itself must be there ──
     if (variant === 'no-js') {
-        const text = await page.evaluate(() => document.body.innerText);
+        // Only where the projects belong: titles also occur in the about copy.
+        const text = await page.evaluate(() => ['portfolio', 'cv']
+            .map(id => document.getElementById(id)?.innerText || '').join('\n'));
         const missing = expect.contentTitles.filter(t => !text.includes(t));
         cov.contentTitles = expect.contentTitles.length - missing.length;
         if (missing.length) F('nojs-content', `${missing.length}/${expect.contentTitles.length} project titles absent without JS: ${missing.join(', ')}`);
@@ -529,8 +537,9 @@ async function checkLinks(base, refs, projects) {
         for (const { abs, where } of external) {
             checked++;
             const host = new URL(abs).host;
-            const code = await curlStatus(abs);
+            const { code, body } = await curlStatus(abs);
             const allowed = BOT_BLOCKING[host] || [];
+            if (code === 403 && SANDBOX_BLOCK.test(body)) { info.push(`external ${abs} → unverifiable (sandbox proxy blocks it)`); continue; }
             if (code >= 200 && code < 400) continue;
             if (allowed.includes(code)) { info.push(`external ${abs} → ${code} (bot-blocking host, accepted)`); continue; }
             fail('default', '-', 'external-link', `${abs} → ${code || 'unreachable'} (${where})`);
@@ -541,15 +550,20 @@ async function checkLinks(base, refs, projects) {
 
 let anchorIds = new Set();   // filled from the rendered DOM before checkLinks runs
 
+// Status plus the start of the body (to recognise the sandbox proxy's refusals).
 async function curlStatus(url) {
+    const parse = out => {
+        const m = /\n?(\d{3})$/.exec(out);
+        return { code: m ? Number(m[1]) : 0, body: out.slice(0, 2000) };
+    };
     try {
-        const { stdout } = await run('curl', ['-sS', '-o', '/dev/null', '-L', '--max-time', '30',
-            '--retry', '3', '--retry-all-errors', '--retry-delay', '2',
+        const { stdout } = await run('curl', ['-sS', '-L', '--max-time', '30',
+            '--retry', '3', '--retry-delay', '2',
             '-A', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36',
-            '-w', '%{http_code}', url]);
-        return Number(stdout.trim());
+            '-w', '\n%{http_code}', url], { maxBuffer: 32 << 20 });
+        return parse(stdout.trimEnd());
     } catch (e) {
-        return Number(String(e.stdout || '').trim()) || 0;
+        return parse(String(e.stdout || '').trimEnd());
     }
 }
 
