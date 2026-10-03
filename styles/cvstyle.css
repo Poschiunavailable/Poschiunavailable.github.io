@@ -760,6 +760,58 @@ body.timeline-immersive header {
     }
 }
 
+/* ── HUD safe areas ──────────────────────────────────────────────────────────
+   The time-machine readout (bottom-left) and the project dots (right edge) are
+   fixed over the stage. Slides centre their content in the space that is left,
+   so text never sits under either. Zero on desktop, where the content column
+   is far narrower than the viewport. These come after every size tier on
+   purpose: the tiers set `padding` shorthands, and the longhands here must win.
+
+   On phones and landscape phones the readout also turns into one compact line
+   (no label, smaller year) so the reserved strip costs ~56px, not ~90px —
+   the tallest topic slide at 375x812 had only 70px to spare — and the exit
+   button moves into the same strip, bottom-right (thumb reach). At the top
+   right it sat over topic images in portrait and over the text column in
+   landscape, and a top strip as well would not fit. */
+
+:root {
+    --hud-gutter-right: 0px;
+    --hud-gutter-bottom: 0px;
+}
+
+@media (max-width: 768px), (max-height: 520px) and (orientation: landscape) {
+    :root {
+        --hud-gutter-right: 40px;    /* dots at right:14px, 10px wide, + gap */
+        --hud-gutter-bottom: 56px;   /* compact readout incl. its panel */
+    }
+
+    #timeMachine {
+        bottom: 12px;
+        left: 14px;
+        min-width: 0;
+    }
+    #tmLabel { display: none; }
+    #tmYear { font-size: 1.25rem; }
+    #tmMonth { font-size: 0.72rem; }
+    #tmProgressTrack { margin-top: 6px; }
+    #timeMachine::before { inset: -8px -12px; }
+
+    #cvExit {
+        top: auto;
+        bottom: 10px;
+        right: 14px;
+    }
+}
+
+.slide-topic {
+    padding-right: max(6vw, var(--hud-gutter-right));
+    padding-bottom: max(2vh, var(--hud-gutter-bottom));
+}
+.slide-hero {
+    padding-right: var(--hud-gutter-right);
+    padding-bottom: var(--hud-gutter-bottom);
+}
+
 /* ── Reduced motion ──────────────────────────────────────────────────────────
    The timeline is motion-heavy (parallax, crossfades, staggered reveals,
    scroll hijacking). Honour the OS preference: keep everything, drop the

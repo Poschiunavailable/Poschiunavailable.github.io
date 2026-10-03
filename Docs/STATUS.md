@@ -14,12 +14,19 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | U8 — Cold Comfort card does nothing |
+| **Unit** | U9 — Timeline HUD collisions |
 | **Phase** | A |
-| **Goal** | Every portfolio card's "View in CV →" lands somewhere meaningful. Cold Comfort has a card but no timeline entry of its own; its prototype is a topic slide of the Freelance entry. |
-| **Acceptance check** | Clicking the Cold Comfort card warp-jumps to the "Cold Comfort — Prototype" slide; the target comes from data (`projects.json`), not a special case in code; the walk asserts each card lands on its expected slide (hero or data-defined target); `warp-noop` known failure removed; full walk reports no stale entries. |
-| **Files** | `projects.json`, `modules/timeline.js`, `tests/site-walk.mjs`, `tests/known-failures.json`, `AGENTS.md`, `Docs/STATUS.md` |
-| **Step reached** | Not started. |
+| **Goal** | No slide text sits under the time-machine readout or the project dots at any viewport. |
+| **Acceptance check** | Walk: zero `slide-overlap`, zero `slide-overflow`/`slide-clipped`; U9 entry removed from `known-failures.json`, full run reports no stale entries. Screenshots at the tight cases (360×640, 375×812, 667×375, 844×390) checked. |
+| **Files** | `styles/cvstyle.css`, `tests/known-failures.json`, `Docs/STATUS.md` |
+| **Step reached** | Measured (2026-10-03): on phones topic text runs to x = 356 while the dots sit at 351–361 (375 wide); the time machine takes the bottom 80–90 px while the tallest 375×812 slide leaves 70 px. Plan: HUD safe-area tokens applied after all size tiers + a compact one-line readout on phones/landscape phones. |
+
+### U8 — Card-only projects get a timeline target (done 2026-10-03, `3e58a57`)
+
+`projects.json` `timelineTarget` (Cold Comfort → Freelance "Cold Comfort —
+Prototype"); `timeline.js` resolves it and warns when a card has no target.
+Full walk PASSED: 6/6 warp jumps land in every JS variant at every viewport;
+`warp-noop` gone, no stale known entries. Landing checked by screenshot.
 
 ### U7 — Placeholder art and markers (done 2026-10-03, `be85251` + hero tweak)
 
@@ -128,10 +135,10 @@ Phases are strict: A before B before C.
    Replace with simple, clearly labelled placeholder images (Patrick OK'd
    placeholder assets, 2026-10-03) and mark every placeholder in
    `projects.json` (schema decided in that unit).
-8. **U8** (card above) Cold Comfort card does nothing on click. Give a card without its own
+8. ~~**U8** Cold Comfort card~~ — done 2026-10-03: does nothing on click. Give a card without its own
    timeline entry a target (the Freelance "Cold Comfort — Prototype" slide is the
    natural one) via data, not a special case in code.
-9. **U9** Timeline HUD collisions: time-machine box over the last bullet, nav
+9. **U9** (card above) Timeline HUD collisions: time-machine box over the last bullet, nav
    dots over text at narrow widths.
 10. **U10** Starfield without WebGL: no uncaught error, a static star
     background instead.

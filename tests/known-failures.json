@@ -1,11 +1,5 @@
 [
   {
-    "code": "slide-overlap",
-    "match": "under #(timeMachine|cvProjectNav)",
-    "unit": "U9",
-    "reason": "The time-machine HUD covers the last bullet and the nav dots sit on text at narrow/short viewports."
-  },
-  {
     "code": "page-error",
     "match": "Error creating WebGL context",
     "variants": [

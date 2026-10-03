@@ -191,7 +191,8 @@ const checkSlideFits = (idx) => {
         if (q.left < -1 || q.top < -1 || q.right > W + 1 || q.bottom > H + 1) {
             issues.push({ kind: 'overflow', el: describe(h), rect: [q.left, q.top, q.right, q.bottom].map(Math.round) });
         }
-        for (const t of content.querySelectorAll('h2, h3, p, li, dt, dd, a')) {
+        // Text, and the images beside it: a control over a picture hides it too.
+        for (const t of content.querySelectorAll('h2, h3, p, li, dt, dd, a, img, .topic-image-section')) {
             if (!shown(t)) continue;
             const r = t.getBoundingClientRect();
             const ix = Math.min(r.right, q.right) - Math.max(r.left, q.left);
