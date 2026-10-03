@@ -14,12 +14,26 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | U4 — CTA contrast |
+| **Unit** | U5 — Render-blocking CSS and self-hosted fonts |
 | **Phase** | A |
-| **Goal** | Every button's text meets 4.5:1 in rest and hover state. Today white on `--highlight-color` is 1.89:1 (Lighthouse `color-contrast` on "View My Work" and "Enter the time machine"). |
-| **Acceptance check** | Lighthouse: `color-contrast` passes, Accessibility ≥ 97 (target 100). Walk green. Screenshots of hero, about, cv intro and contact show the buttons legible. Rest 8.5:1 (#1c212e on #eab180), hover 5.7:1 (on #ff6a53), computed by the WCAG formula. |
-| **Files** | `styles/base.css`, `Docs/STATUS.md` |
-| **Step reached** | Change made: `.cta-button` text is `--secondary-background-color`. Walk + Lighthouse next. |
+| **Goal** | First render no longer waits on chained `@import`s or on fonts.googleapis.com; no layout shift from font swap. |
+| **Acceptance check** | No `@import` left in `styles/`; fonts are local woff2 in `assets/fonts/`, preloaded where above the fold, with metric-matched fallbacks; walk budget fonts ≤ 100 KiB; Lighthouse `render-blocking-insight` no longer lists font CSS, CLS < 0.1 (was 0.092 — from `.hero-content` font swap). Walk green, screenshots show the same typefaces. |
+| **Files** | `styles/*.css`, `index.html`, `assets/fonts/`, `Docs/STATUS.md`, `Docs/HISTORY.md` (font provenance) |
+| **Step reached** | Not started. Groundwork: Google serves one variable woff2 per family (~37 KB each); used: Roboto 400/700, Lora 400/700, Fira Code 400/700. |
+
+### U4 — CTA contrast (done 2026-10-03, `31b1ef2`)
+
+`.cta-button` text is now `--secondary-background-color`: 8.5:1 at rest,
+5.7:1 on hover (WCAG formula). Lighthouse median of 3: **Accessibility 100**
+(was 97), `color-contrast` passes. Walk PASSED (known failures only).
+Screenshots of hero (1920×1080) and CV intro (375×812) checked by eye.
+
+Performance in the same runs: 65–90, median 84 (66 in the previous median),
+from a colour change that cannot move it. The spread is the sandbox's live
+CDN fetches through the proxy (LCP 2.3–5.8 s across runs). Self-hosting fonts
+(U5) and three.js (U6) removes those fetches from the critical path, so it
+should also make the measurement stable; until then a single Lighthouse
+median here is ±15 points.
 
 ### U3 — Broken AURELION link (done 2026-10-03, `bdd73ea`)
 
@@ -59,10 +73,10 @@ Phases are strict: A before B before C.
 1. ~~**U1** Stale docs + README email~~ — done 2026-10-03.
 2. ~~**U2** Site-walk test~~ — done 2026-10-03.
 3. ~~**U3** Broken AURELION link~~ — done 2026-10-03. → `products/sw/experimentandvisualization/aurelion_sensor-realistic_sim.cfm` (public product page, verified 200).
-4. **U4** (card above) CTA contrast: white on `--highlight-color` (#eab180) is **1.89:1**
+4. ~~**U4** CTA contrast~~ — done 2026-10-03: white on `--highlight-color` (#eab180) is **1.89:1**
    (Lighthouse `color-contrast`, `.cta-button` and `#cvEnter`). AGENTS.md's
    "7.8–11.0:1" only covered body text on section fills.
-5. **U5** Render-blocking CSS: every stylesheet `@import`s `base.css` again and
+5. **U5** (card above) Render-blocking CSS: every stylesheet `@import`s `base.css` again and
    `base.css` `@import`s three Google Fonts stylesheets → 1.45 s of
    render-blocking on mobile, LCP 6.5 s. Remove the `@import` chains,
    self-host the fonts (woff2, `preload`, metric-matched fallback so there is no
