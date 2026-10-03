@@ -59,6 +59,7 @@
     <link rel="stylesheet" href="styles/contact.css">
     <!-- Section heads and hero role (star-chart style, Docs/STATUS.md D9) -->
     <link rel="stylesheet" href="styles/headings.css">
+    <link rel="stylesheet" href="styles/nojs.css">
     <!-- three.js is vendored (provenance: Docs/HISTORY.md "three.js"). Import
          maps are native in every current browser, so no shim is needed. -->
     <script type="importmap">
@@ -163,7 +164,82 @@
             </div>
             <div class="tiny-separator"></div>
             <div class="portfolio-grid animate" id="portfolioGrid">
-                <!-- Portfolio items will be injected here -->
+                <!-- Generated from projects.json by tools/render-static.mjs — don't edit by
+                     hand. portfolio.js replaces these with the interactive cards. -->
+                <!-- static:portfolio -->
+                <article class="portfolio-item" id="item-UniversityProjects">
+                    <div class="portfolio-item-image-wrap">
+                        <img src="assets/placeholders/cologne-game-lab.svg" alt="Cologne Game Lab" loading="lazy" decoding="async">
+                    </div>
+                    <div class="portfolio-item-body">
+                        <h3>Cologne Game Lab</h3>
+                        <p class="portfolio-subtitle">BA Digital Games, Game Programming — TH Köln</p>
+                        <p class="portfolio-description">Seven semesters of project-based games education at TH Köln's Cologne Game Lab, taught and examined in English.</p>
+                        <div class="portfolio-tags"><span class="portfolio-tag">C#</span><span class="portfolio-tag">Unity</span><span class="portfolio-tag">Unreal Engine</span><span class="portfolio-tag">Team Projects</span><span class="portfolio-tag">Prototyping</span></div>
+                    </div>
+                    <a class="click-indicator" href="#cv-UniversityProjects">View in CV &#8594;</a>
+                </article>
+                <article class="portfolio-item" id="item-ColdComfort">
+                    <div class="portfolio-item-image-wrap">
+                        <img src="assets/cold_comfort_splashart.webp" alt="Cold Comfort" loading="lazy" decoding="async" srcset="assets/cold_comfort_splashart-480.webp 480w, assets/cold_comfort_splashart-960.webp 960w" sizes="(max-width: 600px) calc(100vw - 72px), 430px">
+                    </div>
+                    <div class="portfolio-item-body">
+                        <h3>Cold Comfort</h3>
+                        <p class="portfolio-subtitle">Gameplay Programmer — Prototype</p>
+                        <p class="portfolio-description">Asymmetric 5v5 PvP shooter prototype in Unreal Engine 4, built at Gamma Minus and presented to publishers at the Gamescom Business Arena.</p>
+                        <div class="portfolio-tags"><span class="portfolio-tag">C++17</span><span class="portfolio-tag">Unreal Engine 4</span><span class="portfolio-tag">Asymmetric PvP</span><span class="portfolio-tag">Network Replication</span><span class="portfolio-tag">Steam Online Subsystem</span></div>
+                    </div>
+                    <a class="click-indicator" href="#cv-Freelance">View in CV &#8594;</a>
+                </article>
+                <article class="portfolio-item" id="item-Freelance">
+                    <div class="portfolio-item-image-wrap">
+                        <img src="assets/cold_comfort_splashart.webp" alt="Freelance Software Engineer" loading="lazy" decoding="async" srcset="assets/cold_comfort_splashart-480.webp 480w, assets/cold_comfort_splashart-960.webp 960w" sizes="(max-width: 600px) calc(100vw - 72px), 430px">
+                    </div>
+                    <div class="portfolio-item-body">
+                        <h3>Freelance Software Engineer</h3>
+                        <p class="portfolio-subtitle">Self-employed — C++ / Unreal Engine 4</p>
+                        <p class="portfolio-description">Independent C++ and Unreal Engine 4 development, building the prototypes that two studio productions grew out of.</p>
+                        <div class="portfolio-tags"><span class="portfolio-tag">C++17</span><span class="portfolio-tag">Unreal Engine 4</span><span class="portfolio-tag">Prototyping</span><span class="portfolio-tag">Network Replication</span><span class="portfolio-tag">Steam Online Subsystem</span></div>
+                    </div>
+                    <a class="click-indicator" href="#cv-Freelance">View in CV &#8594;</a>
+                </article>
+                <article class="portfolio-item" id="item-RoughJustice">
+                    <div class="portfolio-item-image-wrap">
+                        <img src="assets/rough_justice_splashart.webp" alt="Rough Justice: '84" loading="lazy" decoding="async" srcset="assets/rough_justice_splashart-480.webp 480w, assets/rough_justice_splashart-960.webp 960w" sizes="(max-width: 600px) calc(100vw - 72px), 430px">
+                    </div>
+                    <div class="portfolio-item-body">
+                        <h3>Rough Justice: '84</h3>
+                        <p class="portfolio-subtitle">Lead Programmer — Gamma Minus UG</p>
+                        <p class="portfolio-description">Agency management game built in Unreal Engine 4 with an international remote team. Published by Daedalic Entertainment.</p>
+                        <div class="portfolio-tags"><span class="portfolio-tag">C++17</span><span class="portfolio-tag">Unreal Engine 4</span><span class="portfolio-tag">Team Leadership</span><span class="portfolio-tag">Tool Development</span><span class="portfolio-tag">Procedural Generation</span></div>
+                    </div>
+                    <a class="click-indicator" href="#cv-RoughJustice">View in CV &#8594;</a>
+                </article>
+                <article class="portfolio-item" id="item-EverslaughtInvasion">
+                    <div class="portfolio-item-image-wrap">
+                        <img src="assets/everslaught_invasion_splashart.webp" alt="Everslaught Invasion" loading="lazy" decoding="async" srcset="assets/everslaught_invasion_splashart-480.webp 480w, assets/everslaught_invasion_splashart-960.webp 960w" sizes="(max-width: 600px) calc(100vw - 72px), 430px">
+                    </div>
+                    <div class="portfolio-item-body">
+                        <h3>Everslaught Invasion</h3>
+                        <p class="portfolio-subtitle">Software Engineer — MobX Games</p>
+                        <p class="portfolio-description">VR action title for Meta Quest 2, published by Fast Travel Games. Network-synchronised real-time systems inside a standalone headset's memory and performance budget.</p>
+                        <div class="portfolio-tags"><span class="portfolio-tag">C#</span><span class="portfolio-tag">Unity</span><span class="portfolio-tag">Photon Fusion</span><span class="portfolio-tag">P2P Networking</span><span class="portfolio-tag">Behaviour Trees</span><span class="portfolio-tag">Performance</span></div>
+                    </div>
+                    <a class="click-indicator" href="#cv-EverslaughtInvasion">View in CV &#8594;</a>
+                </article>
+                <article class="portfolio-item" id="item-Aurelion">
+                    <div class="portfolio-item-image-wrap">
+                        <img src="assets/sensor_simulation.svg" alt="AURELION — Sensor Simulation" loading="lazy" decoding="async">
+                    </div>
+                    <div class="portfolio-item-body">
+                        <h3>AURELION — Sensor Simulation</h3>
+                        <p class="portfolio-subtitle">Software Engineer, Simulation &amp; Validation — dSPACE</p>
+                        <p class="portfolio-description">Ongoing development of AURELION, dSPACE's sensor-simulation software built on Unreal Engine 5, used to validate ECUs and automated driving functions.</p>
+                        <div class="portfolio-tags"><span class="portfolio-tag">C++20</span><span class="portfolio-tag">Unreal Engine 5</span><span class="portfolio-tag">Vulkan</span><span class="portfolio-tag">Linux</span><span class="portfolio-tag">Windows API</span><span class="portfolio-tag">CMake</span><span class="portfolio-tag">Azure DevOps</span></div>
+                    </div>
+                    <a class="click-indicator" href="#cv-Aurelion">View in CV &#8594;</a>
+                </article>
+                <!-- /static:portfolio -->
             </div>
         </div>
     </section>
@@ -186,6 +262,116 @@
                 <button id="cvEnter" class="cta-button" type="button">Enter the time machine</button>
                 <p class="cv-note">Takes over scrolling — leave any time with Esc or the exit button.</p>
             </div>
+            <!-- Generated from projects.json by tools/render-static.mjs. Shown only
+                 without JavaScript (styles/nojs.css). -->
+            <!-- static:timeline -->
+                <ol class="cv-static" id="cvStatic" aria-label="Career timeline">
+                <li class="cv-static-chapter" id="cv-UniversityProjects">
+                    <p class="cv-static-dates">SEP 2015 — JUL 2019</p>
+                    <h3>Cologne Game Lab</h3>
+                    <p class="cv-static-subtitle">BA Digital Games, Game Programming — TH Köln</p>
+                    <p>A degree built on shipped team projects rather than coursework alone.</p>
+                    <dl class="cv-static-facts"><div><dt>Institution</dt><dd>TH Köln — Cologne Game Lab</dd></div><div><dt>Degree</dt><dd>B.A. Digital Games</dd></div><div><dt>Specialisation</dt><dd>Game Programming</dd></div><div><dt>Language</dt><dd>English</dd></div></dl>
+                    <ul class="cv-static-topics">
+                            <li>
+                                <h4>Collaborative Project Series</h4>
+                                <p>Five semester-long team productions, each built by a cross-disciplinary group of programmers, designers and artists around a different design brief.</p>
+                                <ul><li>Ludic Games, Narrative Games and Mixed Reality Games in years one and two</li><li>Experimental Games and Serious Games in the later semesters</li><li>Cross-disciplinary teams — the same collaboration model as a small studio</li><li>Mainly C# in Unity, with one mixed-reality project in Unreal Engine</li></ul>
+                            </li>
+                            <li>
+                                <h4>Self-Initiated Project</h4>
+                                <p>A full semester dedicated to a single self-directed production — the largest individual module of the degree at 25 ECTS.</p>
+                                <ul><li>Self-defined scope, schedule and technical direction</li><li>Largest single module of the programme (25 ECTS)</li><li>Direct precursor to the freelance prototyping work that followed</li></ul>
+                            </li>
+                            <li>
+                                <h4>Bachelor Thesis</h4>
+                                <p>Thesis on character scale and movement constraints in digital games — how body proportions and traversal rules interact with level geometry.</p>
+                                <ul><li>&quot;Resolving character sizing issues and movement limitations in digital games&quot;</li><li>Combined practical implementation with written research</li><li>Graduated B.A. Digital Games, Game Programming, July 2019</li></ul>
+                            </li>
+                    </ul>
+                    <p class="cv-static-links"><a href="https://www.colognegamelab.de" target="_blank" rel="noopener noreferrer">Cologne Game Lab &#8599;</a></p>
+                </li>
+                <li class="cv-static-chapter" id="cv-Freelance">
+                    <p class="cv-static-dates">FEB 2019 — FEB 2021</p>
+                    <h3>Freelance Software Engineer</h3>
+                    <p class="cv-static-subtitle">Self-employed — C++ / Unreal Engine 4</p>
+                    <p>Built the prototypes that secured funding and led to two permanent studio roles.</p>
+                    <dl class="cv-static-facts"><div><dt>Engine</dt><dd>Unreal Engine 4</dd></div><div><dt>Language</dt><dd>C++17 &amp; Blueprints</dd></div><div><dt>Focus</dt><dd>Prototyping</dd></div><div><dt>Outcome</dt><dd>Both prototypes funded</dd></div></dl>
+                    <ul class="cv-static-topics">
+                            <li>
+                                <h4>Rough Justice: '84 — Prototype</h4>
+                                <p>Independently developed the prototype that secured project funding and grew into a shipped commercial title.</p>
+                                <ul><li>Secured project funding, including Film- und Medienstiftung NRW</li><li>Led directly to a permanent Lead Programmer role on the production</li><li>C++17 on Unreal Engine 4</li></ul>
+                            </li>
+                            <li>
+                                <h4>Cold Comfort — Prototype</h4>
+                                <p>Prototype built around asymmetric multiplayer mechanics, with lobby and session flow on the Steam Online Subsystem.</p>
+                                <ul><li>Asymmetric multiplayer mechanics and network replication</li><li>Lobby and session system on the Steam Online Subsystem</li><li>Technical contact for press and investors at the Gamescom Business Arena</li></ul>
+                            </li>
+                    </ul>
+                </li>
+                <li class="cv-static-chapter" id="cv-RoughJustice">
+                    <p class="cv-static-dates">MAR 2021 — FEB 2022</p>
+                    <h3>Rough Justice: '84</h3>
+                    <p class="cv-static-subtitle">Lead Programmer — Gamma Minus UG</p>
+                    <p>Technical lead on a shipped UE4 title, from data-driven core architecture to team leadership.</p>
+                    <dl class="cv-static-facts"><div><dt>Engine</dt><dd>Unreal Engine 4</dd></div><div><dt>Platform</dt><dd>PC — Steam</dd></div><div><dt>Publisher</dt><dd>Daedalic Entertainment</dd></div><div><dt>Team</dt><dd>Led 3 engineers</dd></div></dl>
+                    <ul class="cv-static-topics">
+                            <li>
+                                <h4>Data-driven Core Architecture</h4>
+                                <p>Designed the C++ core simulating time and resource flows, with modular systems for contracts, dialogue and agent management.</p>
+                                <ul><li>Simulation of time and resource flows as the game's backbone</li><li>Separate modules for contract, dialogue and agent management</li><li>Data-driven design so designers could iterate without engineering support</li><li>C++17 on Unreal Engine 4</li></ul>
+                            </li>
+                            <li>
+                                <h4>Technical Leadership &amp; Tooling</h4>
+                                <p>Led a three-person junior team while building the tooling that removed manual setup work from the production pipeline.</p>
+                                <ul><li>Code reviews, requirements analysis and ticket planning for three junior engineers</li><li>Designed the technical hiring tests used to grow the team</li><li>Built a procedural generation tool driven by network data</li><li>Worked in an international, fully remote team</li></ul>
+                            </li>
+                    </ul>
+                    <p class="cv-static-links"><a href="https://store.steampowered.com/app/1291860/Rough_Justice_84/" target="_blank" rel="noopener noreferrer">Steam page &#8599;</a> <a href="https://www.rough-justice.com/press-kit/" target="_blank" rel="noopener noreferrer">Press kit &#8599;</a></p>
+                </li>
+                <li class="cv-static-chapter" id="cv-EverslaughtInvasion">
+                    <p class="cv-static-dates">FEB 2022 — APR 2023</p>
+                    <h3>Everslaught Invasion</h3>
+                    <p class="cv-static-subtitle">Software Engineer — MobX Games</p>
+                    <p>Agent AI and P2P network synchronisation under standalone VR constraints.</p>
+                    <dl class="cv-static-facts"><div><dt>Engine</dt><dd>Unity</dd></div><div><dt>Platform</dt><dd>Meta Quest 2</dd></div><div><dt>Publisher</dt><dd>Fast Travel Games</dd></div><div><dt>Networking</dt><dd>Photon Fusion P2P</dd></div></dl>
+                    <ul class="cv-static-topics">
+                            <li>
+                                <h4>Autonomous Agent AI Framework</h4>
+                                <p>Built a behaviour-tree-based framework for autonomous agents, covering navigation and rule-driven spawning.</p>
+                                <ul><li>Behaviour-tree architecture for autonomous agent decision-making</li><li>Path and terrain navigation for agents in 3D space</li><li>Rule-based spawn system driving encounter pacing</li><li>Designed for reuse across multiple agent types</li></ul>
+                            </li>
+                            <li>
+                                <h4>Real-time Network Synchronisation</h4>
+                                <p>Implemented peer-to-peer state replication over Photon Fusion, kept stable within the tight budgets of a standalone headset.</p>
+                                <ul><li>State replication for 10+ agents in real time over Photon Fusion P2P</li><li>Lean state design to stay inside standalone VR memory budgets</li><li>Custom object pooling to avoid runtime allocation spikes</li><li>Refactored session management: lobby, join flow and matchmaking</li></ul>
+                            </li>
+                    </ul>
+                    <p class="cv-static-links"><a href="https://www.fasttravelgames.com/" target="_blank" rel="noopener noreferrer">Fast Travel Games &#8599;</a></p>
+                </li>
+                <li class="cv-static-chapter" id="cv-Aurelion">
+                    <p class="cv-static-dates">MAY 2024 — PRESENT</p>
+                    <h3>AURELION — Sensor Simulation</h3>
+                    <p class="cv-static-subtitle">Software Engineer, Simulation &amp; Validation — dSPACE</p>
+                    <p>Cross-platform C++ systems work for automotive sensor simulation on Unreal Engine 5.</p>
+                    <dl class="cv-static-facts"><div><dt>Engine</dt><dd>Unreal Engine 5</dd></div><div><dt>Platform</dt><dd>Windows &amp; Linux</dd></div><div><dt>Domain</dt><dd>Automotive SIL / HIL</dd></div><div><dt>Language</dt><dd>C++20</dd></div></dl>
+                    <ul class="cv-static-topics">
+                            <li>
+                                <h4>Cross-platform GPU &amp; Display Detection</h4>
+                                <p>Designed and built a cross-platform C/C++ library for GPU and monitor detection on multi-GPU simulation systems, now used across several products in the toolchain.</p>
+                                <ul><li>Windows back end via Vulkan, Registry, Setup API and Configuration Manager</li><li>Linux back end via Vulkan, DRM and Xorg</li><li>A single API surface over two very different platform models</li><li>Adopted by several products across the toolchain</li></ul>
+                            </li>
+                            <li>
+                                <h4>Rendering &amp; Platform Engineering</h4>
+                                <p>Real-time rendering integration on Unreal Engine 5, alongside cross-platform support and build automation.</p>
+                                <ul><li>Integrated and optimised real-time lighting with Unreal Engine Lumen and NVIDIA DLSS</li><li>Contributed to Linux support across the toolchain</li><li>Azure DevOps pipelines (YAML) with daily system health checks and repair routines</li><li>C++20 with CMake, Docker and unit testing; SIL/HIL workflows in a Scrum/SAFe setting</li></ul>
+                            </li>
+                    </ul>
+                    <p class="cv-static-links"><a href="https://www.dspace.com/en/pub/home/products/sw/experimentandvisualization/aurelion_sensor-realistic_sim.cfm" target="_blank" rel="noopener noreferrer">AURELION product page &#8599;</a></p>
+                </li>
+                </ol>
+            <!-- /static:timeline -->
             <div id="projectStage" tabindex="-1" role="region" aria-roledescription="timeline"
                 aria-label="CV timeline — arrow keys or Page Up/Down to move, Escape to leave"></div>
             <p id="cvAnnounce" class="visually-hidden" aria-live="polite" aria-atomic="true"></p>

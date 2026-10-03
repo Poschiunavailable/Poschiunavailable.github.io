@@ -14,12 +14,37 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | C1 — Timeline lag on phones (Patrick's report) |
-| **Phase** | C (bug fix; B1 next) |
-| **Goal** | Moving through the timeline on a phone stays smooth to the last slide. Reported on `prototype` via a local server on a phone: fine at first, laggy halfway down the CV. |
-| **Acceptance check** | `npm run perf` PASSED (≤ 20 layers, ≤ 3 janky frames); walk `gpu` guard green on every slide; full walk green; Patrick re-tests on his phone. |
-| **Files** | `styles/cvstyle.css`, `styles/portfolio.css`, `modules/timeline.js`, `modules/portfolio.js`, `modules/scripts.js`, `tests/perf-timeline.mjs`, `tests/site-walk.mjs`, `Docs/QUALITY.md` |
-| **Step reached** | Cause measured with CDP LayerTree: every slide and its inner layers were permanently promoted (`will-change`) — 68 composited layers, 18.2 Mpx in CSS px (~650 MB of textures at 3× DPR), and a phone paints them lazily as slide art arrives, so memory climbs as you go. Now only on-screen slides (`.is-near`, focus ±1) are promoted and the rest are `visibility:hidden`: 11–14 layers, ~4.9 Mpx (mostly the tiled page itself). Also: the hero reel looped forever behind the timeline (now plays only while the hero is on screen), cards were always promoted (now only while hovered). Headless frame p50 33 → 17 ms on later slides. For comparison `main` (live): 48 layers. Full walk running; then Patrick's re-test. |
+| **Unit** | — (Phase C continues) |
+| **Phase** | C |
+| **Goal** | Phase A and B are done. Next Phase C units, in order: hover/focus/pressed states everywhere (QUALITY §4 walk check); type and spacing scale as tokens; then art direction passes on cards and timeline slides in the star-chart voice. |
+| **Acceptance check** | — |
+| **Files** | — |
+| **Step reached** | Waiting on Patrick's phone re-test of C1. |
+
+### B1 — Content without JavaScript (done 2026-10-03)
+
+`tools/render-static.mjs` (Patrick approved the generator, question 7) writes
+`projects.json` into `index.html`: portfolio cards in `portfolio.js`'s markup
+and `#cvStatic`, the timeline as a star-chart route of chapters, shown only
+under `html.no-js` (`styles/nojs.css`, which also reveals `.animate` content
+and hides the hero video's native controls). `portfolio.js` reuses the static
+cards' `<img>` elements — a plain rebuild fetched every card image twice
+(caught by the new per-URL duplicate check in the walk's budget). Walk: no-JS
+variant passes at every viewport, `nojs-content` known failure removed (the
+known-failure list is now empty), drift check self-test passes. Screenshots
+checked at 375×812 and 1920×1080.
+
+### C1 — Timeline lag on phones (done 2026-10-03, `41f71ce`; Patrick to re-test)
+
+Cause measured (CDP LayerTree): 68 permanently promoted layers / 18.2 Mpx CSS
+in the timeline. Now only on-screen slides are promoted (11–14 layers), the
+hero reel pauses off-screen, cards are promoted only while hovered.
+`npm run perf` bar (≤ 20 layers, ≤ 3 janky frames) and a walk guard on every
+slide. Also fixed while verifying: the global reduced-motion rule used
+`transition-duration: 0.01ms`, which still *ran* a transition on every
+property including `visibility` (it caused the earlier focus-return failures
+and four slide-check failures here); it is `0s` now. Lighthouse median perf 97,
+LCP 2.26 s (C0's 91 / 3.16 s was run-to-run noise).
 
 ### C0 — Star-chart heading style (done 2026-10-03, `fc61a9b`)
 
@@ -248,7 +273,7 @@ Phases are strict: A before B before C.
 
 **Phase B — finish what is missing**
 
-B1. No-JS fallback that still shows all content. Seen in the U10 no-JS
+B1. ~~No-JS fallback that still shows all content~~ — done 2026-10-03. Seen in the U10 no-JS
    screenshots: portfolio and timeline are empty (injected from
    `projects.json` by JS), **every `.animate` element stays at opacity 0** (the
    about text is invisible, not just the projects), and Chromium shows the hero
@@ -357,14 +382,6 @@ Collected here; asked together rather than one by one.
    register.
 6. **Master's thesis** — your CV lists it as planned for 2027/28, research
    topic machine learning in real-time strategy games. Not on the site; add it?
-
-7. **No-JS content (B1)** — options: (1, recommended) a dev-run generator
-   writes `projects.json` into `index.html` as static HTML that JS then
-   upgrades; the walk fails if the committed HTML drifts from the JSON; the
-   cost is one command after editing `projects.json`. (2) No generator: only
-   the about text is fixed and a `<noscript>` note says projects need JS.
-   (3) Hand-written static HTML — a second source, not recommended. This is a
-   generation step, so it waits for your call.
 
 ## Decisions
 

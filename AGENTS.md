@@ -76,7 +76,9 @@ Loaded individually via `<link>` in `index.html`, in this order:
 `cvstyle.css` (large — styles the timeline/slide system), `contact.css`,
 `headings.css` (section heads and hero role: the "star chart" style — Lora
 titles, letter-spaced eyebrows between four-point stars, a constellation line
-into each head; also used by `404.html`).
+into each head; also used by `404.html`), `nojs.css` (everything under
+`html.no-js`; an inline script in `<head>` swaps it to `.js` before first
+paint).
 
 **No `@import` in `styles/`.** Every file used to `@import` `base.css`,
 which re-inserted it at the importing file's position in the cascade — so
@@ -131,8 +133,11 @@ is reused); the register in `Docs/STATUS.md` says which.
 
 ## Editing content
 
-To add/edit a project: edit `projects.json` only — no code changes needed
-for a straightforward new entry. To change what shows where, toggle
+To add/edit a project: edit `projects.json`, then run
+`node tools/render-static.mjs` — it writes the content into `index.html` as
+static HTML (portfolio cards + a no-JS timeline) so the site reads without
+JavaScript and for crawlers. The walk fails if `index.html` has drifted from
+`projects.json`. No code changes needed for a straightforward new entry. To change what shows where, toggle
 `showInPortfolio` / `showInTimeline`. `workTopics[]` entries become
 additional timeline slides (image + description + `highlights[]` bullets).
 `details` is the fact list on the project's timeline hero slide (see the quirk
@@ -231,6 +236,11 @@ python -m http.server 4173
 
 Dev-only scripts whose output is committed (nothing runs at deploy time):
 
+- `render-static.mjs` — writes `projects.json` into `index.html` between
+  `<!-- static:portfolio -->` / `<!-- static:timeline -->` markers; `--check`
+  exits 1 on drift. Run after every `projects.json` edit. `portfolio.js`
+  replaces the static cards with the interactive ones (reusing their `<img>`
+  elements so nothing is fetched twice); `#cvStatic` shows only without JS.
 - `render-social-card.mjs` — renders `tools/social-card/card.html` to
   `assets/social/og-card.jpg`, the 1200×630 Open Graph / Twitter preview.
   Re-run after changing the name, role or tagline. Uses Playwright from

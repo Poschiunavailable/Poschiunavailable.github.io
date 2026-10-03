@@ -355,7 +355,10 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
             const ok = await page.evaluate(id => {
                 const el = document.getElementById(id);
                 if (!el) return false;
-                el.scrollIntoView();
+                // instant: the site's scroll-behavior:smooth would still be
+                // moving when the screenshot is taken.
+                const nav = document.querySelector('.navbar');
+                window.scrollTo({ top: el.getBoundingClientRect().top + scrollY - (nav ? nav.offsetHeight : 0), behavior: 'instant' });
                 return true;
             }, id);
             if (!ok) { F('content-missing', `section #${id} missing`); continue; }
@@ -702,6 +705,7 @@ async function walk404(browser, base, cache, vp) {
 
 async function measureBudget(vp, base, cache, requests) {
     const by = { total: 0, script: 0, font: 0, stylesheet: 0, image: 0, document: 0, other: 0 };
+    const items = [];
     for (const r of requests) {
         const type = r.resourceType();
         if (type === 'media') continue;    // lazy video is outside the budget
@@ -713,11 +717,18 @@ async function measureBudget(vp, base, cache, requests) {
             bytes = cache.transferBytesOf(r.url()) || 0;  // real compressed size, from the fill
         }
         const key = type in by ? type : 'other';
+        items.push([Math.round(bytes / 1024), key, r.url().replace(base, '')]);
         by[key] += bytes;
         by.total += bytes;
     }
     const kib = Object.fromEntries(Object.entries(by).map(([k, v]) => [k, Math.round(v / 1024)]));
-    budgets.push({ vp, kib });
+    budgets.push({ vp, kib, largest: items.sort((a, b) => b[0] - a[0]).slice(0, 10) });
+    // The same file downloaded twice in one load is pure waste (static cards
+    // re-fetched by the JS rebuild did exactly that).
+    const seen = new Map();
+    for (const [k, , u] of items) if (k > 0) seen.set(u, (seen.get(u) || 0) + 1);
+    const dup = [...seen].filter(([, n]) => n > 1).map(([u, n]) => `${u} ×${n}`);
+    if (dup.length) fail('default', vp, 'budget', `downloaded more than once during load: ${dup.join(', ')}`);
     for (const [k, limit] of Object.entries(BUDGET_KIB)) {
         if (kib[k] > limit) fail('default', vp, 'budget', `initial load ${k}: ${kib[k]} KiB > budget ${limit} KiB`);
     }

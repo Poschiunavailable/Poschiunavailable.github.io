@@ -1,10 +1,1 @@
-[
-  {
-    "code": "nojs-content",
-    "variants": [
-      "no-js"
-    ],
-    "unit": "B1",
-    "reason": "Portfolio and timeline are rendered from projects.json by JS; without JS they are empty."
-  }
-]
+[]

@@ -111,9 +111,11 @@ const BLOCKS = {
 export function applyStatic(html, projects) {
     let out = html;
     for (const [name, render] of Object.entries(BLOCKS)) {
-        const re = new RegExp(`(<!-- static:${name} -->\\n)[\\s\\S]*?(\\n\\s*<!-- /static:${name} -->)`);
+        // Works for an empty block too (first run): everything between the
+        // markers is replaced, the closing marker keeps its own indentation.
+        const re = new RegExp(`(<!-- static:${name} -->)[\\s\\S]*?(\\n[ \\t]*<!-- /static:${name} -->)`);
         if (!re.test(out)) throw new Error(`index.html has no <!-- static:${name} --> … <!-- /static:${name} --> markers`);
-        out = out.replace(re, (_, open, close) => `${open}${render(projects)}${close}`);
+        out = out.replace(re, (_, open, close) => `${open}\n${render(projects)}${close}`);
     }
     return out;
 }

@@ -396,10 +396,8 @@ export function initTimeline(projects) {
     }
 
     // The page sections come back from visibility:hidden, and that change can
-    // itself be transitioned (under reduced motion the global rule gives every
-    // property a 0.01ms transition, and a busy main thread stretched the flip
-    // past two frames). So keep trying each frame until the opener takes
-    // focus; after ~500ms fall back to the section's own button (the opener
+    // itself be transitioned or delayed by a busy main thread. So keep trying
+    // each frame until the opener takes focus; after ~500ms fall back to the section's own button (the opener
     // may be gone, or a link in the closed mobile menu).
     function restoreFocus() {
         const t = S.returnFocus;

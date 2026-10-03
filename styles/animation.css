@@ -111,7 +111,12 @@
     *::after {
         animation-duration: 0.01ms !important;
         animation-iteration-count: 1 !important;
-        transition-duration: 0.01ms !important;
+        /* 0s, not the common 0.01ms: a non-zero duration still *runs* a
+           transition for every property — `visibility` included — so hidden
+           things came back a frame or more late (focus return failed under
+           load; a timeline slide was still hidden when checked). Nothing here
+           listens for transitionend, which is what 0.01ms exists for. */
+        transition-duration: 0s !important;
         scroll-behavior: auto !important;
     }
 

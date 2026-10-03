@@ -15,6 +15,12 @@ export function initPortfolio(projects) {
 function generatePortfolioItems(projects) {
     const grid = document.getElementById('portfolioGrid');
     if (!grid) return;
+    // index.html carries static cards (tools/render-static.mjs) whose images
+    // may already be loading. Keep those <img> elements and move them into the
+    // interactive cards — rebuilding them fetched every card image twice.
+    const staticImages = new Map([...grid.querySelectorAll('.portfolio-item')]
+        .map(card => [card.id, card.querySelector('.portfolio-item-image-wrap img')])
+        .filter(([, img]) => img));
     grid.innerHTML = '';
 
     projects.filter(p => p.showInPortfolio).forEach(project => {
@@ -52,6 +58,9 @@ function generatePortfolioItems(projects) {
             </div>
             <div class="click-indicator">View in CV &#8594;</div>
         `;
+        const kept = staticImages.get(item.id);
+        const fresh = item.querySelector('.portfolio-item-image-wrap img');
+        if (kept && fresh && kept.getAttribute('src') === fresh.getAttribute('src')) fresh.replaceWith(kept);
         const activate = () => scrollToCVAndHighlight(project.id);
         item.addEventListener('click', activate);
         item.addEventListener('keydown', e => {
