@@ -14,12 +14,20 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | U2 — Site-walk test |
+| **Unit** | U3 — Broken AURELION link |
 | **Phase** | A |
-| **Goal** | A repeatable Node + Playwright walk that exercises the whole site at all 10 viewports and fails loudly, so every later change is checked the same way. |
-| **Acceptance check** | `npm test` in `tests/` serves the site, and per viewport: loads, visits 5 sections, runs every card's warp jump and asserts it lands on that project's hero slide, steps every slide, checks horizontal and slide overflow, fails on site console/page errors, checks every link; variants reduced-motion and no-WebGL; writes screenshots + `index.html` contact sheet. Self-tests: an injected overflow, an injected console error and a broken link each make it fail. Third-party requests served from a pinned local cache so proxy flakes cannot fail or pass it. |
-| **Files** | `tests/package.json`, `tests/site-walk.mjs`, `.gitignore`, `Docs/QUALITY.md`, `AGENTS.md` |
-| **Step reached** | Built and committed (`7609f1d`). Self-test passes (4/4 injected faults caught). First full run (813 s, 721 screenshots) found real bugs, triaged below and recorded in `tests/known-failures.json`; harness fixes from triage applied; confirming re-run in progress. |
+| **Goal** | The AURELION link on the timeline hero slide reaches dSPACE's public product page. |
+| **Acceptance check** | Walk: no `external-link` failure; the U3 entry is removed from `tests/known-failures.json` and the full run reports no stale entries. |
+| **Files** | `projects.json`, `tests/known-failures.json`, `Docs/STATUS.md` |
+| **Step reached** | Not started. |
+
+### U2 — Site-walk test (done 2026-10-03)
+
+`tests/site-walk.mjs` + `tests/lighthouse.mjs`, documented in AGENTS.md
+"Testing". Self-test 4/4 faults caught. Full run: 40 viewport×variant walks,
+721 screenshots, 855 s, **PASSED** apart from known failures, no stale
+entries; 37 links checked (LinkedIn 999 accepted as bot-blocking, GitHub
+profile unverifiable from the sandbox).
 
 **First full walk — triage (2026-10-03).** 413 failures, 7 causes:
 
@@ -44,8 +52,8 @@ Phases are strict: A before B before C.
 **Phase A — fix what is broken or stale**
 
 1. ~~**U1** Stale docs + README email~~ — done 2026-10-03.
-2. **U2** Site-walk test (card above).
-3. **U3** Broken AURELION link → `products/sw/experimentandvisualization/aurelion_sensor-realistic_sim.cfm` (public product page, verified 200).
+2. ~~**U2** Site-walk test~~ — done 2026-10-03.
+3. **U3** (card above) Broken AURELION link → `products/sw/experimentandvisualization/aurelion_sensor-realistic_sim.cfm` (public product page, verified 200).
 4. **U4** CTA contrast: white on `--highlight-color` (#eab180) is **1.89:1**
    (Lighthouse `color-contrast`, `.cta-button` and `#cvEnter`). AGENTS.md's
    "7.8–11.0:1" only covered body text on section fills.
@@ -92,7 +100,26 @@ B7. Lighthouse mobile Performance ≥ 90 and the transfer budget in QUALITY.md.
 hover/focus/pressed states everywhere, motion and art direction refinement
 in service of the "travel between projects" idea.
 
-## Baseline (2026-10-03, commit `3ff5e4c`)
+## Measurements
+
+**After U2 (2026-10-03, `71e6c71`), `npm run lighthouse` (median of 3, test
+server with gzip + Range like GitHub Pages):** Performance **66**,
+Accessibility **97**, Best Practices 100, SEO 100 · FCP 3.9 s, LCP 5.8 s,
+CLS **0.092**, TBT 139 ms · 3,961 KiB. Two differences from the baseline below
+are explained, not noise:
+
+- **3.1 MB of hero reel at load.** The test server answers Range requests as
+  GitHub Pages does; `python -m http.server` doesn't, which hid this. The hero
+  video's "lazy" start fires immediately because the hero is on screen at load,
+  so on a real visit the reel streams during first load. → handled in B7
+  (performance), decision to be recorded then.
+- **CLS 0.092 on `.hero-content`**: web-font swap shifting the hero. → U5
+  (self-hosted fonts with metric-matched fallback).
+
+Walk transfer budget (video excluded): 651 KiB at 375×812, 877 KiB at
+1920×1080 vs 600 KiB; fonts 114 vs 100; images 234 / 462 vs 200.
+
+### Baseline (2026-10-03, commit `3ff5e4c`)
 
 Measured locally (`python3 -m http.server 4173`) in the cloud sandbox.
 
