@@ -31,8 +31,8 @@
   },
   {
     "code": "budget",
-    "unit": "U5/U6/B6",
-    "reason": "Initial load over budget: render-blocking fonts, three.js from CDN, oversized icons and images."
+    "unit": "B6",
+    "reason": "Initial load over budget at desktop size: card and slide images (no srcset yet). Fonts/CSS/JS are within budget since U5/U6."
   },
   {
     "code": "nojs-content",

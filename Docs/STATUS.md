@@ -14,12 +14,22 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | U6 — Vendor three.js, drop es-module-shims |
+| **Unit** | U7 — Placeholder art and placeholder markers |
 | **Phase** | A |
-| **Goal** | The starfield's only third-party dependency is served from this repo: one pinned `three.module.js`, no `es-module-shims` (import maps are native in all current browsers), no unpkg on the critical path. |
-| **Acceptance check** | No `unpkg.com` (or any third-party origin) requested on load — walk `--offline` passes with an empty third-party cache; starfield screenshots unchanged; Lighthouse median holds Performance ≥ 90; walk script budget measured and recorded. |
-| **Files** | `index.html`, `assets/vendor/` (or `modules/vendor/`), `Docs/HISTORY.md` (provenance), `AGENTS.md`, `Docs/STATUS.md` |
+| **Goal** | No entry shows another project's art. Where an asset is missing, a simple, clearly labelled placeholder stands in (Patrick OK'd placeholder assets, 2026-10-03), and every placeholder is marked in `projects.json` so it can be found and replaced. |
+| **Acceptance check** | Cologne Game Lab card, hero and three topic slides and the Freelance card use placeholder art, not AURELION / Cold Comfort / Everslaught / Rough Justice art; each placeholder image itself reads "placeholder"; `projects.json` marks each placeholder field; the walk fails if a marked placeholder points at a non-placeholder asset or an unmarked field points at a placeholder asset; register below matches the data. Walk green, screenshots checked. |
+| **Files** | `assets/placeholders/`, `projects.json`, `tests/site-walk.mjs`, `Docs/STATUS.md`, `AGENTS.md` |
 | **Step reached** | Not started. |
+
+### U6 — three.js vendored (done 2026-10-03, `f977913`)
+
+`modules/vendor/three-0.151.3.module.min.js` (provenance: HISTORY.md
+"three.js"); `es-module-shims` dropped; the page requests nothing from a
+third-party origin (offline walk, empty cache). Walk PASSED; script
+272 → 179 KiB; initial load **518 KiB at 375×812 — under the 600 KiB budget**;
+746 KiB at 1920×1080 (images 462 KiB are what's left: B6). Lighthouse median:
+**Performance 97, Accessibility 100, BP 100, SEO 100; FCP 1.2 s, LCP 2.11 s,
+CLS 0, TBT 124 ms**. Starfield and mid-warp frames checked by eye.
 
 ### U5 — Self-hosted fonts, no `@import` (done 2026-10-03, `928a474`)
 
@@ -98,10 +108,10 @@ Phases are strict: A before B before C.
    render-blocking on mobile, LCP 6.5 s. Remove the `@import` chains,
    self-host the fonts (woff2, `preload`, metric-matched fallback so there is no
    font shift).
-6. **U6** (card above) Vendor three.js (one pinned file) and drop `es-module-shims`
+6. ~~**U6** Vendor three.js~~ — done 2026-10-03: (one pinned file) and drop `es-module-shims`
    (import maps are native in every current browser). Removes a third-party
    origin from the critical path.
-7. **U7** Placeholder art: the Cologne Game Lab card/hero uses the AURELION
+7. **U7** (card above) Placeholder art: the Cologne Game Lab card/hero uses the AURELION
    artwork and its three topic slides use Cold Comfort / Everslaught / Rough
    Justice art, which reads as if those games were university projects.
    Replace with simple, clearly labelled placeholder images (Patrick OK'd
