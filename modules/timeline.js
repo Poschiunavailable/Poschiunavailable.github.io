@@ -351,7 +351,10 @@ export function initTimeline(projects) {
         clearTimeout(S.arriveTimer);
         document.body.classList.remove('timeline-warping', 'timeline-arriving');
 
-        S.slides.forEach(({ el }) => {
+        S.slides.forEach((slide) => {
+            const { el } = slide;
+            slide.near = false;
+            el.classList.remove('is-near');
             el.style.opacity       = '0';
             el.style.pointerEvents = 'none';
             const v = el.querySelector('video');
@@ -727,6 +730,12 @@ export function initTimeline(projects) {
 
             slide.el.style.opacity       = opacity;
             slide.el.style.pointerEvents = opacity > 0.5 ? 'auto' : 'none';
+            // Only on-screen slides keep GPU layers (see .is-near in cvstyle.css).
+            const near = progress > -1 && progress < 1;
+            if (near !== slide.near) {
+                slide.near = near;
+                slide.el.classList.toggle('is-near', near);
+            }
             // No transform on the slide itself — layers below move on their own
 
             // Background drifts slowly (depth feel) with a subtle in-scroll scale

@@ -166,6 +166,7 @@ function handlePortfolioItems() {
             clearTimeout(resetTimer);
             measure();
             // Disable the scroll-in transition while hovering so movement is 1:1
+            item.style.willChange = 'transform';
             item.style.transition = 'box-shadow 0.2s ease';
             item.style.boxShadow = '0 24px 48px rgba(0, 0, 0, 0.55)';
             // Always above every previously-hovered card. A fixed z-index tied
@@ -218,6 +219,7 @@ function handlePortfolioItems() {
                 if (!hovered) {
                     item.style.transition = '';
                     item.style.zIndex = '';
+                    item.style.willChange = '';
                 }
             }, 500);
         };

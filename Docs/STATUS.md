@@ -14,12 +14,18 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | C0 — Adopt the star-chart heading style |
-| **Phase** | C (direction chosen by Patrick, 2026-10-03; B1 still waits on question 7) |
-| **Goal** | The chosen style is the site's, not an exploration: merged, typing effect retired, 404 page in the same voice, works on small phones. |
-| **Acceptance check** | Full walk green incl. new `reveal` check; screenshots at 320×568, 360×640, 1920×1080 checked; Lighthouse holds perf ≥ 90 / a11y 100. |
-| **Files** | `styles/headings.css`, `index.html`, `404.html`, `modules/scripts.js`, `modules/portfolio.js`, `styles/animation.css`, `styles/hero.css`, `tests/site-walk.mjs` |
-| **Step reached** | Merged `explore/star-chart`; typing effect and dead `.hero h2` removed; 404 uses the same section head; small-screen tier (role line wrapped at 360 px, heads too tall). Found and fixed a reveal bug (below). Quick walks green; full walk + Lighthouse running. |
+| **Unit** | C1 — Timeline lag on phones (Patrick's report) |
+| **Phase** | C (bug fix; B1 next) |
+| **Goal** | Moving through the timeline on a phone stays smooth to the last slide. Reported on `prototype` via a local server on a phone: fine at first, laggy halfway down the CV. |
+| **Acceptance check** | `npm run perf` PASSED (≤ 20 layers, ≤ 3 janky frames); walk `gpu` guard green on every slide; full walk green; Patrick re-tests on his phone. |
+| **Files** | `styles/cvstyle.css`, `styles/portfolio.css`, `modules/timeline.js`, `modules/portfolio.js`, `modules/scripts.js`, `tests/perf-timeline.mjs`, `tests/site-walk.mjs`, `Docs/QUALITY.md` |
+| **Step reached** | Cause measured with CDP LayerTree: every slide and its inner layers were permanently promoted (`will-change`) — 68 composited layers, 18.2 Mpx in CSS px (~650 MB of textures at 3× DPR), and a phone paints them lazily as slide art arrives, so memory climbs as you go. Now only on-screen slides (`.is-near`, focus ±1) are promoted and the rest are `visibility:hidden`: 11–14 layers, ~4.9 Mpx (mostly the tiled page itself). Also: the hero reel looped forever behind the timeline (now plays only while the hero is on screen), cards were always promoted (now only while hovered). Headless frame p50 33 → 17 ms on later slides. For comparison `main` (live): 48 layers. Full walk running; then Patrick's re-test. |
+
+### C0 — Star-chart heading style (done 2026-10-03, `fc61a9b`)
+
+Full walk PASSED (incl. new `reveal` check). Lighthouse median dipped to perf
+91 / LCP 3.16 s (was 97 / 2.26 s) — to investigate after C1 (the serif hero
+title is now the LCP element candidate).
 
 Reveal bug found while checking C0 screenshots: the portfolio grid is one
 `.animate` element revealed at `threshold: 0.1`; on phones the grid is

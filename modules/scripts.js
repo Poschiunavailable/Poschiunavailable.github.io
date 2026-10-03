@@ -92,18 +92,24 @@ function setupHeroVideo() {
 
     // preload="none" in the markup keeps the video off the critical path;
     // start fetching only once the hero is actually on screen.
-    const start = () => {
-        video.preload = 'auto';
-        video.load();
+    let loaded = false;
+    const play = () => {
+        if (!loaded) {
+            loaded = true;
+            video.preload = 'auto';
+            video.load();
+        }
         video.play().catch(() => { /* autoplay refused — poster stays */ });
     };
 
-    if (!('IntersectionObserver' in window)) return start();
+    if (!('IntersectionObserver' in window)) return play();
 
+    // Play only while the hero is on screen. It used to start once and loop
+    // forever, so a phone kept decoding 720p video behind the timeline and
+    // everything below the hero.
     const observer = new IntersectionObserver(([entry]) => {
-        if (!entry?.isIntersecting) return;
-        start();
-        observer.disconnect();
+        if (entry?.isIntersecting) play();
+        else if (!video.paused) video.pause();
     }, { threshold: 0.1 });
     observer.observe(video);
 }

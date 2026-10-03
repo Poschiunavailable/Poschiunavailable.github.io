@@ -117,8 +117,25 @@ body.timeline-immersive #projectStage {
     height: 100%;
     opacity: 0;
     pointer-events: none;
-    will-change: transform, opacity;
     /* JS drives opacity & transform per frame — no CSS transitions */
+}
+
+/* GPU memory: only the slides on screen (focus ±1, set by timeline.js as
+   .is-near) are promoted to layers; every other slide is visibility:hidden,
+   so the compositor holds nothing for it. With will-change on all 16 slides
+   and their inner layers, the timeline kept 68 layers / 18 Mpx (CSS px) —
+   ~650 MB of textures at 3x DPR — and phones went laggy partway down as
+   slide art got painted into them. */
+.project-slide:not(.is-near) {
+    visibility: hidden;
+}
+.project-slide.is-near {
+    will-change: transform, opacity;
+}
+.project-slide.is-near .slide-bg,
+.project-slide.is-near .slide-content,
+.project-slide.is-near .topic-image-section {
+    will-change: transform;
 }
 
 /* ── Hero Slide ──────────────────────────────────────────────────────────────── */
@@ -136,7 +153,6 @@ body.timeline-immersive #projectStage {
     position: absolute;
     inset: 0;
     overflow: hidden;
-    will-change: transform;
     -webkit-mask-image: radial-gradient(ellipse 82% 78% at 50% 42%,
         #000 40%, rgba(0, 0, 0, 0.72) 70%, rgba(0, 0, 0, 0.18) 90%, transparent 100%);
     mask-image: radial-gradient(ellipse 82% 78% at 50% 42%,
@@ -187,7 +203,6 @@ body.timeline-immersive #projectStage {
     backdrop-filter: blur(14px) saturate(115%);
     border: 1px solid rgba(129, 168, 209, 0.16);
     box-shadow: 0 26px 70px rgba(0, 0, 0, 0.5);
-    will-change: transform;
 }
 
 /* Without backdrop-filter the panel would be too see-through to read against
@@ -270,7 +285,6 @@ body.timeline-immersive #projectStage {
     align-items: center;
     max-width: 1280px;
     width: 100%;
-    will-change: transform;
 }
 
 .topic-image-section {
@@ -280,7 +294,6 @@ body.timeline-immersive #projectStage {
     aspect-ratio: 4 / 3;
     background: rgba(12, 18, 30, 0.55);
     box-shadow: 0 28px 64px rgba(0, 0, 0, 0.55), 0 0 1px rgba(129, 168, 209, 0.2);
-    will-change: transform;
 }
 
 .topic-image-section img {

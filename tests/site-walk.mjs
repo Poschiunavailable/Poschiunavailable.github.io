@@ -539,6 +539,14 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
                     : is.kind === 'clipped' ? `hides ${is.px}px of text` : `under ${is.with}`}`, shot);
             }
             if (!hud) F('timeline-hud', `slide ${i}: time-machine year not shown`, shot);
+            // GPU footprint guard: only on-screen slides keep layers, and the
+            // hero reel doesn't decode behind the timeline (Patrick's mobile lag).
+            const gpu = await page.evaluate(() => ({
+                near: document.querySelectorAll('.project-slide.is-near').length,
+                reel: document.getElementById('heroVideo')?.paused !== false,
+            }));
+            if (gpu.near > 2) F('gpu', `slide ${i}: ${gpu.near} slides promoted (expected ≤ 2)`);
+            if (!gpu.reel) F('gpu', `slide ${i}: hero video still playing behind the timeline`);
             const a11y = await page.evaluate(i => {
                 const reachable = [...document.querySelectorAll('.project-slide')].filter(s => !s.inert).map(s => +s.dataset.idx);
                 const dots = [...document.querySelectorAll('#cvProjectNav .nav-dot')];

@@ -21,6 +21,10 @@ const args = Object.fromEntries(process.argv.slice(2).map(a => { const [k, v] = 
 const ROOT = path.resolve(args.root ? String(args.root) : path.join(HERE, '..'));
 const CPU = Number(args.cpu || 4);
 const DWELL = Number(args.dwell || 1000);   // ms on each slide, like a reader swiping on
+// Bars (Docs/QUALITY.md §2): composited layers that draw content while in the
+// timeline, and frames slower than 50 ms over the whole walk.
+const MAX_LAYERS = 20;
+const MAX_JANK = 3;
 
 const { base, close } = await startServer({ root: ROOT });
 const cache = createThirdPartyCache({ dir: path.join(HERE, '.cache', 'thirdparty') });
@@ -39,6 +43,15 @@ await ctx.addInitScript(() => {
 });
 const page = await ctx.newPage();
 const cdp = await ctx.newCDPSession(page);
+// Composited layers: each is a GPU texture. Phones run out of GPU memory long
+// before desktops, so count them and their pixel area per slide.
+let layers = [];
+await cdp.send('LayerTree.enable');
+cdp.on('LayerTree.layerTreeDidChange', e => { if (e.layers) layers = e.layers; });
+const layerStats = () => {
+    const drawn = layers.filter(l => l.drawsContent && !l.invisible);
+    return { count: drawn.length, mpx: drawn.reduce((s, l) => s + l.width * l.height, 0) / 1e6 };
+};
 
 let bytes = 0;
 const bytesLog = [];
@@ -73,16 +86,22 @@ for (let i = 0; i < slides; i++) {
         return { frames: f.length, p50: pct(0.5), p95: pct(0.95), max: f[f.length - 1] || 0, janky: f.filter(d => d > 50).length,
             longtasks: lt.length, longMs: lt.reduce((s, [, d]) => s + d, 0) };
     }, [t0, t1]);
-    rows.push({ slide: i, ...r, kib: Math.round((bytes - b0) / 1024) });
+    rows.push({ slide: i, ...r, kib: Math.round((bytes - b0) / 1024), ...layerStats() });
     await page.keyboard.press('ArrowDown');
 }
 
 const fmt = n => String(Math.round(n)).padStart(5);
 console.log(`root ${ROOT}\nCPU ×${CPU}, ${DWELL} ms per slide, 375×812 @2x touch; page load ${Math.round(loadBytes / 1024)} KiB\n`);
-console.log('slide frames   p50   p95   max jank>50ms longtasks(ms)   KiB');
-for (const r of rows) console.log(`${String(r.slide).padStart(5)} ${fmt(r.frames)} ${fmt(r.p50)} ${fmt(r.p95)} ${fmt(r.max)} ${fmt(r.janky)}     ${String(r.longtasks).padStart(3)} (${fmt(r.longMs)})  ${fmt(r.kib)}`);
+console.log('slide frames   p50   p95   max jank>50ms longtasks(ms)   KiB  layers  Mpx (CSS px)');
+for (const r of rows) console.log(`${String(r.slide).padStart(5)} ${fmt(r.frames)} ${fmt(r.p50)} ${fmt(r.p95)} ${fmt(r.max)} ${fmt(r.janky)}     ${String(r.longtasks).padStart(3)} (${fmt(r.longMs)})  ${fmt(r.kib)}  ${fmt(r.count)}  ${r.mpx.toFixed(1).padStart(5)}`);
 const all = rows.reduce((a, r) => ({ jank: a.jank + r.janky, kib: a.kib + r.kib, long: a.long + r.longMs }), { jank: 0, kib: 0, long: 0 });
 console.log(`\ntotal: ${all.jank} janky frames, ${Math.round(all.long)} ms long tasks, ${all.kib} KiB fetched while in the timeline`);
+const worstLayers = Math.max(...rows.map(r => r.count));
+const failed = [];
+if (worstLayers > MAX_LAYERS) failed.push(`${worstLayers} composited layers > ${MAX_LAYERS}`);
+if (all.jank > MAX_JANK) failed.push(`${all.jank} janky frames > ${MAX_JANK}`);
+console.log(failed.length ? `FAILED: ${failed.join('; ')}` : `PASSED (≤ ${MAX_LAYERS} layers, ≤ ${MAX_JANK} janky frames)`);
+process.exitCode = failed.length ? 1 : 0;
 const big = bytesLog.filter(([, n]) => n > 500 * 1024).map(([u, n]) => `${u} ${(n / 1048576).toFixed(1)} MB`);
 if (big.length) console.log(`large downloads: ${[...new Set(big)].join(', ')}`);
 

@@ -40,6 +40,7 @@ Lighthouse numbers are the **median of 3 runs**.
 | Initial-load transfer budget | Walk records transfer bytes from navigation to network idle at 375×812 and 1920×1080, excluding `video/*` responses. **Total ≤ 600 KiB; JS ≤ 300 KiB; fonts ≤ 100 KiB; CSS ≤ 40 KiB; images ≤ 200 KiB.** Baseline ≈ 920 KiB without video (1,081 KiB with). Budget revisited only with a written reason here. |
 | Responsive images | Every raster `<img>` over 40 KB has `srcset` + `sizes`, or a recorded reason why not (walk lists offenders). Lighthouse `image-delivery-insight` passes. |
 | No layout shift from fonts | Self-hosted woff2, preloaded, with a metric-matched fallback (`size-adjust`/`ascent-override`); walk CLS = 0 from load to idle. |
+| Timeline stays smooth on phones (GPU footprint) | `npm run perf` (`tests/perf-timeline.mjs`): 375×812 @2x touch, CPU ×4, every slide for 1 s — ≤ 20 composited layers that draw content, ≤ 3 frames over 50 ms in total. Walk guard on every slide: ≤ 2 slides promoted (`.is-near`) and the hero reel paused. Added after Patrick's report of lag partway down the CV on a phone (68 layers / ~18 Mpx CSS before). |
 
 ## 3. Accessibility
 
