@@ -25,7 +25,7 @@ Lighthouse numbers are the **median of 3 runs**.
 | Every section, every card's warp jump, every timeline slide is visited | Walk asserts counts: 5 sections, `cards == entries with showInPortfolio`, `slides == heroes + workTopics` of timeline entries; each warp jump lands on the slide of the card's project. |
 | Nothing overflows where it must fit | Per viewport: `scrollWidth - innerWidth == 0`; every visible descendant of the focused timeline slide lies inside the viewport (±1 px). Self-test: the walk injects an oversized element and must report it. |
 | Keyboard reaches every control, with visible focus | Walk tabs through the page and the timeline; every interactive element (links, buttons, cards, nav dots, exit) receives focus, and its focused computed style differs from unfocused (outline / box-shadow). Order follows reading order. |
-| Reduced motion respected | Walk variant with `reducedMotion: 'reduce'`: no running CSS animation longer than 0.01 s after load, warp jump skipped, hero video not requested, typing effect off. Every stylesheet with `transition`/`animation` has a `prefers-reduced-motion` block (grep check). |
+| Reduced motion respected | Walk variant with `reducedMotion: 'reduce'`: no running CSS animation longer than 0.01 s after load, warp jump skipped, hero video not requested. Every stylesheet with `transition`/`animation` has a `prefers-reduced-motion` block (grep check). |
 | Readable without WebGL | Walk variant with WebGL unavailable: no errors, all sections and timeline content visible, a static background instead of a blank one. |
 | Readable without JavaScript | Walk variant with JS disabled: every project's title, role, dates and description are in the DOM and visible. *Fails today — Phase B item 7.* |
 

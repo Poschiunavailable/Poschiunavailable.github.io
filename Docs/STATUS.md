@@ -14,12 +14,22 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | — (waiting) |
-| **Phase** | B → C |
-| **Goal** | Phase B is done except B1, which waits on question 7 (generator or not). Phase C's direction waits on question 8 (heading style A/B/C). |
-| **Acceptance check** | — |
-| **Files** | — |
-| **Step reached** | Waiting on Patrick. Work that needs neither answer: hover/focus/pressed states audit (QUALITY §4 walk check). |
+| **Unit** | C0 — Adopt the star-chart heading style |
+| **Phase** | C (direction chosen by Patrick, 2026-10-03; B1 still waits on question 7) |
+| **Goal** | The chosen style is the site's, not an exploration: merged, typing effect retired, 404 page in the same voice, works on small phones. |
+| **Acceptance check** | Full walk green incl. new `reveal` check; screenshots at 320×568, 360×640, 1920×1080 checked; Lighthouse holds perf ≥ 90 / a11y 100. |
+| **Files** | `styles/headings.css`, `index.html`, `404.html`, `modules/scripts.js`, `modules/portfolio.js`, `styles/animation.css`, `styles/hero.css`, `tests/site-walk.mjs` |
+| **Step reached** | Merged `explore/star-chart`; typing effect and dead `.hero h2` removed; 404 uses the same section head; small-screen tier (role line wrapped at 360 px, heads too tall). Found and fixed a reveal bug (below). Quick walks green; full walk + Lighthouse running. |
+
+Reveal bug found while checking C0 screenshots: the portfolio grid is one
+`.animate` element revealed at `threshold: 0.1`; on phones the grid is
+~2,700 px tall, so 10 % was more than the screen showed and the cards stayed
+invisible under their heading (pre-existing; taller heads made it visible at
+360×640). Reveal now fires when the element's edge is 8 % into the viewport,
+whatever its height. New walk check `reveal`: anything ≥ 40 px on screen must
+be fully revealed after settling — fails on the old code at 360×640, passes
+after. The walk's section screenshots now wait for running animations to
+finish instead of a fixed 1.1 s (it captured cards mid-fade).
 
 ### B6 + B7 — Responsive images, deferred timeline media, performance budget (done 2026-10-03, `f037ffe`)
 
@@ -350,22 +360,6 @@ Collected here; asked together rather than one by one.
    (3) Hand-written static HTML — a second source, not recommended. This is a
    generation step, so it waits for your call.
 
-8. **Heading style** (asked 2026-10-03: the `<brackets>` don't read as
-   intentionally dev-like). Three explorations, each on its own branch off
-   `prototype` (`7c9a016`), headings and hero role only so far — starfield,
-   timeline and warp jump untouched:
-   - `explore/flight-log` (A): instrument-readout eyebrows ("01 · About",
-     boxed like the TIME MACHINE HUD, hairline) over tight sans titles; all
-     display type sans + mono.
-   - `explore/star-chart` (B): editorial Lora titles, letter-spaced eyebrows
-     between four-point stars, centred, a constellation line dropping into
-     each section.
-   - `explore/terminal` (C): headings are shell commands (`$ cat about.md`,
-     `$ ls ~/projects`, `$ git log --reverse`, `$ ./contact.sh`) with prompt
-     and block cursor; screen readers get the plain name.
-   Pick one (or a mix); the chosen one then gets pushed further (cards,
-   slides, spacing) in Phase C.
-
 ## Decisions
 
 | # | Date | Decision | Reason |
@@ -378,3 +372,4 @@ Collected here; asked together rather than one by one.
 | D6 | 2026-10-03 | Phase A grows from the first walk: U3 broken link, U8 Cold Comfort card, U9 HUD collisions, U10 no-WebGL error. Phase B items are numbered B1–B7. | The walk found them; small, user-visible breakage stays in Phase A. |
 | D7 | 2026-10-03 | Real bugs the walk finds but a later unit fixes go in `tests/known-failures.json` with that unit's id. They are reported, don't fail the run, and a full run flags entries that stop matching. | Keeps the walk green-meaningful without hiding bugs or deleting checks. |
 | D8 | 2026-10-03 | Icons are a raster set made from Patrick's PT brush logo (`tools/make-icons.py`), not an SVG; QUALITY.md's favicon bar changed accordingly. | The logo is a brush mark; a traced SVG would be a different mark. Keeping his own logo beats a cleaner generic icon. |
+| D9 | 2026-10-03 | Heading style: **star chart** (exploration B), chosen by Patrick. Merged from `explore/star-chart`; `explore/flight-log` and `explore/terminal` stay on the remote as references until Patrick says to delete them. | Patrick's pick; it was also the recommendation — reads designed rather than templated, and the route-between-stars motif extends the warp jump. |

@@ -57,7 +57,7 @@ These are deliberate decisions, not oversights. Don't "fix" them:
 |---|---|
 | `main.js` | Entry point / orchestration. |
 | `dataManager.js` | Fetches + memoizes `projects.json`. |
-| `scripts.js` | Generic site chrome: mobile nav toggle, smooth-scroll nav, lazy hero video, typing-effect headers (`.typing-target`), scroll-in reveal (`.animate` + IntersectionObserver). Also exports `prefersReducedMotion()`, which the other modules import. |
+| `scripts.js` | Generic site chrome: mobile nav toggle, smooth-scroll nav, lazy hero video, scroll-in reveal (`.animate` + IntersectionObserver). Also exports `prefersReducedMotion()`, which the other modules import. |
 | `portfolio.js` | Builds portfolio cards from `projects.json` into `#portfolioGrid`. 3D tilt/scale hover effect. Clicking a card doesn't open a modal — it dispatches `portfolio:selectProject` (`{id}`), which `timeline.js` listens for. |
 | `timeline.js` | The CV/timeline section (`#cv`). Biggest/most complex module — a custom slide-based "virtual scroll" (like apple.com product pages): each project becomes one hero slide + one slide per `workTopics[]` entry, all flattened into `slideData`. Wheel/touch/keyboard input moves a `virtualPos` that LERPs toward an integer `targetPos`; scrolling into `#cv` far enough triggers "immersive mode" which locks page scroll and takes over input. Drives the `#timeMachine` date HUD by interpolating each project's `startDate`/`endDate` across its slides. |
 | `background.js` | Three.js starfield background (`#canvas-container`), independent of the rest — reacts to mouse/gyro tilt and scroll position, and listens for `timeline:warpSpeed` (dispatched by `timeline.js` on entering/exiting immersive mode) to trigger a hyperspace streak effect. |
@@ -73,7 +73,10 @@ Cross-module coupling is intentionally just two `CustomEvent`s on `window`:
 Loaded individually via `<link>` in `index.html`, in this order:
 `fonts.css` (self-hosted `@font-face` + metric-matched fallbacks), `base.css` (resets + CSS custom properties / theme colors), `styles.css`,
 `animation.css`, `navbar.css`, `hero.css`, `about.css`, `portfolio.css`,
-`cvstyle.css` (large — styles the timeline/slide system), `contact.css`.
+`cvstyle.css` (large — styles the timeline/slide system), `contact.css`,
+`headings.css` (section heads and hero role: the "star chart" style — Lora
+titles, letter-spaced eyebrows between four-point stars, a constellation line
+into each head; also used by `404.html`).
 
 **No `@import` in `styles/`.** Every file used to `@import` `base.css`,
 which re-inserted it at the importing file's position in the cascade — so

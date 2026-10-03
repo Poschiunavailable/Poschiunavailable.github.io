@@ -1,4 +1,4 @@
-import { prefersReducedMotion } from './scripts.js';
+import { prefersReducedMotion, REVEAL_OPTIONS } from './scripts.js';
 import { srcsetFor } from './images.js';
 
 // Card images are at most ~430px wide (measured 250–427px from 320 to 1920
@@ -74,7 +74,7 @@ function observeItems(elements) {
         entries.forEach(entry => {
             entry.target.classList.toggle('visible', entry.isIntersecting);
         });
-    }, { threshold: 0.1 });
+    }, REVEAL_OPTIONS);
 
     elements.forEach(el => {
         el.classList.add('animate');

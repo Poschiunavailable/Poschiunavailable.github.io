@@ -15,6 +15,7 @@
     <link rel="preload" href="/assets/fonts/lora-latin-wght.woff2" as="font" type="font/woff2" crossorigin>
     <link rel="stylesheet" href="/styles/fonts.css">
     <link rel="stylesheet" href="/styles/base.css">
+    <link rel="stylesheet" href="/styles/headings.css">
     <style>
         body {
             min-height: 100vh;
@@ -29,15 +30,8 @@
                 radial-gradient(ellipse 80% 70% at 50% 45%, #2a3346 0%, var(--background-color) 45%, #0d1018 100%);
         }
         main { max-width: 34rem; text-align: center; }
-        .code {
-            font-family: var(--tertiary-font);
-            font-size: 0.8rem;
-            letter-spacing: 0.3em;
-            color: var(--highlight-color);
-            margin-bottom: 14px;
-        }
-        h1 { font-family: var(--secondary-font); font-size: clamp(2.2rem, 7vw, 3.4rem); line-height: 1.1; }
-        p.lead { margin: 18px auto 32px; line-height: 1.7; color: #b9c4d3; max-width: 28rem; }
+        .section-head { margin-bottom: 0; }
+        p.lead { margin: 22px auto 32px; line-height: 1.7; color: #b9c4d3; max-width: 28rem; }
         .actions { display: flex; flex-wrap: wrap; gap: 14px; justify-content: center; }
         .ghost {
             display: inline-block;
@@ -57,8 +51,10 @@
 
 <body>
     <main>
-        <p class="code">Error 404</p>
-        <h1>Off the map</h1>
+        <div class="section-head">
+            <p class="section-eyebrow">Error 404</p>
+            <h1 class="section-title">Off the map</h1>
+        </div>
         <p class="lead">Nothing exists at these coordinates. The page may have moved, or the
             link was mistyped — the timeline is still where you left it.</p>
         <div class="actions">

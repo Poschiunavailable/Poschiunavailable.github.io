@@ -405,12 +405,25 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
             return true;
         }, id);
         if (!exists) { F('content-missing', `section #${id} missing`); continue; }
-        // Typing headings finish, reveal animations settle.
-        await page.waitForFunction((id) => [...document.querySelectorAll(`#${id} .typing-target`)]
-            .every(t => t.classList.contains('typed')), id, { timeout: 5000 }).catch(() => {});
-        await page.waitForTimeout(variant === 'reduced-motion' ? 200 : 1100);
+        // Reveal transitions settle: wait for running animations to finish
+        // (a fixed wait captured cards mid-fade), capped so a looping
+        // animation can't stall the walk.
+        await page.waitForTimeout(150);
+        await page.waitForFunction(() => document.getAnimations()
+            .every(a => a.playState !== 'running' || a.effect?.getTiming().iterations === Infinity),
+        null, { timeout: 4000, polling: 100 }).catch(() => {});
         await hOverflow(`#${id}`);
-        await shoot(`section-${id}`);
+        // Anything substantially on screen must have been revealed.
+        const hidden = await page.evaluate(() => [...document.querySelectorAll('.animate')].filter(el => {
+            const r = el.getBoundingClientRect();
+            const onScreen = Math.min(r.bottom, innerHeight * 0.9) - Math.max(r.top, 0);
+            if (onScreen < 40 || r.width < 1) return false;
+            let op = 1;
+            for (let e = el; e; e = e.parentElement) op *= parseFloat(getComputedStyle(e).opacity);
+            return op < 0.99;
+        }).map(el => el.id ? '#' + el.id : `${el.tagName.toLowerCase()}.${String(el.className).trim().split(/\s+/).join('.')}`));
+        const shotRel = await shoot(`section-${id}`);
+        if (hidden.length) F('reveal', `#${id}: on screen but not revealed: ${[...new Set(hidden)].slice(0, 4).join(', ')}`, shotRel);
         cov.sections++;
     }
 

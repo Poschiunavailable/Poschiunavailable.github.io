@@ -1,4 +1,4 @@
-/* Style exploration B — "Star chart".
+/* Section heads and hero role — the "star chart" style (Docs/STATUS.md D9).
    Editorial and calm: large Lora titles, small letter-spaced eyebrows marked
    with a four-point star, centred. A thin constellation line drops into each
    section head, so scrolling the page reads as following a route between
@@ -90,4 +90,20 @@
     width: 36px;
     height: 1px;
     background: rgba(234, 177, 128, 0.5);
+}
+
+/* ── Small screens ─────────────────────────────────────────────────────────
+   At 360px the role line wrapped ("SOFTWARE / ENGINEER") and the section
+   heads took most of the first screen; shorter route lines, tighter
+   tracking. */
+@media (max-width: 480px) {
+    .section-head { margin-bottom: 2rem; }
+    .section-head::before { height: 40px; margin-bottom: 10px; }
+    .hero-role {
+        gap: 10px;
+        letter-spacing: 0.26em;
+        white-space: nowrap;
+    }
+    .hero-role::before,
+    .hero-role::after { width: 18px; }
 }

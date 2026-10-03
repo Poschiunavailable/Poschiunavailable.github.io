@@ -81,12 +81,6 @@
     color: var(--primary-color);
 }
 
-.hero h2 {
-    font-size: clamp(1.35rem, 4.5vw, 2rem);
-    margin-bottom: 1rem;
-    color: var(--highlight-color);
-    font-family: var(--tertiary-font);
-}
 
 .hero p {
     font-size: 1.2rem;

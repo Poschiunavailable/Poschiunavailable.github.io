@@ -4,7 +4,6 @@ export const prefersReducedMotion = () =>
 export function initScripts() {
     setupNavToggle();
     setupHeroVideo();
-    handleTypingTargets();
     animateOnScroll();
     setupSmoothScrolling();
 }
@@ -72,58 +71,6 @@ function setupSmoothScrolling() {
     });
 }
 
-// ─── Typing Effect ────────────────────────────────────────────────────────────
-
-function startTypingEffect(element) {
-    const fullText = element.getAttribute('data-text');
-    let currentCharacter = 0;
-
-    function type() {
-        if (currentCharacter < fullText.length) {
-            element.textContent += fullText.charAt(currentCharacter);
-            currentCharacter++;
-            setTimeout(type, 70);
-        } else {
-            element.classList.remove('typing');
-            element.classList.add('typed');
-            element.style.borderRight = 'none';
-        }
-    }
-
-    if (!element.classList.contains('typing') && !element.classList.contains('typed')) {
-        element.classList.add('typing');
-        element.style.borderRight = '2px solid var(--primary-color)';
-        type();
-    }
-}
-
-function handleTypingTargets() {
-    const typingTargets = document.querySelectorAll(".typing-target");
-    const reduced = prefersReducedMotion();
-
-    typingTargets.forEach(target => {
-        target.setAttribute("data-text", target.textContent.trim());
-
-        // Reduced motion: leave the heading exactly as authored.
-        if (reduced) {
-            target.classList.add('typed');
-            return;
-        }
-
-        target.textContent = "";
-        target.style.visibility = "hidden";
-
-        const observer = new IntersectionObserver(([entry]) => {
-            if (entry.isIntersecting) {
-                target.style.visibility = "visible";
-                startTypingEffect(target);
-                observer.disconnect();
-            }
-        }, { threshold: 0.5 });
-        observer.observe(target);
-    });
-}
-
 // ─── Hero Video ───────────────────────────────────────────────────────────────
 
 function setupHeroVideo() {
@@ -163,13 +110,19 @@ function setupHeroVideo() {
 
 // ─── Scroll Reveal ────────────────────────────────────────────────────────────
 
+// Reveal when an element's edge comes 8% into the viewport — not at a ratio of
+// its own height. A ratio threshold (0.1) never fired for the portfolio grid on
+// phones: ~2,700px tall, so 10% was more than the screen had left to show, and
+// the cards stayed invisible under their heading.
+export const REVEAL_OPTIONS = { threshold: 0, rootMargin: '0px 0px -8% 0px' };
+
 function animateOnScroll() {
     const reduced = prefersReducedMotion();
     const observer = new IntersectionObserver((entries) => {
         entries.forEach((entry) => {
             entry.target.classList.toggle("visible", entry.isIntersecting);
         });
-    }, { threshold: 0.1 });
+    }, REVEAL_OPTIONS);
 
     document.querySelectorAll(".animate").forEach(element => {
         if (reduced) {
