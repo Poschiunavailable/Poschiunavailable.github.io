@@ -69,9 +69,14 @@ Cross-module coupling is intentionally just two `CustomEvent`s on `window`:
 ## Styles (`styles/`)
 
 Loaded individually via `<link>` in `index.html`, in this order:
-`base.css` (resets + CSS custom properties / theme colors), `styles.css`,
+`fonts.css` (self-hosted `@font-face` + metric-matched fallbacks), `base.css` (resets + CSS custom properties / theme colors), `styles.css`,
 `animation.css`, `navbar.css`, `hero.css`, `about.css`, `portfolio.css`,
 `cvstyle.css` (large — styles the timeline/slide system), `contact.css`.
+
+**No `@import` in `styles/`.** Every file used to `@import` `base.css`,
+which re-inserted it at the importing file's position in the cascade — so
+`base.css` silently beat equal-specificity rules in files loaded earlier, and
+the chain delayed first render. Order is set by the `<link>`s alone.
 
 Theme colors/fonts are CSS variables defined once in `base.css` `:root`
 (`--primary-color`, `--highlight-color`, etc.) — change the palette there.
@@ -114,7 +119,8 @@ Layout is validated at the viewports listed in `Docs/QUALITY.md`. **360×640 and
 
 Images/video referenced by `projects.json` and `index.html`: genuine key art
 for each game, Patrick's profile photo, the hero reel (`portfolio_reel.mp4` +
-poster) and the original AURELION artwork. Some assets are reused as
+poster), the original AURELION artwork, and `assets/fonts/` (self-hosted
+woff2 + OFL licences; provenance in `Docs/HISTORY.md` "Fonts"). Some assets are reused as
 placeholders for entries that lack their own — the register in
 `Docs/STATUS.md` says which.
 
@@ -204,7 +210,12 @@ npm test              # site walk: 4 variants × 10 viewports (~12 min)
 npm run test:quick    # 3 viewports, all variants
 npm run test:self     # injects faults; passes only if the walk catches each
 npm run lighthouse    # Lighthouse mobile, median of 3
+node style-diff.mjs <old-checkout>   # computed-style diff, for CSS refactors
 ```
+
+For a before/after comparison, check the old commit out with
+`git worktree add <dir> <commit>`; `site-walk.mjs --root=<dir>` and
+`style-diff.mjs <dir>` both take it.
 
 - `site-walk.mjs` serves the repo with `lib/server.mjs` (GitHub-Pages-like:
   gzip, Range, `404.html`), then per viewport visits every section, opens the

@@ -12,6 +12,7 @@
 //   node site-walk.mjs --self-test         injects faults; passes only if each is caught
 //   node site-walk.mjs --offline           third-party cache misses are errors
 //   node site-walk.mjs --skip-external     don't check external links (offline work)
+//   node site-walk.mjs --root=../../old    walk another checkout (before/after comparisons)
 //
 // Quality bars and what each check stands for: Docs/QUALITY.md.
 
@@ -27,7 +28,6 @@ import { createThirdPartyCache } from './lib/thirdparty.mjs';
 
 const run = promisify(execFile);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const ROOT = path.resolve(HERE, '..');
 const OUT = path.join(HERE, 'out');
 
 // ── Configuration ────────────────────────────────────────────────────────────
@@ -59,6 +59,8 @@ const args = Object.fromEntries(process.argv.slice(2).map(a => {
     const [k, v] = a.replace(/^--/, '').split('=');
     return [k, v ?? true];
 }));
+// --root=<dir> walks another checkout (e.g. a worktree of an older commit).
+const ROOT = path.resolve(args.root ? String(args.root) : path.join(HERE, '..'));
 const SELF_TEST = !!args['self-test'];
 const viewports = SELF_TEST ? ['375x667']
     : args.viewports ? String(args.viewports).split(',')
@@ -77,6 +79,7 @@ const SELF_TEST_FAULTS = {
     'console-error':  ['/modules/main.js', s => s + "\nconsole.error('[self-test] injected console error');\n", /self-test/],
     'broken-link':    ['/index.html', s => s.replace('</footer>', '<a href="assets/self-test-missing.png">self-test</a></footer>'), /self-test-missing\.png/],
     'broken-anchor':  ['/index.html', s => s.replace('</footer>', '<a href="#self-test-missing-anchor">self-test</a></footer>'), /self-test-missing-anchor/],
+    'cls':            ['/modules/scripts.js', s => s + "\naddEventListener('load', () => setTimeout(() => { document.querySelector('.hero-content').style.marginTop = '320px'; }, 150));\n", /layout shift during load/],
     'slide-overflow': ['/styles/cvstyle.css', s => s + '\n.project-slide[data-idx="1"] .topic-desc { padding-bottom: 150vh; }\n', /^slide 1 /],
 };
 function selfTestTransform(urlPath, buf) {
@@ -102,7 +105,21 @@ function fail(variant, vp, code, message, shot) {
 // ── Helpers that run in the page ─────────────────────────────────────────────
 
 const INIT_SCRIPT = () => {
-    window.__walk = { warpSeen: false };
+    window.__walk = { warpSeen: false, cls: 0, shifts: [] };
+    // Cumulative layout shift during load (QUALITY.md §2). Every shift
+    // counts: the walk does no input before it reads this, and Chromium marks
+    // shifts in the first ~500 ms after an automated navigation as
+    // hadRecentInput — filtering on it hid exactly the load-time shifts
+    // (found by the self-test).
+    try {
+        new PerformanceObserver(list => {
+            for (const e of list.getEntries()) {
+                window.__walk.cls += e.value;
+                window.__walk.shifts.push({ value: e.value, nodes: (e.sources || [])
+                    .map(s => s.node && (s.node.id ? '#' + s.node.id : s.node.className || s.node.nodeName)).filter(Boolean) });
+            }
+        }).observe({ type: 'layout-shift', buffered: true });
+    } catch { /* not supported: reported as missing below */ }
     new MutationObserver(() => {
         if (document.body?.classList.contains('timeline-warping')) window.__walk.warpSeen = true;
     }).observe(document, { subtree: true, attributes: true, attributeFilter: ['class'] });
@@ -312,6 +329,13 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
         if (px > 0) F('h-overflow', `page scrolls horizontally by ${px}px (${where})`);
     };
     await hOverflow('after load');
+
+    // Layout shift from load to idle, before the walk scrolls anything.
+    await page.waitForTimeout(500);
+    const ls = await page.evaluate(() => window.__walk);
+    cov.cls = Number(ls.cls.toFixed(4));
+    if (ls.cls >= 0.1) F('cls', `layout shift during load ${ls.cls.toFixed(3)} ≥ 0.1 (${ls.shifts.map(s => `${s.value.toFixed(3)} ${s.nodes.join(',')}`).join('; ')})`);
+    else if (ls.cls > 0) info.push(`${variant} ${vp} CLS ${ls.cls.toFixed(4)}: ${ls.shifts.map(s => s.nodes.join(',')).join('; ')}`);
 
     // ── Sections ──
     for (const id of SECTIONS) {
@@ -692,6 +716,8 @@ async function main() {
         .map(([c, n]) => `${c}×${n}`).join(', ');
     console.log(`\n${shots.length} screenshots, ${report.seconds}s → tests/out/index.html`);
     for (const b of budgets) console.log(`  budget ${b.vp}: ${JSON.stringify(b.kib)}`);
+    const clsList = Object.entries(coverage).filter(([, c]) => c.cls !== undefined).map(([, c]) => c.cls);
+    if (clsList.length) console.log(`  CLS during load: max ${Math.max(...clsList)} over ${clsList.length} walks`);
     if (known.length) console.log(`known failures: ${byCode(known)}`);
     for (const s of stale) console.log(`STALE known failure (nothing matched — remove it): ${s.code} ${s.match || ''}`);
 

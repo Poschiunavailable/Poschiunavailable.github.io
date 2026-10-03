@@ -1,5 +1,4 @@
 /* about.css */
-@import url("base.css");
 
 /*--------------------------------
     About Section
@@ -83,6 +82,14 @@
 
 .about-text .cta-button {
     margin-top: 20px;
+}
+
+/* This button is both a .cta-button (hover colour) and an .animate (scroll-in
+   reveal); each sets `transition` at equal specificity, so name both here
+   rather than let file order pick one. */
+.about-text .cta-button.animate {
+    transition: opacity 1s ease-out, transform 1s ease-out,
+                background-color var(--transition-duration);
 }
 
 /*--------------------------------

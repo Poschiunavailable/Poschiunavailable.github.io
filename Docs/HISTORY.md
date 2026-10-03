@@ -248,3 +248,29 @@ stand-in for the CSS ellipse, which reported the top and bottom edges as fully
 covered. That was wrong — CSS `radial-gradient(ellipse X% Y% …)` normalises the
 two axes independently. Recomputed with the correct formula; the numbers above
 are from that.
+
+## Fonts (U5, 2026-10-03)
+
+Self-hosted in `assets/fonts/`, replacing three render-blocking
+`@import`s of fonts.googleapis.com in `base.css`. Source: the Latin
+variable woff2 that Google Fonts serves to Chrome (Roboto v51, Lora v37,
+Fira Code v27), downloaded 2026-10-03. Licences: SIL OFL 1.1, copies in
+`assets/fonts/OFL-*.txt` (from github.com/google/fonts).
+
+| File | Made with (fontTools 4.66) | Size |
+|---|---|---|
+| `roboto-latin-wght.woff2` | `pyftsubset` to Google's Latin range + U+2192, U+25B8, features `kern,liga,ccmp,locl,mark,mkmk`; `varLib.instancer` wght 400–700 | 25 KB (was 43) |
+| `firacode-latin-wght.woff2` | same; this drops `calt` (programming ligatures — the site's mono text is labels, not code) | 18 KB (was 36) |
+| `lora-latin-wght.woff2` | **unmodified** — Lora has a Reserved Font Name, so a subset could not be called "Lora"; subsetting saved < 1 KB anyway | 38 KB |
+
+Fallback metrics in `styles/fonts.css` were computed against Liberation
+Sans/Serif/Mono (metric-compatible with Arial, Times New Roman, Courier New)
+from the average advance width over the site's own text.
+
+Measured: walk font transfer 114 → 80 KiB, CSS 24 → 17 KiB (no `@import`
+chain). Computed-style diff (`tests/style-diff.mjs`) before/after over 442
+elements × 4 body states × 2 viewports: two differences, both explained —
+"View in CV →" labels 0.12 px narrower (kerning re-encoded by the
+instancer), and the About button, which now gets both its reveal and hover
+transitions (see `about.css`); before, the `@import` re-insertion of
+`base.css` silently dropped its reveal transition.

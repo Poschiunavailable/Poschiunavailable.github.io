@@ -4,8 +4,6 @@
    here — duplicating them across files is what previously caused the hero to
    inherit `height:100vh` from one file and `overflow:hidden` from another. */
 
-@import url("base.css");
-@import url("animation.css");
 
 /* Body Styling */
 body {

@@ -1,7 +1,3 @@
-/* Fonts */
-@import url('https://fonts.googleapis.com/css2?family=Roboto:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Lora:wght@400;700&display=swap');
-@import url('https://fonts.googleapis.com/css2?family=Fira+Code:wght@400;700&display=swap');
 
 /* Variables */
 :root {
@@ -28,9 +24,9 @@
   --highlight-color: #eab180;
   --highlight-color-translucent: rgba(234, 177, 128, 0.6);
 
-  --primary-font: 'Roboto', sans-serif;
-  --secondary-font: 'Lora', serif;
-  --tertiary-font: 'Fira Code', monospace;
+  --primary-font: 'Roboto', 'Roboto Fallback', sans-serif;
+  --secondary-font: 'Lora', 'Lora Fallback', serif;
+  --tertiary-font: 'Fira Code', 'Fira Code Fallback', monospace;
 
   --transition-duration: 0.3s;
 

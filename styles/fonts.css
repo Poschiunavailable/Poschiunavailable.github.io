@@ -1,0 +1,65 @@
+/* Self-hosted web fonts. Provenance and how the files were made:
+   Docs/HISTORY.md "Fonts (U5)". Licences: assets/fonts/OFL-*.txt.
+
+   Each family is one variable woff2 (wght 400–700), Latin range only.
+   Lora is Google's file unmodified: it has a Reserved Font Name, so a
+   subsetted copy could not be called "Lora".
+
+   The "… Fallback" faces are local fonts scaled to the web font's metrics,
+   so swapping to the web font doesn't move text (CLS). Arial, Times New
+   Roman and Courier New share metrics with Liberation Sans/Serif/Mono and
+   Arimo/Tinos/Cousine, so one set of overrides covers Windows, macOS and
+   Linux. Overrides computed from the site's own text (index.html +
+   projects.json) by average advance width. */
+
+@font-face {
+  font-family: 'Roboto';
+  src: url('../assets/fonts/roboto-latin-wght.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Lora';
+  src: url('../assets/fonts/lora-latin-wght.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+  unicode-range: U+0000-00FF, U+0131, U+0152-0153, U+02BB-02BC, U+02C6, U+02DA, U+02DC, U+0304, U+0308, U+0329, U+2000-206F, U+20AC, U+2122, U+2191, U+2193, U+2212, U+2215, U+FEFF, U+FFFD;
+}
+
+@font-face {
+  font-family: 'Fira Code';
+  src: url('../assets/fonts/firacode-latin-wght.woff2') format('woff2');
+  font-weight: 400 700;
+  font-style: normal;
+  font-display: swap;
+}
+
+@font-face {
+  font-family: 'Roboto Fallback';
+  src: local('Arial'), local('Liberation Sans'), local('Arimo');
+  size-adjust: 99.39%;
+  ascent-override: 93.34%;
+  descent-override: 24.56%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Lora Fallback';
+  src: local('Times New Roman'), local('Liberation Serif'), local('Tinos');
+  size-adjust: 114.65%;
+  ascent-override: 87.75%;
+  descent-override: 23.90%;
+  line-gap-override: 0%;
+}
+
+@font-face {
+  font-family: 'Fira Code Fallback';
+  src: local('Courier New'), local('Liberation Mono'), local('Cousine');
+  size-adjust: 99.98%;
+  ascent-override: 99.02%;
+  descent-override: 32.21%;
+  line-gap-override: 0%;
+}
