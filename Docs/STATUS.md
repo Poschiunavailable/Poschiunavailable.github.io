@@ -14,12 +14,29 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | U5 — Render-blocking CSS and self-hosted fonts |
+| **Unit** | U6 — Vendor three.js, drop es-module-shims |
 | **Phase** | A |
-| **Goal** | First render no longer waits on chained `@import`s or on fonts.googleapis.com; no layout shift from font swap. |
-| **Acceptance check** | No `@import` left in `styles/`; fonts are local woff2 in `assets/fonts/`, preloaded where above the fold, with metric-matched fallbacks; walk budget fonts ≤ 100 KiB; Lighthouse `render-blocking-insight` no longer lists font CSS, CLS < 0.1 (was 0.092 — from `.hero-content` font swap). Walk green, screenshots show the same typefaces. |
-| **Files** | `styles/*.css`, `index.html`, `assets/fonts/`, `Docs/STATUS.md`, `Docs/HISTORY.md` (font provenance) |
-| **Step reached** | Not started. Groundwork: Google serves one variable woff2 per family (~37 KB each); used: Roboto 400/700, Lora 400/700, Fira Code 400/700. |
+| **Goal** | The starfield's only third-party dependency is served from this repo: one pinned `three.module.js`, no `es-module-shims` (import maps are native in all current browsers), no unpkg on the critical path. |
+| **Acceptance check** | No `unpkg.com` (or any third-party origin) requested on load — walk `--offline` passes with an empty third-party cache; starfield screenshots unchanged; Lighthouse median holds Performance ≥ 90; walk script budget measured and recorded. |
+| **Files** | `index.html`, `assets/vendor/` (or `modules/vendor/`), `Docs/HISTORY.md` (provenance), `AGENTS.md`, `Docs/STATUS.md` |
+| **Step reached** | Not started. |
+
+### U5 — Self-hosted fonts, no `@import` (done 2026-10-03, `928a474`)
+
+Fonts in `assets/fonts/` (provenance: HISTORY.md "Fonts"), `styles/fonts.css`
+with metric-matched fallbacks, all three preloaded; no `@import` left.
+Computed-style diff over 442 elements × 4 states × 2 viewports: only the two
+explained differences. **Lighthouse median of 3: Performance 97, Accessibility
+100, BP 100, SEO 100; FCP 1.3 s, LCP 2.26 s, CLS 0, TBT 160 ms** — all
+Lighthouse bars in QUALITY.md met. Font CSS gone from `render-blocking-insight`
+(only the site's own 10 small stylesheets remain). Walk: fonts 114 → 80 KiB,
+CSS 24 → 17 KiB; CLS during load 0 at every viewport (0.0008 before, all font
+swap). Typefaces unchanged in screenshots.
+
+Walk change in this unit: CLS measured (self-test fault #5); external links
+retry with backoff and cache passes for 24 h, because dspace.com answers in up
+to 30 s and rate-limits repeats (one full run reported it "unreachable"; three
+manual retries gave 200 / timeout / 429).
 
 ### U4 — CTA contrast (done 2026-10-03, `31b1ef2`)
 
@@ -76,12 +93,12 @@ Phases are strict: A before B before C.
 4. ~~**U4** CTA contrast~~ — done 2026-10-03: white on `--highlight-color` (#eab180) is **1.89:1**
    (Lighthouse `color-contrast`, `.cta-button` and `#cvEnter`). AGENTS.md's
    "7.8–11.0:1" only covered body text on section fills.
-5. **U5** (card above) Render-blocking CSS: every stylesheet `@import`s `base.css` again and
+5. ~~**U5** Render-blocking CSS~~ — done 2026-10-03: every stylesheet `@import`s `base.css` again and
    `base.css` `@import`s three Google Fonts stylesheets → 1.45 s of
    render-blocking on mobile, LCP 6.5 s. Remove the `@import` chains,
    self-host the fonts (woff2, `preload`, metric-matched fallback so there is no
    font shift).
-6. **U6** Vendor three.js (one pinned file) and drop `es-module-shims`
+6. **U6** (card above) Vendor three.js (one pinned file) and drop `es-module-shims`
    (import maps are native in every current browser). Removes a third-party
    origin from the critical path.
 7. **U7** Placeholder art: the Cologne Game Lab card/hero uses the AURELION

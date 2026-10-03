@@ -561,7 +561,7 @@ async function checkLinks(base, refs, projects) {
         for (const { abs, where } of external) {
             checked++;
             const host = new URL(abs).host;
-            const { code, body } = await curlStatus(abs);
+            const { code, body } = await cachedStatus(abs);
             const allowed = BOT_BLOCKING[host] || [];
             if (code === 403 && SANDBOX_BLOCK.test(body)) { info.push(`external ${abs} → unverifiable (sandbox proxy blocks it)`); continue; }
             if (code >= 200 && code < 400) continue;
@@ -574,6 +574,25 @@ async function checkLinks(base, refs, projects) {
 
 let anchorIds = new Set();   // filled from the rendered DOM before checkLinks runs
 
+// A link that answered 2xx/3xx in the last 24 h is not fetched again: some
+// hosts (dspace.com) are slow and rate-limit repeat requests, which made the
+// check flaky. Failures are never cached — they are always rechecked.
+const LINK_CACHE = path.join(HERE, '.cache', 'links.json');
+const LINK_TTL_MS = 24 * 3600 * 1000;
+async function cachedStatus(url) {
+    let cache = {};
+    try { cache = JSON.parse(fs.readFileSync(LINK_CACHE, 'utf8')); } catch { /* first run */ }
+    const hit = cache[url];
+    if (hit && Date.now() - hit.at < LINK_TTL_MS) { info.push(`external ${url} → ${hit.code} (cached ${new Date(hit.at).toISOString()})`); return { code: hit.code, body: '' }; }
+    const res = await curlStatus(url);
+    if (res.code >= 200 && res.code < 400) {
+        cache[url] = { code: res.code, at: Date.now() };
+        fs.mkdirSync(path.dirname(LINK_CACHE), { recursive: true });
+        fs.writeFileSync(LINK_CACHE, JSON.stringify(cache, null, 2));
+    }
+    return res;
+}
+
 // Status plus the start of the body (to recognise the sandbox proxy's refusals).
 async function curlStatus(url) {
     const parse = out => {
@@ -581,8 +600,9 @@ async function curlStatus(url) {
         return { code: m ? Number(m[1]) : 0, body: out.slice(0, 2000) };
     };
     try {
-        const { stdout } = await run('curl', ['-sS', '-L', '--max-time', '30',
-            '--retry', '3', '--retry-delay', '2',
+        // --retry covers timeouts, 5xx and 429 (honouring Retry-After); not 4xx.
+        const { stdout } = await run('curl', ['-sS', '-L', '--max-time', '60',
+            '--retry', '4', '--retry-delay', '5', '--retry-max-time', '240',
             '-A', 'Mozilla/5.0 (X11; Linux x86_64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/141.0 Safari/537.36',
             '-w', '\n%{http_code}', url], { maxBuffer: 32 << 20 });
         return parse(stdout.trimEnd());
