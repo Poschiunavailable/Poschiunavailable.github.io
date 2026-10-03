@@ -57,6 +57,8 @@
     <link rel="stylesheet" href="styles/portfolio.css">
     <link rel="stylesheet" href="styles/cvstyle.css">
     <link rel="stylesheet" href="styles/contact.css">
+    <!-- Style exploration: C — Terminal, made explicit -->
+    <link rel="stylesheet" href="styles/headings.css">
     <!-- three.js is vendored (provenance: Docs/HISTORY.md "three.js"). Import
          maps are native in every current browser, so no shim is needed. -->
     <script type="importmap">
@@ -110,7 +112,7 @@
                     fetchpriority="high">
             </div>
             <h1>Patrick Temborius</h1>
-            <h2>&lt;software engineer&gt;</h2>
+            <p class="hero-role term"><span class="term-line" aria-hidden="true"><span class="ps1">~$</span> whoami</span><span class="term-out">software engineer</span></p>
             <p>Six years of cross-platform <b>C/C++</b> development — low-level <b>systems programming</b> on Windows
                 and Linux, <b>real-time and simulation</b> software, and <b>test automation</b>.</p>
             <a href="#portfolio" class="cta-button" data-scroll-to="portfolio">View My Work</a>
@@ -121,8 +123,8 @@
     <!-- About Section -->
     <section id="about">
         <div class="container animate">
-            <div class="typing-effect">
-                <h2 class="typing-text typing-target">&lt;about me&gt;</h2>
+            <div class="section-head animate">
+                <h2 class="section-title term"><span class="visually-hidden">About</span><span aria-hidden="true"><span class="ps1">~$</span> <span class="cmd typing-target">cat about.md</span><span class="caret"></span></span></h2>
             </div>
             <div class="about-content">
                 <div class="about-image animate">
@@ -154,8 +156,8 @@
     <!-- Portfolio Section -->
     <section id="portfolio">
         <div class="container animate">
-            <div class="typing-effect">
-                <h2 class="typing-text typing-target">&lt;portfolio&gt;</h2>
+            <div class="section-head animate">
+                <h2 class="section-title term"><span class="visually-hidden">Work</span><span aria-hidden="true"><span class="ps1">~$</span> <span class="cmd typing-target">ls ~/projects</span><span class="caret"></span></span></h2>
             </div>
             <div class="tiny-separator"></div>
             <div class="portfolio-grid animate" id="portfolioGrid">
@@ -168,7 +170,9 @@
     <section id="cv">
         <div id="cvSection">
             <div id="cvSectionLabel">
-                <h2>&lt;cv&gt;</h2>
+            <div class="section-head">
+                <h2 class="section-title term"><span class="visually-hidden">Timeline</span><span aria-hidden="true"><span class="ps1">~$</span> <span class="cmd typing-target">git log --reverse</span><span class="caret"></span></span></h2>
+            </div>
             </div>
             <!-- Entering the timeline is deliberately an explicit action. It takes
                  over scrolling, so it must never trigger just because the section
@@ -197,8 +201,8 @@
 
     <section id="contact">
         <div class="container animate">
-            <div class="typing-effect">
-                <h2 class="typing-text typing-target">&lt;contact&gt;</h2>
+            <div class="section-head animate">
+                <h2 class="section-title term"><span class="visually-hidden">Contact</span><span aria-hidden="true"><span class="ps1">~$</span> <span class="cmd typing-target">./contact.sh</span><span class="caret"></span></span></h2>
             </div>
             <!-- Contact runs through LinkedIn by choice: no email address or phone
                  number is published here, so there's nothing on the page for scrapers
