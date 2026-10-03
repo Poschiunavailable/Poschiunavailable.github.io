@@ -13,6 +13,7 @@
 //   node site-walk.mjs --offline           third-party cache misses are errors
 //   node site-walk.mjs --skip-external     don't check external links (offline work)
 //   node site-walk.mjs --root=../../old    walk another checkout (before/after comparisons)
+//   node site-walk.mjs --out=/tmp/walk-a    write results elsewhere (parallel runs)
 //
 // Quality bars and what each check stands for: Docs/QUALITY.md.
 
@@ -28,7 +29,6 @@ import { createThirdPartyCache } from './lib/thirdparty.mjs';
 
 const run = promisify(execFile);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
-const OUT = path.join(HERE, 'out');
 
 // ── Configuration ────────────────────────────────────────────────────────────
 
@@ -67,7 +67,9 @@ const args = Object.fromEntries(process.argv.slice(2).map(a => {
     return [k, v ?? true];
 }));
 // --root=<dir> walks another checkout (e.g. a worktree of an older commit).
+// --out=<dir> writes screenshots/report elsewhere (parallel runs must not share one).
 const ROOT = path.resolve(args.root ? String(args.root) : path.join(HERE, '..'));
+const OUT = path.resolve(args.out ? String(args.out) : path.join(HERE, 'out'));
 const SELF_TEST = !!args['self-test'];
 const viewports = SELF_TEST ? ['375x667']
     : args.viewports ? String(args.viewports).split(',')

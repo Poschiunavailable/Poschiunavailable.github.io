@@ -312,6 +312,22 @@ Collected here; asked together rather than one by one.
    (3) Hand-written static HTML — a second source, not recommended. This is a
    generation step, so it waits for your call.
 
+8. **Heading style** (asked 2026-10-03: the `<brackets>` don't read as
+   intentionally dev-like). Three explorations, each on its own branch off
+   `prototype` (`7c9a016`), headings and hero role only so far — starfield,
+   timeline and warp jump untouched:
+   - `explore/flight-log` (A): instrument-readout eyebrows ("01 · About",
+     boxed like the TIME MACHINE HUD, hairline) over tight sans titles; all
+     display type sans + mono.
+   - `explore/star-chart` (B): editorial Lora titles, letter-spaced eyebrows
+     between four-point stars, centred, a constellation line dropping into
+     each section.
+   - `explore/terminal` (C): headings are shell commands (`$ cat about.md`,
+     `$ ls ~/projects`, `$ git log --reverse`, `$ ./contact.sh`) with prompt
+     and block cursor; screen readers get the plain name.
+   Pick one (or a mix); the chosen one then gets pushed further (cards,
+   slides, spacing) in Phase C.
+
 ## Decisions
 
 | # | Date | Decision | Reason |
