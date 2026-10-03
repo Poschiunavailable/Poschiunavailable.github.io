@@ -14,12 +14,24 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | B2 — Timeline accessibility |
+| **Unit** | B3 — Metadata, social preview, robots, sitemap |
 | **Phase** | B |
-| **Goal** | The timeline is operable by keyboard alone and understandable with a screen reader: focus moves in on enter and back on exit, each step is announced, invisible slides and the faded-out page can't be tabbed into, the nav dots say which project is current. |
-| **Acceptance check** | Walk (all JS variants): entering by keyboard puts focus inside the timeline; a polite live region reads "Slide 1 of 16 — …" and updates on every step; Tab only reaches visible controls (each focused element on screen and visibly rendered); the active nav dot has `aria-current`; Escape returns focus to the control that opened the timeline (button, nav link, card). Lighthouse Accessibility stays 100. |
-| **Files** | `modules/timeline.js`, `index.html`, `styles/cvstyle.css`, `tests/site-walk.mjs`, `Docs/STATUS.md` |
-| **Step reached** | Not started. (B1 waits on Patrick's answer to question 7.) |
+| **Goal** | Links to the site unfurl as a designed card everywhere (LinkedIn, Slack, X, Mastodon), and crawlers get a canonical URL, robots.txt and a sitemap. |
+| **Acceptance check** | `<head>`: description, canonical, `og:type/site_name/title/description/url/image(+width/height/alt)`, `twitter:card/title/description/image`; `og:image` absolute on the canonical origin, its local file exists and is a 1200×630 PNG under 300 KB; `robots.txt` names the sitemap; `sitemap.xml` lists the canonical URL. The walk checks all of it. Card looked at; P5 leaves the placeholder register. Lighthouse SEO stays 100. |
+| **Files** | `index.html`, `assets/social/`, `tools/render-social-card.mjs`, `robots.txt`, `sitemap.xml`, `tests/site-walk.mjs`, `Docs/STATUS.md`, `AGENTS.md` |
+| **Step reached** | Not started. |
+
+### B2 — Timeline accessibility (done 2026-10-03, `0471b36`, `3a8ad32`)
+
+Slides are labelled groups, all but the focused one `inert`; polite live
+region announces each step; `aria-current` on the active dot; focus moves in
+on enter and back to the opener on exit. `#timeMachine` got the role its label
+needed; sections wrapped in `<main>`. The walk now enters by keyboard, checks
+announcements, inert slides, `aria-current`, visible Tab stops, focus return,
+and runs axe-core on the page and every slide (phone + desktop); against the
+pre-B2 commit it reports 61 failures, and axe catches the old
+`aria-prohibited-attr`. Full walk PASSED; **Lighthouse median perf 97, a11y
+100, BP 100, SEO 100**, LCP 2.1 s, CLS 0.
 
 **Phase A done (2026-10-03).** U1–U10 closed. Lighthouse median perf 97 /
 a11y 100 / BP 100 / SEO 100, LCP 2.1–2.3 s, CLS 0; no third-party requests;
@@ -178,10 +190,10 @@ B1. No-JS fallback that still shows all content. Seen in the U10 no-JS
    about text is invisible, not just the projects), and Chromium shows the hero
    video's native controls when JS is off. Needs a design decision that keeps
    `projects.json` the single source; record it here before building.
-B2. Timeline accessibility: slides announced (live region "slide x of N"),
+B2. ~~Timeline accessibility~~ — done 2026-10-03: slides announced (live region "slide x of N"),
    controls named, focus management on enter/exit, keyboard reaches every
    control.
-B3. Metadata: absolute `og:image`, Twitter card fields, designed 1200×630
+B3. (card above) Metadata: absolute `og:image`, Twitter card fields, designed 1200×630
    social preview, canonical URL, `robots.txt`, `sitemap.xml`.
 B4. Favicon set (SVG + 32 px ICO + 180 px apple-touch + manifest icons);
     today a 129 KB 2048²-derived PNG is linked as the icon.
