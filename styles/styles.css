@@ -39,6 +39,15 @@ section[id] {
     height: 100%;
 }
 
+/* No WebGL (background.js adds .starfield-static) or no JavaScript at all:
+   a static star tile stands in for the live field. Never both at once — the
+   live canvas is transparent, so a tile under it would double the stars. */
+.no-js #canvas-container,
+#canvas-container.starfield-static {
+    background: url('../assets/starfield-static.svg') repeat;
+    background-size: 600px 600px;
+}
+
 /* Immersive mode is "in space" — the starfield is the point, so it stays
    near-full strength. Slide legibility is handled per-slide in cvstyle.css
    (hero art is full-bleed; topic slides use a centred vignette). */

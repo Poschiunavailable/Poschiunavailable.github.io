@@ -14,12 +14,22 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | U9 — Timeline HUD collisions |
+| **Unit** | U10 — Starfield without WebGL (and without JS) |
 | **Phase** | A |
-| **Goal** | No slide text sits under the time-machine readout or the project dots at any viewport. |
-| **Acceptance check** | Walk: zero `slide-overlap`, zero `slide-overflow`/`slide-clipped`; U9 entry removed from `known-failures.json`, full run reports no stale entries. Screenshots at the tight cases (360×640, 375×812, 667×375, 844×390) checked. |
-| **Files** | `styles/cvstyle.css`, `tests/known-failures.json`, `Docs/STATUS.md` |
-| **Step reached** | Measured (2026-10-03): on phones topic text runs to x = 356 while the dots sit at 351–361 (375 wide); the time machine takes the bottom 80–90 px while the tallest 375×812 slide leaves 70 px. Plan: HUD safe-area tokens applied after all size tiers + a compact one-line readout on phones/landscape phones. |
+| **Goal** | No WebGL → no error and a static star background instead of a blank one; no JS → the same static background. |
+| **Acceptance check** | `no-webgl` walk: zero console/page errors (U10 known failures removed, no stale entries); screenshots show static stars; default walk unchanged (no doubled stars where WebGL works — the static layer must not paint under the live canvas); `no-js` screenshots show static stars. |
+| **Files** | `modules/background.js`, `assets/starfield-static.svg`, `styles/styles.css`, `index.html`, `tests/known-failures.json`, `Docs/STATUS.md` |
+| **Step reached** | Plan: probe WebGL with a plain canvas before creating the renderer (three.js logs an error before it throws, so try/catch alone would still fail); fallback class on `#canvas-container`; `html.no-js` swapped to `js` by a one-line inline script. |
+
+### U9 — Timeline HUD collisions (done 2026-10-03, `b99e609`)
+
+HUD safe-area tokens (right gutter for the dots, bottom strip on phones and
+landscape phones) applied after every size tier; compact one-line time-machine
+readout bottom-left and the exit button bottom-right in that strip. Full walk
+PASSED: `slide-overlap` 354 → 0, no slide overflow or clipping at any
+viewport, no stale known entries. The walk's overlap check now covers images
+too, shown to fail on the old exit-button position. Screenshots checked at
+360×640, 375×812, 667×375, 844×390.
 
 ### U8 — Card-only projects get a timeline target (done 2026-10-03, `3e58a57`)
 
@@ -138,17 +148,19 @@ Phases are strict: A before B before C.
 8. ~~**U8** Cold Comfort card~~ — done 2026-10-03: does nothing on click. Give a card without its own
    timeline entry a target (the Freelance "Cold Comfort — Prototype" slide is the
    natural one) via data, not a special case in code.
-9. **U9** (card above) Timeline HUD collisions: time-machine box over the last bullet, nav
+9. ~~**U9** Timeline HUD collisions~~ — done 2026-10-03: time-machine box over the last bullet, nav
    dots over text at narrow widths.
-10. **U10** Starfield without WebGL: no uncaught error, a static star
+10. **U10** (card above) Starfield without WebGL: no uncaught error, a static star
     background instead.
 
 **Phase B — finish what is missing**
 
-B1. No-JS fallback that still shows all content (today the
-   portfolio and timeline are injected from `projects.json` by JS — with JS off
-   they are empty). Needs a design decision that keeps `projects.json` the
-   single source; record it here before building.
+B1. No-JS fallback that still shows all content. Seen in the U10 no-JS
+   screenshots: portfolio and timeline are empty (injected from
+   `projects.json` by JS), **every `.animate` element stays at opacity 0** (the
+   about text is invisible, not just the projects), and Chromium shows the hero
+   video's native controls when JS is off. Needs a design decision that keeps
+   `projects.json` the single source; record it here before building.
 B2. Timeline accessibility: slides announced (live region "slide x of N"),
    controls named, focus management on enter/exit, keyboard reaches every
    control.

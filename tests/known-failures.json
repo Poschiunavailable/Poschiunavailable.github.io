@@ -1,23 +1,5 @@
 [
   {
-    "code": "page-error",
-    "match": "Error creating WebGL context",
-    "variants": [
-      "no-webgl"
-    ],
-    "unit": "U10",
-    "reason": "background.js assumes WebGL; without it three.js throws and there is no static background."
-  },
-  {
-    "code": "console-error",
-    "match": "Error creating WebGL context",
-    "variants": [
-      "no-webgl"
-    ],
-    "unit": "U10",
-    "reason": "Same bug as the page error above: three.js (vendored since U6, so same-origin) logs it before throwing."
-  },
-  {
     "code": "budget",
     "unit": "B6",
     "reason": "Initial load over budget at desktop size: card and slide images (no srcset yet). Fonts/CSS/JS are within budget since U5/U6."

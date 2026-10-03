@@ -288,6 +288,17 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
     page.off('requestfinished', onFinished);
     if (variant === 'default' && BUDGET_VIEWPORTS.includes(vp)) await measureBudget(vp, base, cache, loadRequests);
 
+    // ── Exactly one starfield: the live canvas, or the static tile — never
+    //    both (doubled stars), never neither (blank sky). ──
+    const sky = await page.evaluate(() => {
+        const c = document.getElementById('canvas-container');
+        return { canvas: !!c?.querySelector('canvas'), tile: /starfield-static/.test(getComputedStyle(c).backgroundImage) };
+    });
+    const wantTile = variant === 'no-webgl' || variant === 'no-js';
+    if (sky.canvas === sky.tile || sky.tile !== wantTile) {
+        F('starfield', `expected ${wantTile ? 'static star tile' : 'live WebGL canvas'} only; got canvas=${sky.canvas} tile=${sky.tile}`);
+    }
+
     // ── No-JS: the content itself must be there ──
     if (variant === 'no-js') {
         // Only where the projects belong: titles also occur in the about copy.

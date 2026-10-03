@@ -6,12 +6,24 @@ document.addEventListener('DOMContentLoaded', () => {
 
   const reducedMotion = window.matchMedia('(prefers-reduced-motion: reduce)');
 
+  // No WebGL (disabled, blocklisted GPU, old device): fall back to the static
+  // star tile instead of a blank background. Probe with a plain canvas first —
+  // three.js logs an error before it throws, so try/catch alone isn't silent.
+  const useStaticStars = () => container.classList.add('starfield-static');
+  if (!hasWebGL()) { useStaticStars(); return; }
+
   // Scene / Camera / Renderer
   const scene = new THREE.Scene();
   const camera = new THREE.PerspectiveCamera(90, window.innerWidth / window.innerHeight, 0.1, 1000);
   camera.position.set(0, 0, 0);
 
-  const renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+  let renderer;
+  try {
+    renderer = new THREE.WebGLRenderer({ antialias: false, alpha: true });
+  } catch {
+    useStaticStars();
+    return;
+  }
   renderer.setSize(window.innerWidth, window.innerHeight);
   renderer.setPixelRatio(Math.min(window.devicePixelRatio || 1, 2));
   container.appendChild(renderer.domElement);
@@ -285,3 +297,15 @@ document.addEventListener('DOMContentLoaded', () => {
   });
   window.addEventListener('pageshow', () => { if (!document.hidden) startLoop(); });
 });
+
+function hasWebGL() {
+  try {
+    const canvas = document.createElement('canvas');
+    const gl = canvas.getContext('webgl2') || canvas.getContext('webgl');
+    // Free the probe's context right away; three.js creates its own.
+    gl?.getExtension('WEBGL_lose_context')?.loseContext();
+    return !!gl;
+  } catch {
+    return false;
+  }
+}
