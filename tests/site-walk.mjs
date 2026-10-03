@@ -26,6 +26,7 @@ import { promisify } from 'node:util';
 import { fileURLToPath } from 'node:url';
 import { startServer } from './lib/server.mjs';
 import { createThirdPartyCache } from './lib/thirdparty.mjs';
+import { applyStatic } from '../tools/render-static.mjs';
 
 const run = promisify(execFile);
 const HERE = path.dirname(fileURLToPath(import.meta.url));
@@ -93,6 +94,7 @@ const SELF_TEST_FAULTS = {
     'metadata':       ['/index.html', s => s.replace('content="1200"', 'content="1201"'), /disagree with the file/],
     'icons':          ['/site.webmanifest', s => s.replace('"192x192"', '"193x193"'), /declared 193x193/],
     'responsive':     ['/projects.json', s => { const d = JSON.parse(s); d[0].workTopics[0].image = 'assets/profile_picture.jpg'; return JSON.stringify(d); }, /profile_picture-480\.webp/],
+    'static-drift':   ['/projects.json', s => s.replace(/"title":\s*"Cold Comfort"/, '"title": "Cold Comfort (renamed)"'), /out of date/],
     'slide-overflow': ['/styles/cvstyle.css', s => s + '\n.project-slide[data-idx="1"] .topic-desc { padding-bottom: 150vh; }\n', /^slide 1 /],
 };
 function selfTestTransform(urlPath, buf) {
@@ -1011,6 +1013,16 @@ async function main() {
         refs: [],
     };
 
+    // The static HTML in index.html must be what tools/render-static.mjs makes
+    // from projects.json (B1: content without JS) — compared as served.
+    try {
+        const servedHtml = await (await fetch(base + 'index.html')).text();
+        if (applyStatic(servedHtml, projects) !== servedHtml) {
+            fail('-', '-', 'static-drift', 'index.html is out of date with projects.json — run: node tools/render-static.mjs');
+        }
+    } catch (e) {
+        fail('-', '-', 'static-drift', `static blocks: ${e.message}`);
+    }
     const marked = checkPlaceholders(projects);
     info.push(`responsive variants checked: ${await checkResponsive(base, projects)}`);
     // Images only the timeline uses must not load with the page (B6).

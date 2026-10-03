@@ -1,0 +1,150 @@
+/* Without JavaScript. html starts as .no-js and an inline script swaps it to
+   .js before first paint, so none of this applies when JS runs.
+   The static content comes from projects.json via tools/render-static.mjs. */
+
+/* The static timeline exists for no-JS only; with JS the slide timeline
+   replaces it. */
+.cv-static { display: none; }
+
+/* Scroll-in reveal needs JS; without it the content must simply be there. */
+.no-js .animate {
+    opacity: 1;
+    transform: none;
+}
+
+/* Chromium shows native controls on a video when JS is off. The reel is
+   decoration; the section reads fine without it. */
+.no-js #heroVideo { display: none; }
+
+/* ── CV: the chapters as a route on a star chart ──────────────────────────── */
+
+.no-js #cvIntro,
+.no-js #projectStage,
+.no-js #cvExit,
+.no-js #timeMachine,
+.no-js #cvProjectNav { display: none; }
+
+.no-js #cvSection {
+    display: block;
+    min-height: 0;
+    padding: 72px 20px 96px;
+}
+
+.no-js #cvSectionLabel {
+    position: static;
+    transform: none;
+}
+
+.no-js .cv-static {
+    display: block;
+    position: relative;
+    max-width: 760px;
+    margin: 40px auto 0;
+    padding: 0 0 0 36px;
+    list-style: none;
+}
+
+/* The route: a faint line linking the chapters… */
+.no-js .cv-static::before {
+    content: "";
+    position: absolute;
+    left: 11px;
+    top: 8px;
+    bottom: 8px;
+    width: 1px;
+    background: linear-gradient(rgba(129, 168, 209, 0), rgba(129, 168, 209, 0.5) 6%,
+        rgba(129, 168, 209, 0.5) 94%, rgba(129, 168, 209, 0));
+}
+
+.no-js .cv-static-chapter {
+    position: relative;
+    margin: 0 0 28px;
+    padding: 22px 24px;
+    border-radius: 14px;
+    background: var(--section-fill-alt);
+    border: 1px solid rgba(129, 168, 209, 0.14);
+}
+
+/* …and a star at each stop. */
+.no-js .cv-static-chapter::before {
+    content: "";
+    position: absolute;
+    left: -31px;
+    top: 26px;
+    width: 13px;
+    height: 13px;
+    background: var(--highlight-color);
+    clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+}
+
+.no-js .cv-static-dates {
+    margin: 0 0 6px;
+    font-family: var(--tertiary-font);
+    font-size: 0.75rem;
+    letter-spacing: 0.2em;
+    color: var(--highlight-color);
+}
+
+.no-js .cv-static-chapter h3 {
+    margin: 0 0 4px;
+    font-size: clamp(1.4rem, 3.4vw, 1.8rem);
+    color: var(--tertiary-color);
+}
+
+.no-js .cv-static-subtitle {
+    margin: 0 0 12px;
+    font-family: var(--tertiary-font);
+    font-size: 0.8rem;
+    color: var(--secondary-color);
+}
+
+.no-js .cv-static-chapter p { line-height: 1.65; }
+
+.no-js .cv-static-facts {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 10px 22px;
+    margin: 4px 0 14px;
+    font-size: 0.85rem;
+}
+.no-js .cv-static-facts dt {
+    font-family: var(--tertiary-font);
+    font-size: 0.68rem;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: rgba(174, 198, 228, 0.75);
+}
+.no-js .cv-static-facts dd { margin: 0; }
+
+.no-js .cv-static-topics {
+    margin: 8px 0 0;
+    padding: 0;
+    list-style: none;
+}
+.no-js .cv-static-topics > li {
+    margin-top: 16px;
+    padding-top: 14px;
+    border-top: 1px solid rgba(129, 168, 209, 0.12);
+}
+.no-js .cv-static-topics h4 {
+    margin: 0 0 6px;
+    font-family: var(--secondary-font);
+    font-size: 1.1rem;
+    color: var(--primary-color);
+}
+.no-js .cv-static-topics ul {
+    margin: 8px 0 0;
+    padding-left: 1.1em;
+    font-size: 0.92rem;
+    line-height: 1.55;
+}
+
+.no-js .cv-static-links { margin: 14px 0 0; }
+.no-js .cv-static-links a { margin-right: 14px; }
+
+@media (max-width: 480px) {
+    .no-js .cv-static { padding-left: 28px; }
+    .no-js .cv-static::before { left: 7px; }
+    .no-js .cv-static-chapter { padding: 18px 16px; }
+    .no-js .cv-static-chapter::before { left: -27px; }
+}
