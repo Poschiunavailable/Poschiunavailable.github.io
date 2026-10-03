@@ -130,7 +130,8 @@ below).
 ## Known quirks worth knowing before touching things
 
 - No build tooling at all: editing a module is directly editing what ships.
-  No TypeScript, no linter config, no test suite in this repo.
+  No TypeScript, no linter config. The only Node code is the dev-only test
+  harness in `tests/` (see "Testing" below) — nothing in it ships.
 - `timeline.js`'s wheel handling has hand-tuned constants (session-gap
   detection, cooldowns) to make one physical scroll click = one slide step
   across browsers that fragment wheel events. Read the comments before
@@ -194,3 +195,29 @@ python -m http.server 4173
 ```
 
 `.claude/launch.json` wires this up for the in-app browser preview.
+
+## Testing (`tests/`)
+
+```bash
+cd tests && npm install
+npm test              # site walk: 4 variants × 10 viewports (~12 min)
+npm run test:quick    # 3 viewports, all variants
+npm run test:self     # injects faults; passes only if the walk catches each
+npm run lighthouse    # Lighthouse mobile, median of 3
+```
+
+- `site-walk.mjs` serves the repo with `lib/server.mjs` (GitHub-Pages-like:
+  gzip, Range, `404.html`), then per viewport visits every section, opens the
+  mobile nav, steps every timeline slide, runs every card's warp jump and the
+  CV nav-link entry, and checks overflow, console/page errors and links.
+  Variants: `default`, `reduced-motion`, `no-webgl` (WebGL contexts return
+  null), `no-js`. Output: `tests/out/index.html` (contact sheet) and
+  `tests/out/report.json`.
+- The browser under test has no internet access: third-party requests are
+  answered from `tests/.cache/` (`lib/thirdparty.mjs`, filled once via curl).
+  `--offline` turns a cache miss into an error.
+- `known-failures.json` lists real bugs that are already scheduled in
+  `Docs/STATUS.md`. A failure that matches one is reported but doesn't fail the
+  run; a full run flags entries that no longer match so they get removed.
+- Every change that adds or alters a section, slide, state or interaction
+  extends the walk in the same commit.
