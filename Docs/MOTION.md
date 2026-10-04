@@ -56,3 +56,5 @@ From game feel practice — Jonasson & Purho, *Juice it or lose it* (GDC Europe
 | Star burst from the press point | primary buttons, cards | "Launch" — a press sets travel in motion |
 | Magnetic pull towards the pointer (desktop) | primary buttons | Gravity of a destination |
 | Underline drawn as a route line | text links | The constellation route, drawn on demand |
+| Gate charge: ψ packet narrows, date sharpens, charge line fills | CV gate, while scrolling towards it | Anticipation before a launch — the time machine locking onto its departure date |
+| Warp out: stage falls away at lightspeed, page fades in as the field slows | leaving the timeline | The return trip; the same starfield carries you back |

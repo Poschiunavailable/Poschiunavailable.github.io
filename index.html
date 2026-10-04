@@ -60,7 +60,7 @@
     <!-- Section heads and hero role (star-chart style, Docs/STATUS.md D9) -->
     <link rel="stylesheet" href="styles/headings.css">
     <link rel="stylesheet" href="styles/motion.css">
-    <!-- Exploration: science visuals (explore/science) -->
+    <!-- Science layer: atom, orrery, particle chart, ψ readout (modules/science.js) -->
     <link rel="stylesheet" href="styles/science.css">
     <link rel="stylesheet" href="styles/nojs.css">
     <!-- three.js is vendored (provenance: Docs/HISTORY.md "three.js"). Import
@@ -251,20 +251,23 @@
     <!-- CV / Timeline Section -->
     <section id="cv">
         <div id="cvSection">
+            <div id="cvGate">
             <div id="cvSectionLabel">
             <div class="section-head">
                 <p class="section-eyebrow" aria-hidden="true">Timeline</p>
                 <h2 class="section-title">The journey so far</h2>
             </div>
             </div>
-            <!-- Entering the timeline is deliberately an explicit action. It takes
-                 over scrolling, so it must never trigger just because the section
-                 drifted into view. -->
+            <!-- The gate: scrolling it to the centre launches the timeline
+                 (modules/timeline.js installScrollGate); the charge line fills
+                 on the way so the launch is expected, not sprung. -->
             <div id="cvIntro">
                 <p>Five chapters, one timeline — from university productions to automotive
                     sensor simulation.</p>
                 <button id="cvEnter" class="cta-button" type="button">Enter the time machine</button>
-                <p class="cv-note">Takes over scrolling — leave any time with Esc or the exit button.</p>
+                <span class="cv-charge" aria-hidden="true"><span></span></span>
+                <p class="cv-note">Keep scrolling to launch — leave any time with Esc or the exit button.</p>
+            </div>
             </div>
             <!-- Generated from projects.json by tools/render-static.mjs. Shown only
                  without JavaScript (styles/nojs.css). -->

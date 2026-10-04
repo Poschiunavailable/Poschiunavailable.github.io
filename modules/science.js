@@ -1,4 +1,4 @@
-// Science exploration (branch explore/science) — four visual ideas, each tied
+// Science layer (adopted from explore/science, STATUS D10) — four visual ideas, each tied
 // to "travel between projects" (Docs/MOTION.md):
 //   - atom:      electrons orbit the portrait in the hero; hover excites them
 //   - orrery:    the projects as planets orbiting "now" — click one to warp to it
@@ -248,49 +248,87 @@ function initParticles(projects) {
     });
 }
 
-// ── Collapse: the CV gate's year in superposition ───────────────────────────
+// ── Collapse: the CV gate's date in superposition ──────────────────────────
+// timeline.js measures how close the gate is to the centre and broadcasts it
+// as `timeline:gate` {charge}; charge 1 is the moment the jump launches. Until
+// then the date is uncertain: |ψ|² over the career is a wide, rippling packet
+// and the readout flickers between outcomes. As charge rises the packet
+// narrows onto the first start date and the readout settles — then collapses.
 
 const MONTHS = ['JAN', 'FEB', 'MAR', 'APR', 'MAY', 'JUN', 'JUL', 'AUG', 'SEP', 'OCT', 'NOV', 'DEC'];
 
 function initCollapse(projects) {
     const intro = document.getElementById('cvIntro');
-    const section = document.getElementById('cv');
-    if (!intro || !section) return;
+    if (!intro) return;
     const first = sorted(projects.filter(p => p.showInTimeline))[0];
     const [fy, fm] = String(first?.startDate || '2015-01').split('-').map(Number);
+    const y0 = fy, y1 = NOW.getFullYear();
     const readout = document.createElement('div');
     readout.className = 'psi';
     readout.setAttribute('aria-hidden', 'true');
-    readout.innerHTML = `<span class="psi-label">ψ(t)</span><span class="psi-value"><span class="psi-month">${MONTHS[fm - 1]}</span> <span class="psi-year">${fy}</span></span>`;
+    const W = 240, H = 44;
+    readout.innerHTML = `<svg class="psi-density" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
+            <path class="psi-fill" d=""/><path class="psi-line" d=""/>
+            <line class="psi-axis" x1="0" y1="${H - 0.5}" x2="${W}" y2="${H - 0.5}"/>
+        </svg>
+        <div class="psi-axis-labels"><span>${y0}</span><span>now</span></div>
+        <div class="psi-row"><span class="psi-label">ψ(t)</span><span class="psi-value"><span class="psi-month">${MONTHS[fm - 1]}</span> <span class="psi-year">${fy}</span></span></div>`;
     intro.prepend(readout);
-    if (REDUCED()) { readout.classList.add('is-collapsed'); return; }
-
+    const fill = readout.querySelector('.psi-fill'), line = readout.querySelector('.psi-line');
     const yearEl = readout.querySelector('.psi-year'), monthEl = readout.querySelector('.psi-month');
-    const y0 = fy, y1 = NOW.getFullYear();
-    let acc = 0, collapsed = false;
-    loopWhileVisible(readout, dt => {
-        // Observation = how close the gate is to the middle of the screen.
-        const r = intro.getBoundingClientRect();
-        const centre = r.top + r.height / 2;
-        const p = Math.max(0, Math.min(1, 1 - Math.abs(centre - innerHeight / 2) / (innerHeight * 0.55)));
-        const u = Math.max(0, 1 - p / 0.92);                     // uncertainty, 0 = collapsed
-        readout.style.setProperty('--u', u.toFixed(3));
-        if (u <= 0.001) {
-            if (!collapsed) {
-                collapsed = true;
-                yearEl.textContent = y0; monthEl.textContent = MONTHS[fm - 1];
-                readout.classList.remove('is-collapsed'); void readout.offsetWidth;
-                readout.classList.add('is-collapsed');
-            }
-            return;
+
+    // Where the first start date sits on the career axis (0…1).
+    const span = (y1 + 1) - y0;
+    const target = ((fy - y0) + (fm - 1) / 12) / span;
+    const POINTS = 72;
+    let phase = 0;
+    const draw = u => {
+        // Centre drifts from mid-career onto the start date; width shrinks with
+        // u; interference fringes ripple through the packet while uncertain.
+        const mu = target + (0.5 - target) * u;
+        const sigma = 0.012 + u * 0.32;
+        let top = '', pts = [];
+        for (let i = 0; i <= POINTS; i++) {
+            const x = i / POINTS;
+            const g = Math.exp(-((x - mu) ** 2) / (2 * sigma * sigma));
+            const fringe = 1 - u * 0.55 * (0.5 + 0.5 * Math.cos(x * 38 - phase));
+            pts.push([x * W, H - 2 - g * fringe * (H - 6)]);
         }
+        top = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join('');
+        line.setAttribute('d', top);
+        fill.setAttribute('d', `${top}L${W} ${H}L0 ${H}Z`);
+    };
+
+    let u = 1, collapsed = false;
+    const settle = () => {
+        collapsed = true;
+        yearEl.textContent = y0; monthEl.textContent = MONTHS[fm - 1];
+        readout.style.setProperty('--u', '0');
+        readout.classList.remove('is-collapsed'); void readout.offsetWidth;
+        readout.classList.add('is-collapsed');
+        draw(0);
+    };
+    if (REDUCED()) { settle(); return; }
+    window.addEventListener('timeline:gate', e => { u = 1 - e.detail.charge; });
+
+    let acc = 0;
+    draw(1);
+    loopWhileVisible(readout, dt => {
+        readout.style.setProperty('--u', u.toFixed(3));
+        if (u <= 0.001) { if (!collapsed) settle(); return; }
         if (collapsed) { collapsed = false; readout.classList.remove('is-collapsed'); }
+        phase += dt * (1.5 + u * 4);              // integrated (AGENTS.md)
+        draw(u);
         // The more uncertain, the faster the readout flickers through history.
         acc += dt;
         if (acc > 0.04 + (1 - u) * 0.22) {
             acc = 0;
-            yearEl.textContent = y0 + Math.floor(Math.random() * (y1 - y0 + 1));
-            monthEl.textContent = MONTHS[Math.floor(Math.random() * 12)];
+            // Sample an outcome from the packet's neighbourhood, not uniformly.
+            // Never before the first start date: that outcome doesn't exist.
+            const x = Math.max(target, Math.min(0.999, target + (0.5 - target) * u + (Math.random() - 0.5) * (0.05 + u * 1.1)));
+            const t = x * span;
+            yearEl.textContent = y0 + Math.floor(t);
+            monthEl.textContent = MONTHS[Math.floor((t % 1) * 12)];
         }
     });
 }

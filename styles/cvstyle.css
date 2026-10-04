@@ -17,11 +17,24 @@
 
 /* ── Section label (visible before immersive) ───────────────────────────────── */
 
+/* The gate (label + entry panel) is in normal flow and sets the section's
+   height: at least one viewport, taller if the content needs it. It used to be
+   two absolutely positioned layers over the stage, which overlapped once the
+   ψ readout made the panel taller on phones. */
+#cvGate {
+    width: 100%;
+    min-height: 100vh;
+    min-height: 100svh;
+    box-sizing: border-box;
+    padding: 48px 16px;
+    display: flex;
+    flex-direction: column;
+    align-items: center;
+    justify-content: center;
+    gap: clamp(20px, 5vh, 44px);
+}
+
 #cvSectionLabel {
-    position: absolute;
-    top: 48px;
-    left: 50%;
-    transform: translateX(-50%);
     text-align: center;
     transition: opacity 0.4s ease;
 }
@@ -37,16 +50,13 @@ body.timeline-warping #cvSectionLabel {
     pointer-events: none;
 }
 
-/* ── Entry panel (explicit opt-in) ───────────────────────────────────────────
-   Replaces the old "scroll to enter" hint. Immersive mode takes over page
-   scrolling, so it is entered by a button press, never by scroll position. */
+/* ── Entry panel: the gate ───────────────────────────────────────────────────
+   The button enters at once; scrolling the gate to the centre launches too
+   (timeline.js installScrollGate). --charge (0…1) is set on #cvIntro as the
+   gate nears the centre and fills the charge line — the anticipation beat. */
 
 #cvIntro {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    transform: translate(-50%, -50%);
-    width: min(560px, 86vw);
+    width: min(560px, 100%);
     text-align: center;
     transition: opacity 0.4s ease;
 }
@@ -74,6 +84,24 @@ body.timeline-warping #cvSectionLabel {
     opacity: 1;
 }
 
+#cvIntro .cv-charge {
+    display: block;
+    width: 168px;
+    height: 2px;
+    margin: 16px auto 0;
+    border-radius: 2px;
+    background: rgba(129, 168, 209, 0.22);
+    overflow: hidden;
+}
+#cvIntro .cv-charge span {
+    display: block;
+    height: 100%;
+    background: linear-gradient(90deg, var(--tertiary-color), var(--highlight-color));
+    transform-origin: 50% 50%;
+    transform: scaleX(var(--charge, 0));
+    opacity: calc(0.4 + var(--charge, 0) * 0.6);
+}
+
 body.timeline-immersive #cvIntro,
 body.timeline-warping #cvIntro {
     opacity: 0;
@@ -89,10 +117,9 @@ body.timeline-warping #cvIntro {
 /* ── Project Stage (full viewport canvas) ────────────────────────────────────── */
 
 #projectStage {
-    position: relative;
+    position: absolute;
+    inset: 0;
     width: 100%;
-    height: 100vh;
-    height: 100svh;
     opacity: 0;
     pointer-events: none;
     transition: opacity 0.3s ease;
@@ -1066,4 +1093,44 @@ body.timeline-arriving #cvProjectNav {
         animation: none;
     }
     body.timeline-warping #canvas-container { filter: none; }
+}
+
+/* ── Departure ───────────────────────────────────────────────────────────────
+   leaveTimeline(): the stage falls away while the starfield hits lightspeed,
+   then (body.timeline-returning) the page fades back in as it slows down. */
+
+body.timeline-departing #projectStage {
+    animation: warpDepartStage 340ms cubic-bezier(0.5, 0, 0.75, 0) forwards;
+    transition: none;
+}
+
+@keyframes warpDepartStage {
+    0%   { opacity: 1; transform: scale(1);    filter: blur(0); }
+    100% { opacity: 0; transform: scale(0.92); filter: blur(8px); }
+}
+
+body.timeline-departing #timeMachine,
+body.timeline-departing #cvExit,
+body.timeline-departing #cvProjectNav,
+body.timeline-departing #timelineBackdrop {
+    opacity: 0;
+    transition: opacity 200ms ease;
+}
+
+body.timeline-returning header,
+body.timeline-returning main,
+body.timeline-returning footer {
+    animation: warpReturnPage 560ms cubic-bezier(0.16, 1, 0.3, 1) backwards;
+}
+
+@keyframes warpReturnPage {
+    0% { opacity: 0; }
+    100% { opacity: 1; }
+}
+
+@media (prefers-reduced-motion: reduce) {
+    body.timeline-departing #projectStage,
+    body.timeline-returning header,
+    body.timeline-returning main,
+    body.timeline-returning footer { animation: none; }
 }

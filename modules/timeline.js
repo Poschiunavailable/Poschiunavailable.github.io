@@ -56,6 +56,18 @@ export function initTimeline(projects) {
     const FLY_FADE_MS             = 320;   // Page fade-out before we switch
     const FLY_WARP_MS             = 430;   // Time spent at lightspeed
     const ARRIVE_MS               = 640;   // Bloom + settle on landing
+    const DEPART_MS               = 340;   // Stage falls away before we drop out of warp
+    const RETURN_MS               = 560;   // Page fades back in around the starfield
+
+    // Scroll gate (#cvIntro). Distances are in viewport heights, measured from
+    // the gate's centre to the viewport's centre. Charge rises from 0 at
+    // GATE_RANGE to 1 at GATE_TRIGGER, where the jump launches.
+    const GATE_RANGE              = 0.55;
+    const GATE_TRIGGER            = 0.045;
+    const GATE_REARM              = 0.6;   // must leave this far before it can fire again
+    const GATE_INPUT_MS           = 450;   // only scrolling the user is doing right now counts
+    const GATE_COOLDOWN_MS        = 700;   // after leaving, before the gate can fire again
+    const GATE_HOLD_MS            = 600;   // wheel ignored this long after a gate launch
 
     const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
@@ -80,10 +92,14 @@ export function initTimeline(projects) {
         lastScrollDir:    0,
         lastTs:           0,
         lastExitTs:       0,
+        inputHoldUntil:   0,
+        returnTimer:      0,
         lastWheelStepTs:  0,
         lastWheelEventTs: 0,
         touchActive:      false,
-        flying:           false,   // a warp jump is in progress
+        flying:           false,   // a warp jump (in or out) is in progress
+        departing:        false,   // the jump out, see leaveTimeline()
+        exitDir:          'top',
         returnFocus:      null,    // element to refocus when leaving the timeline
         arriveTimer:      0,
         touchStartY:      0,
@@ -102,6 +118,7 @@ export function initTimeline(projects) {
         navEl:     document.getElementById('cvProjectNav'),
         announce:  document.getElementById('cvAnnounce'),
         enterBtn:  document.getElementById('cvEnter'),
+        intro:     document.getElementById('cvIntro'),
     };
 
     if (!els.cvSection || !els.stage) {
@@ -112,6 +129,7 @@ export function initTimeline(projects) {
     buildSlides();
     buildNavDots();
     installEnterTriggers();
+    installScrollGate();
     installKeyboard();
     installExitButton();
     listenPortfolioSelect();
@@ -293,13 +311,8 @@ export function initTimeline(projects) {
 
     // ── Entry / Exit ───────────────────────────────────────────────────────────
 
-    // Entry is EXPLICIT only.
-    //
-    // This used to be an IntersectionObserver that flipped into immersive mode
-    // as soon as the CV section covered half the viewport. That meant anyone
-    // scrolling down the page got their scrolling taken away without asking for
-    // it — the single most hostile thing the site did. Now it takes a deliberate
-    // action: the section's own button, the CV nav link, or a portfolio card.
+    // Four ways in: the section's own button, the CV nav link, a portfolio card
+    // (or orrery planet), and scrolling through the gate (installScrollGate).
     function installEnterTriggers() {
         const enterBtn = document.getElementById('cvEnter');
         if (enterBtn) enterBtn.addEventListener('click', () => flyToProject(0));
@@ -312,6 +325,76 @@ export function initTimeline(projects) {
                 setTimeout(() => { if (!S.immersive) flyToProject(0); }, 120);
             });
         });
+    }
+
+    // Scroll gate: scrolling the page into the timeline launches it, so
+    // nobody has to find a button. History: an IntersectionObserver used to
+    // grab scrolling the moment the section was half visible, which felt like
+    // being hijacked (Docs/HISTORY.md, round 3). The gate differs on purpose:
+    //   - it is telegraphed: the ψ readout and the charge line fill as the gate
+    //     nears the centre (`timeline:gate`), so the launch is anticipated;
+    //   - it fires only on scrolling the user is doing (wheel, touch, scroll
+    //     keys), never on a nav link's smooth scroll or a focus jump;
+    //   - it is directional: from above it lands on the first slide, from
+    //     below (scrolling back up) on the last;
+    //   - after leaving, it re-arms only once the gate is well off centre.
+    // Crossing the centre between two frames counts too, so a fast fling
+    // cannot skip it.
+    function installScrollGate() {
+        if (!els.intro) return;
+        const SCROLL_KEYS = new Set([' ', 'PageDown', 'PageUp', 'ArrowDown', 'ArrowUp', 'Home', 'End']);
+        let lastInputTs = -Infinity, lastY = window.scrollY, lastOff = null, armed = true, queued = false, lastCharge = -1;
+        const input = () => { lastInputTs = performance.now(); };
+        window.addEventListener('wheel', input, { passive: true });
+        window.addEventListener('touchmove', input, { passive: true });
+        window.addEventListener('keydown', e => {
+            if (SCROLL_KEYS.has(e.key) && !e.target.closest?.('input, textarea, select, button, a, [contenteditable]')) input();
+        });
+
+        const check = () => {
+            queued = false;
+            const y = window.scrollY, dir = Math.sign(y - lastY);
+            lastY = y;
+            if (S.immersive || S.flying) { lastOff = null; return; }
+            const r = els.intro.getBoundingClientRect();
+            const off = (r.top + r.height / 2 - window.innerHeight / 2) / window.innerHeight;   // + = below centre
+            const charge = Math.max(0, Math.min(1, (GATE_RANGE - Math.abs(off)) / (GATE_RANGE - GATE_TRIGGER)));
+            if (Math.abs(charge - lastCharge) > 0.002) {
+                lastCharge = charge;
+                els.intro.style.setProperty('--charge', charge.toFixed(3));
+                window.dispatchEvent(new CustomEvent('timeline:gate', { detail: { charge } }));
+            }
+            if (Math.abs(off) > GATE_REARM) armed = true;
+            const crossed = lastOff !== null && Math.sign(lastOff) !== Math.sign(off);
+            lastOff = off;
+            const now = performance.now();
+            if (!armed || !dir || (Math.abs(off) > GATE_TRIGGER && !crossed)) return;
+            if (now - lastInputTs > GATE_INPUT_MS || now - S.lastExitTs < GATE_COOLDOWN_MS) return;
+            armed = false;
+            S.returnFocus = null;
+            // The scroll that launched us is still going; don't let its tail
+            // step past the landing slide (no warp delay under reduced motion).
+            S.inputHoldUntil = now + GATE_HOLD_MS;
+            flyToProject(dir > 0 ? 0 : N - 1);
+        };
+        const queue = () => { if (!queued) { queued = true; requestAnimationFrame(check); } };
+        window.addEventListener('scroll', queue, { passive: true });
+        window.addEventListener('resize', queue);
+        queue();
+    }
+
+    // Leaving by scrolling past either end, Escape or the exit button: the
+    // reverse of the warp jump — the stage falls away at lightspeed, then the
+    // page fades back in around the starfield as it slows down.
+    function leaveTimeline(direction) {
+        if (!S.immersive || S.flying) return;
+        if (REDUCED) { exitImmersive(direction); return; }
+        S.flying = true;
+        S.departing = true;
+        S.exitDir = direction;
+        document.body.classList.add('timeline-departing');
+        setWarp(WARP_JUMP, 7);
+        setTimeout(() => { if (S.departing) exitImmersive(direction); }, DEPART_MS);
     }
 
     function enterImmersive({ silent = false } = {}) {
@@ -349,7 +432,7 @@ export function initTimeline(projects) {
         // clear its classes so the page isn't left faded out or mid-bloom.
         S.flying = false;
         clearTimeout(S.arriveTimer);
-        document.body.classList.remove('timeline-warping', 'timeline-arriving');
+        document.body.classList.remove('timeline-warping', 'timeline-arriving', 'timeline-departing');
 
         S.slides.forEach((slide) => {
             const { el } = slide;
@@ -378,7 +461,16 @@ export function initTimeline(projects) {
         window.scrollTo({ top: scrollDest, behavior: 'auto' });
 
         S.lastExitTs = performance.now();
-        setWarp(1.0);
+        // Drop out of warp gradually after a departure, at once otherwise.
+        if (S.departing && !REDUCED) {
+            setWarp(1.0, 3.5);
+            document.body.classList.add('timeline-returning');
+            clearTimeout(S.returnTimer);
+            S.returnTimer = setTimeout(() => document.body.classList.remove('timeline-returning'), RETURN_MS);
+        } else {
+            setWarp(1.0);
+        }
+        S.departing = false;
 
         S.slides.forEach(({ el }) => { el.inert = true; });
         setPageInert(false);
@@ -447,6 +539,7 @@ export function initTimeline(projects) {
         if (Math.abs(e.deltaY) < WHEEL_MIN_DELTA) return;
 
         const now = performance.now();
+        if (now < S.inputHoldUntil) { S.lastWheelEventTs = now; return; }
         const gapSinceLastEvent = now - S.lastWheelEventTs;
         S.lastWheelEventTs = now;
 
@@ -500,8 +593,8 @@ export function initTimeline(projects) {
     }
 
     function checkBoundaryExit() {
-        if (S.targetPos < -EXIT_OVER)              exitImmersive('top');
-        else if (S.targetPos > N - 1 + EXIT_OVER)  exitImmersive('bottom');
+        if (S.targetPos < -EXIT_OVER)              leaveTimeline('top');
+        else if (S.targetPos > N - 1 + EXIT_OVER)  leaveTimeline('bottom');
     }
 
     // ── Keyboard ───────────────────────────────────────────────────────────────
@@ -526,7 +619,9 @@ export function initTimeline(projects) {
                 e.preventDefault();
                 S.targetPos = N - 1; S.lastScrollDir = 1;
             } else if (e.key === 'Escape') {
-                exitImmersive('top');
+                // Mid-jump (either way) Escape cuts straight out.
+                if (S.flying) exitImmersive(S.departing ? S.exitDir : 'top');
+                else leaveTimeline('top');
             }
         });
     }
@@ -538,7 +633,7 @@ export function initTimeline(projects) {
     function installExitButton() {
         const btn = document.getElementById('cvExit');
         if (!btn) return;
-        btn.addEventListener('click', () => exitImmersive('top'));
+        btn.addEventListener('click', () => leaveTimeline('top'));
     }
 
     // ── Portfolio Card → Timeline ──────────────────────────────────────────────

@@ -1,4 +1,4 @@
-/* Science exploration (branch explore/science): atom, orrery, Standard Model
+/* Science layer (STATUS D10): atom, orrery, Standard Model
    particles, wave-function collapse. Behaviour: modules/science.js.
    Family colours follow the conventional Standard Model chart (purple
    quarks, green leptons, red gauge bosons, yellow Higgs), tuned to the site's
@@ -273,14 +273,35 @@
 
 .psi {
     --u: 1;
-    display: inline-flex;
-    align-items: baseline;
-    gap: 12px;
-    margin-bottom: 18px;
+    display: grid;
+    justify-items: center;
+    width: 240px;
+    margin: 0 auto 16px;
     font-family: var(--tertiary-font);
 }
+.psi-density { display: block; overflow: visible; }
+.psi-fill { fill: rgba(129, 168, 209, calc(0.10 + (1 - var(--u)) * 0.18)); }
+.psi-line {
+    fill: none;
+    stroke: var(--highlight-color);
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+    opacity: calc(0.55 + (1 - var(--u)) * 0.45);
+}
+.psi-axis { stroke: rgba(129, 168, 209, 0.35); stroke-width: 1; }
+.psi-axis-labels {
+    display: flex;
+    justify-content: space-between;
+    width: 100%;
+    margin-top: 3px;
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: rgba(174, 198, 228, 0.7);
+}
+.psi-row { display: inline-flex; align-items: baseline; gap: 12px; margin-top: 6px; }
 .psi-label { font-size: 0.85rem; color: rgba(174, 198, 228, 0.75); }
 .psi-value {
+    display: inline-block;
     font-size: 1.6rem;
     font-weight: 700;
     letter-spacing: 0.06em;
@@ -296,9 +317,14 @@
     color: var(--highlight-color);
     animation: psi-collapse 520ms var(--ease-spring);
 }
+.psi.is-collapsed .psi-line { filter: drop-shadow(0 0 4px rgba(234, 177, 128, 0.9)); }
 @keyframes psi-collapse {
     0% { transform: scale(1.35); text-shadow: 0 0 24px rgba(234, 177, 128, 0.9); }
     100% { transform: scale(1); text-shadow: 0 0 0 transparent; }
+}
+@media (max-height: 620px) {
+    .psi-density, .psi-axis-labels { display: none; }
+    .psi { margin-bottom: 8px; }
 }
 
 /* ── Reduced motion ───────────────────────────────────────────────────── */

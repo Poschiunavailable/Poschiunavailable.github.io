@@ -123,6 +123,7 @@ const SELF_TEST_FAULTS = {
     'responsive':     ['/projects.json', s => { const d = JSON.parse(s); d[0].workTopics[0].image = 'assets/profile_picture.jpg'; return JSON.stringify(d); }, /profile_picture-480\.webp/],
     'static-drift':   ['/projects.json', s => s.replace(/"title":\s*"Cold Comfort"/, '"title": "Cold Comfort (renamed)"'), /out of date/],
     'slide-overflow': ['/styles/cvstyle.css', s => s + '\n.project-slide[data-idx="1"] .topic-desc { padding-bottom: 150vh; }\n', /^slide 1 /],
+    'gate-enter':     ['/modules/timeline.js', s => s.replace('installScrollGate();', ''), /scrolling down through the CV gate/],
 };
 function selfTestTransform(urlPath, buf) {
     let s = null;
@@ -737,6 +738,54 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
         F('timeline-enter', `CV nav link did not enter the timeline at slide 0 (${JSON.stringify(diag)})`, await shoot('nav-cv-failed'));
     }
     else await exitTimeline('nav link');
+
+    // ── Scroll gate: scrolling through the CV gate launches the timeline ──
+    // Only scrolling the user does counts (wheel here); a nav link's smooth
+    // scroll past the gate must not. From above it lands on the first slide;
+    // scrolling past the last slide leaves downwards, and scrolling back up
+    // re-enters on the last slide.
+    if (variant !== 'no-js') {
+        const imm = () => page.evaluate(() => document.body.classList.contains('timeline-immersive'));
+        const settledOut = () => page.waitForFunction(() => !/timeline-/.test(document.body.className), null, { timeout: 3000 }).catch(() => {});
+        await page.evaluate(() => document.getElementById('portfolio').scrollIntoView({ behavior: 'instant' }));
+        await page.waitForTimeout(800);                       // the gate's cooldown after the last exit
+        await page.evaluate(() => document.getElementById('contact').scrollIntoView({ behavior: 'smooth' }));
+        await page.waitForTimeout(1500);
+        if (await imm()) { F('gate-hijack', 'a programmatic (nav-link) scroll past the CV gate launched the timeline'); await exitTimeline('gate hijack'); }
+        await page.evaluate(() => document.getElementById('portfolio').scrollIntoView({ behavior: 'instant' }));
+        await page.waitForTimeout(300);
+        await page.mouse.move(w / 2, h / 2);
+        let entered = false, charged = false;
+        for (let i = 0; i < 90 && !entered; i++) {
+            await page.mouse.wheel(0, 90);
+            await page.waitForTimeout(50);
+            entered = await imm();
+            const charge = await page.evaluate(() => parseFloat(getComputedStyle(document.getElementById('cvIntro')).getPropertyValue('--charge')) || 0);
+            if (!entered && charge > 0.45 && !charged) { charged = true; if (variant === 'default') await shoot('gate-charging'); }
+        }
+        if (!entered) F('gate-enter', 'scrolling down through the CV gate did not launch the timeline', await shoot('gate-enter-failed'));
+        else if (!charged && variant === 'default') F('gate-enter', 'the gate launched without charging first (no anticipation)');
+        if (entered && !(await waitFocus(0))) F('gate-enter', `scrolling into the timeline did not settle on slide 0 (state ${JSON.stringify(await state())})`);
+        else if (entered) {
+            await page.keyboard.press('End');
+            await waitFocus(expect.slides - 1);
+            let left = false;
+            for (let i = 0; i < 8 && !left; i++) { await page.mouse.wheel(0, 100); await page.waitForTimeout(400); left = !(await imm()); }
+            if (!left) F('gate-exit', 'scrolling past the last slide did not leave the timeline');
+            else {
+                await settledOut();
+                const off = await page.evaluate(() => { const r = document.getElementById('cvIntro').getBoundingClientRect(); return (r.top + r.height / 2 - innerHeight / 2) / innerHeight; });
+                if (off > 0) F('gate-exit', `leaving past the last slide landed above the timeline (gate offset ${off.toFixed(2)})`);
+                await page.waitForTimeout(800);
+                let back = false;
+                for (let i = 0; i < 90 && !back; i++) { await page.mouse.wheel(0, -90); await page.waitForTimeout(50); back = await imm(); }
+                if (!back) F('gate-reverse', 'scrolling back up through the CV gate did not re-enter the timeline');
+                else if (!(await waitFocus(expect.slides - 1))) F('gate-reverse', `scrolling up into the timeline did not land on the last slide (state ${JSON.stringify(await state())})`);
+                else cov.gate = true;
+                if (back) { await exitTimeline('gate reverse'); await settledOut(); }
+            }
+        }
+    }
 
     if (variant === 'reduced-motion') {
         const seen = await page.evaluate(() => window.__walk.warpSeen);

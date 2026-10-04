@@ -5,6 +5,18 @@ measured. Append-only and historical — statements here describe the site *at
 that date*. Current state, open work and questions live in `STATUS.md`; the
 quality bars and test viewports live in `QUALITY.md`.
 
+## C3 scroll gate (2026-10-04)
+
+- Round 3's "explicit entry only" rule is superseded (STATUS D11): scrolling
+  through a telegraphed gate launches the timeline, scrolling past either end
+  warps out. Measured with real wheel input: a nav-link smooth scroll through
+  the section does not launch; wheel-down launches at charge 1 after ~5 wheel
+  clicks of visible charging; past the last slide lands below the section;
+  scrolling back up re-enters on the last slide.
+- Found on the way: under reduced motion the tail of the launching scroll
+  stepped one slide past the landing (no warp delay to absorb it) — fixed with
+  a 600 ms wheel hold after a gate launch.
+
 ## Audit (2026-08-07)
 
 Audit 2026-08-07; fixes applied same day. Everything under **Fixed** was

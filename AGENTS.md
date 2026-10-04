@@ -61,12 +61,15 @@ These are deliberate decisions, not oversights. Don't "fix" them:
 | `portfolio.js` | Builds portfolio cards from `projects.json` into `#portfolioGrid`. 3D tilt/scale hover effect. Clicking a card doesn't open a modal — it dispatches `portfolio:selectProject` (`{id}`), which `timeline.js` listens for. |
 | `timeline.js` | The CV/timeline section (`#cv`). Biggest/most complex module — a custom slide-based "virtual scroll" (like apple.com product pages): each project becomes one hero slide + one slide per `workTopics[]` entry, all flattened into `slideData`. Wheel/touch/keyboard input moves a `virtualPos` that LERPs toward an integer `targetPos`; scrolling into `#cv` far enough triggers "immersive mode" which locks page scroll and takes over input. Drives the `#timeMachine` date HUD by interpolating each project's `startDate`/`endDate` across its slides. |
 | `background.js` | Three.js starfield background (`#canvas-container`), independent of the rest — reacts to mouse/gyro tilt and scroll position, and listens for `timeline:warpSpeed` (dispatched by `timeline.js` on entering/exiting immersive mode) to trigger a hyperspace streak effect. |
+| `science.js` | The science layer (decision D10): electron orbits round the hero portrait, the orrery (portfolio projects as planets; click = warp jump), the Standard Model chart of the stack (from `projects.json` tags), and the ψ readout on the CV gate. Every loop runs only while on screen and integrates its phase per frame. |
+| `motion.js` | Magnetic primary buttons and the star burst on press (Docs/MOTION.md). |
 | `images.js` | `srcsetFor(path)`: the responsive-variant naming convention shared by cards and topic slides. |
 | `vendor/` | Third-party code, vendored and pinned: `three-0.151.3.module.min.js` (mapped to `"three"` by the import map in `index.html`) + its MIT licence. Provenance and why it isn't upgraded: `Docs/HISTORY.md` "three.js". The site loads nothing from third-party origins. |
 
-Cross-module coupling is intentionally just two `CustomEvent`s on `window`:
-`portfolio:selectProject` (portfolio → timeline) and `timeline:warpSpeed`
-(timeline → background). No shared state module, no framework store.
+Cross-module coupling is intentionally just three `CustomEvent`s on `window`:
+`portfolio:selectProject` (portfolio/orrery → timeline), `timeline:warpSpeed`
+(timeline → background) and `timeline:gate` (`{charge}`, timeline → the ψ
+readout in science.js). No shared state module, no framework store.
 
 ## Styles (`styles/`)
 
@@ -76,7 +79,8 @@ Loaded individually via `<link>` in `index.html`, in this order:
 `cvstyle.css` (large — styles the timeline/slide system), `contact.css`,
 `headings.css` (section heads and hero role: the "star chart" style — Lora
 titles, letter-spaced eyebrows between four-point stars, a constellation line
-into each head; also used by `404.html`), `nojs.css` (everything under
+into each head; also used by `404.html`), `motion.css` (interaction states,
+star burst — Docs/MOTION.md), `science.css` (the science layer), `nojs.css` (everything under
 `html.no-js`; an inline script in `<head>` swaps it to `.js` before first
 paint).
 
@@ -201,12 +205,18 @@ directions.
   to the opener two frames later (the sections return from `visibility:hidden`
   through a transition, so the opener isn't focusable sooner), else to
   `#cvEnter`.
-- **Immersive mode is entered explicitly, never by scroll position.** There
-  used to be an IntersectionObserver that hijacked scrolling the moment the CV
-  section filled half the viewport. It is gone on purpose. The three entry
-  points are the `#cvEnter` button, the CV nav link, and a portfolio card —
-  all of them route through `flyToProject()`. Do not reintroduce scroll-based
-  entry.
+- **Scrolling enters the timeline only through the gate** (`installScrollGate()`,
+  decision D11). The round-3 IntersectionObserver grabbed scrolling the moment
+  the CV section was half visible and felt like a hijack; the gate is the
+  replacement, and each of its rules answers part of that complaint: it charges
+  visibly first (`--charge` on `#cvIntro`, `timeline:gate` → the ψ readout),
+  fires only on scrolling the user is doing right now (wheel/touch/scroll keys —
+  not nav-link smooth scrolls or focus jumps), is directional (from below it
+  lands on the last slide), re-arms only when the gate is well off centre, and
+  ignores the launching scroll's tail. Keep all of those if you touch it. The
+  other entries — `#cvEnter`, the CV nav link, a portfolio card or orrery
+  planet — route through `flyToProject()` too. Leaving (past either end,
+  Escape, exit button) goes through `leaveTimeline()`: the warp in reverse.
 - `projects.json` `details` is a free-form key/value map rendered as the fact
   list on hero slides; keys are shown in author order, so any project can
   define its own. It is hidden under `max-height: 620px` where vertical space

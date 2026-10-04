@@ -14,14 +14,32 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | S1 — Science exploration (branch `explore/science`) |
-| **Phase** | C (exploration; Patrick asked 2026-10-04) |
-| **Goal** | Visual directions inspired by orbiting planets, atom models, wave-function collapse and the Standard Model, with animation — on a test branch, as with the heading styles. Decides how C3 (portfolio → CV transition) and C4/C5 look. |
-| **Acceptance check** | Branch pushed; each idea tied to "travel between projects" (MOTION.md rule); walked (no errors, reduced motion respected, phone perf probe passes); comparison screenshots/frames sent to Patrick. |
-| **Files** | on `explore/science` only |
-| **Step reached** | Built, walked and pushed (`explore/science` @ origin); comparison sheet sent. **Waiting for Patrick's pick.** Then: C3 launch sequence, C4 parallax depth, C5 reveal choreography (Patrick's animation pass, 2026-10-04). |
+| **Unit** | S2 — Science pieces, deeper: quantum field, Feynman lines, orrery that scales, atom trails |
+| **Phase** | C (Patrick, 2026-10-04: keep the science direction, add quantum field theory, make each piece fancier, keep performance) |
+| **Goal** | Each science piece gains one richer layer without a measurable perf cost: a quantum-field lattice behind the particle chart (particles as ripples in their field), Feynman-style interaction lines between particles that share projects, an orrery that sizes itself for any number of projects (plus moons = work topics, day/night terminators), electron trails and a quantum jump on the atom. |
+| **Acceptance check** | Walk green (all variants); perf probe and page-scroll comparison at CPU ×4 no worse than before; orrery checked with 6 and 14 projects; reduced motion static; screenshots sent. |
+| **Files** | `modules/science.js`, `styles/science.css`, `tests/site-walk.mjs`, docs |
+| **Step reached** | Not started. **C3 (scroll gate) done** — see below. |
 
-**S1 result.** Four pieces, each tied to travel between projects:
+### C3 — Scroll gate and warp-out (done 2026-10-04)
+
+Patrick: "I would still like some auto-transition when scrolling into the cv
+section and scrolling out of it." Scrolling the gate (#cvIntro) to the centre
+now launches the warp jump; scrolling past either end of the timeline warps
+back out (stage falls away at lightspeed, page fades back in as the field
+slows). Designed against the round-3 hijack complaint: the launch is
+telegraphed (ψ packet narrows, date sharpens, charge line fills from half a
+viewport out), fires only on scrolling the user is doing (wheel, touch,
+scroll keys — never a nav link's smooth scroll or a focus jump), is
+directional (from below it lands on the last slide), re-arms only once the
+gate is well off centre, and swallows the launching scroll's tail for 600 ms
+(under reduced motion that tail skipped a slide — found by the walk). The
+gate (label + panel) is now in normal flow instead of two absolute layers,
+which had overlapped on phones once the ψ curve made the panel taller. Walk:
+new checks gate-hijack / gate-enter (+ must charge first) / gate-exit /
+gate-reverse, and a self-test fault that removes the gate.
+
+**S1 result** (adopted by Patrick, D10). Four pieces, each tied to travel between projects:
 
 | Idea | Where | What it does | Travel tie |
 |---|---|---|---|
@@ -430,3 +448,5 @@ Collected here; asked together rather than one by one.
 | D7 | 2026-10-03 | Real bugs the walk finds but a later unit fixes go in `tests/known-failures.json` with that unit's id. They are reported, don't fail the run, and a full run flags entries that stop matching. | Keeps the walk green-meaningful without hiding bugs or deleting checks. |
 | D8 | 2026-10-03 | Icons are a raster set made from Patrick's PT brush logo (`tools/make-icons.py`), not an SVG; QUALITY.md's favicon bar changed accordingly. | The logo is a brush mark; a traced SVG would be a different mark. Keeping his own logo beats a cleaner generic icon. |
 | D9 | 2026-10-03 | Heading style: **star chart** (exploration B), chosen by Patrick. Merged from `explore/star-chart`; `explore/flight-log` and `explore/terminal` stay on the remote as references until Patrick says to delete them. | Patrick's pick; it was also the recommendation — reads designed rather than templated, and the route-between-stars motif extends the warp jump. |
+| D10 | 2026-10-04 | **Science direction adopted** (atom, orrery, Standard Model chart, ψ collapse) — merged from `explore/science`. | Patrick's pick ("I really like the science approach, I would like to keep it"). |
+| D11 | 2026-10-04 | **Scrolling enters and leaves the timeline** again, through a telegraphed gate (C3). Supersedes the round-3 "explicit entry only" rule. | Patrick asked for it; the gate's charge, user-input-only trigger, direction and re-arm distance address what made the old observer hostile. |
