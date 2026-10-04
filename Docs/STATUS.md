@@ -19,7 +19,24 @@ only merged into with Patrick's go-ahead.
 | **Goal** | Visual directions inspired by orbiting planets, atom models, wave-function collapse and the Standard Model, with animation — on a test branch, as with the heading styles. Decides how C3 (portfolio → CV transition) and C4/C5 look. |
 | **Acceptance check** | Branch pushed; each idea tied to "travel between projects" (MOTION.md rule); walked (no errors, reduced motion respected, phone perf probe passes); comparison screenshots/frames sent to Patrick. |
 | **Files** | on `explore/science` only |
-| **Step reached** | Not started. Then: C3 launch sequence, C4 parallax depth, C5 reveal choreography (Patrick's animation pass, 2026-10-04). |
+| **Step reached** | Built, walked and pushed (`explore/science` @ origin); comparison sheet sent. **Waiting for Patrick's pick.** Then: C3 launch sequence, C4 parallax depth, C5 reveal choreography (Patrick's animation pass, 2026-10-04). |
+
+**S1 result.** Four pieces, each tied to travel between projects:
+
+| Idea | Where | What it does | Travel tie |
+|---|---|---|---|
+| Atom | hero portrait | three electron orbits, excited (×3 speed, glow) on hover | the person as the nucleus the work orbits |
+| Orrery | above the portfolio grid | portfolio projects as planets, newest innermost, Kepler speeds (T ∝ r^1.5); hover holds + labels, click = warp jump | each planet is a destination; click launches the existing warp |
+| Standard model | after About | stack as a particle chart built from `projects.json` tags (years, project count); a particle lights the cards that used it | filters the map of destinations |
+| ψ collapse | CV gate | the date is in superposition (blur + chromatic ghosts, flickering real years) until the gate reaches the centre, then collapses to SEP 2015 with a spring | the time machine locks onto its departure date |
+
+Walk (360×640, 375×812, 667×375, 1920×1080 × default / reduced-motion /
+no-webgl) passes; budget 385 / 420 KiB; timeline perf probe 3 janky frames;
+page scroll at CPU ×4 equal to prototype (p95 33 ms, 0 jank). All loops run
+only while on screen and integrate phase per frame; reduced motion shows the
+static end states. Recommendation: adopt the **orrery** and **ψ collapse** as
+the basis of C3 (orrery click → ψ collapse → warp), the atom as a small hero
+accent; the Standard Model chart is the most optional (a second skills view).
 
 ### C2 — Motion system and juicy controls (done 2026-10-04)
 
