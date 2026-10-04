@@ -1,0 +1,311 @@
+/* Science exploration (branch explore/science): atom, orrery, Standard Model
+   particles, wave-function collapse. Behaviour: modules/science.js.
+   Family colours follow the conventional Standard Model chart (purple
+   quarks, green leptons, red gauge bosons, yellow Higgs), tuned to the site's
+   palette and checked for ≥4.5:1 text contrast on the dark fill. */
+
+:root {
+    --sm-quark: #b48cf0;
+    --sm-lepton: #9bd16a;
+    --sm-boson: #ff8a73;
+    --sm-higgs: #f2d16b;
+}
+
+/* ── Atom ──────────────────────────────────────────────────────────────── */
+
+/* The portrait is its own stacking context: far-side electrons (z 0) pass
+   behind the photo (z 1) but stay above the hero background; with a negative
+   z-index they vanished behind the hero altogether. */
+.hero .hero-image { position: relative; isolation: isolate; }
+.hero .hero-image img { position: relative; z-index: 1; }
+
+.atom {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 0;
+    height: 0;
+    pointer-events: none;
+}
+
+.atom-ring {
+    position: absolute;
+    left: 0;
+    top: 0;
+    border: 1px solid rgba(129, 168, 209, 0.28);
+    border-radius: 50%;
+    transform: translate(-50%, -50%) rotate(var(--tilt));
+    transition: border-color var(--dur-base) var(--ease-out);
+}
+
+.atom-electron {
+    position: absolute;
+    left: -4px;
+    top: -4px;
+    width: 8px;
+    height: 8px;
+    border-radius: 50%;
+    background: #fff3e2;
+    box-shadow: 0 0 6px 2px rgba(234, 177, 128, 0.85), 0 0 16px 4px rgba(234, 177, 128, 0.35);
+}
+
+.hero-image.is-excited .atom-ring { border-color: rgba(234, 177, 128, 0.5); }
+.hero-image.is-excited img { box-shadow: 0 0 0 6px rgba(234, 177, 128, 0.12), 0 0 40px rgba(234, 177, 128, 0.35); }
+.hero-image img { transition: box-shadow var(--dur-base) var(--ease-out); }
+
+/* ── Orrery ────────────────────────────────────────────────────────────── */
+
+.orrery {
+    position: relative;
+    height: clamp(300px, 46vw, 460px);
+    margin: 0 auto 2.5rem;
+    max-width: 1100px;
+}
+
+.orrery-sun {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 64px;
+    height: 64px;
+    margin: -32px 0 0 -32px;
+    border-radius: 50%;
+    z-index: 2;
+    display: grid;
+    place-items: center;
+    background: radial-gradient(circle at 40% 35%, #fff4dc, #f2b97c 45%, #c46a3c 100%);
+    box-shadow: 0 0 30px 6px rgba(242, 185, 124, 0.45), 0 0 80px 20px rgba(242, 185, 124, 0.15);
+    animation: sun-pulse 4.5s ease-in-out infinite;
+}
+.orrery-sun span {
+    font-family: var(--tertiary-font);
+    font-size: 0.7rem;
+    letter-spacing: 0.18em;
+    text-transform: uppercase;
+    color: #3a2412;
+    font-weight: 700;
+}
+@keyframes sun-pulse {
+    50% { box-shadow: 0 0 36px 9px rgba(242, 185, 124, 0.55), 0 0 100px 28px rgba(242, 185, 124, 0.2); }
+}
+
+.orrery-ring {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    transform: translate(-50%, -50%);
+    border: 1px dashed rgba(129, 168, 209, 0.22);
+    border-radius: 50%;
+    pointer-events: none;
+}
+
+.orrery-planet {
+    position: absolute;
+    left: 0;
+    top: 0;
+    width: 60px;
+    height: 60px;
+    padding: 0;
+    border: 2px solid rgba(208, 210, 211, 0.35);
+    border-radius: 50%;
+    background: #1c212e;
+    cursor: pointer;
+    overflow: visible;
+    filter: brightness(calc(1 - var(--dim, 0)));
+    transition: border-color var(--dur-fast) linear;
+}
+.orrery-planet img {
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
+    object-fit: cover;
+    opacity: 0;
+    transition: opacity var(--dur-base) var(--ease-out);
+}
+.orrery-planet img.is-ready { opacity: 1; }
+.orrery-planet::after {                     /* atmosphere */
+    content: "";
+    position: absolute;
+    inset: -5px;
+    border-radius: 50%;
+    box-shadow: 0 0 14px rgba(129, 168, 209, 0.35);
+    pointer-events: none;
+}
+.orrery-planet:hover,
+.orrery-planet:focus-visible,
+.orrery-planet.is-held {
+    border-color: var(--highlight-color);
+    filter: none;
+}
+.orrery-planet:focus-visible { outline: 2px solid var(--tertiary-color); outline-offset: 5px; }
+.orrery-planet:active { filter: brightness(1.25); }
+
+.orrery-label {
+    position: absolute;
+    left: 50%;
+    top: calc(100% + 8px);
+    transform: translate(-50%, 6px);
+    display: grid;
+    gap: 2px;
+    padding: 6px 10px;
+    white-space: nowrap;
+    border-radius: 8px;
+    background: rgba(10, 14, 24, 0.85);
+    border: 1px solid rgba(234, 177, 128, 0.35);
+    opacity: 0;
+    pointer-events: none;
+    transition: opacity var(--dur-fast) linear, transform var(--dur-base) var(--ease-spring);
+}
+.orrery-label b { font-family: var(--secondary-font); font-size: 0.95rem; color: var(--primary-color); }
+.orrery-label small { font-family: var(--tertiary-font); font-size: 0.7rem; color: var(--highlight-color); letter-spacing: 0.1em; }
+.orrery-planet:hover .orrery-label,
+.orrery-planet:focus-visible .orrery-label,
+.orrery-planet.is-held .orrery-label { opacity: 1; transform: translate(-50%, 0); }
+
+.orrery-hint {
+    position: absolute;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    margin: 0;
+    text-align: center;
+    font-family: var(--tertiary-font);
+    font-size: 0.72rem;
+    letter-spacing: 0.08em;
+    color: rgba(174, 198, 228, 0.7);
+}
+
+@media (max-width: 600px) {
+    .orrery { height: 250px; margin-bottom: 1.5rem; }
+    .orrery-planet { width: 44px; height: 44px; }
+    .orrery-sun { width: 48px; height: 48px; margin: -24px 0 0 -24px; }
+    .orrery-sun span { font-size: 0.6rem; }
+}
+
+/* ── Particles (Standard Model chart) ─────────────────────────────────── */
+
+.particles { margin-top: 3rem; }
+.particles .section-head { margin-bottom: 1.75rem; }
+.particles-title { font-size: clamp(1.6rem, 3.6vw, 2.3rem) !important; max-width: none !important; }
+
+.particle-chart {
+    display: grid;
+    gap: 14px;
+}
+.particle-family {
+    display: grid;
+    grid-template-columns: 150px 1fr;
+    gap: 14px;
+    align-items: center;
+}
+.particle-family-name {
+    margin: 0;
+    font-family: var(--tertiary-font);
+    font-size: 0.72rem;
+    letter-spacing: 0.16em;
+    text-transform: uppercase;
+    display: grid;
+    gap: 3px;
+}
+.particle-family-name small { letter-spacing: 0.04em; text-transform: none; font-size: 0.72rem; color: rgba(208, 210, 211, 0.7); }
+.particle-family.is-quark .particle-family-name { color: var(--sm-quark); }
+.particle-family.is-lepton .particle-family-name { color: var(--sm-lepton); }
+.particle-family.is-boson .particle-family-name { color: var(--sm-boson); }
+.particle-family.is-higgs .particle-family-name { color: var(--sm-higgs); }
+
+.particle-row { display: flex; flex-wrap: wrap; gap: 10px; }
+
+.particle {
+    --c: var(--sm-quark);
+    position: relative;
+    width: 112px;
+    height: 112px;
+    padding: 8px 10px;
+    display: grid;
+    grid-template-rows: auto 1fr auto;
+    text-align: left;
+    color: var(--primary-color);
+    background: rgba(10, 14, 24, 0.72);
+    border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
+    border-radius: 12px;
+    cursor: pointer;
+    transform: translateY(0) scale(1);
+    transition: transform var(--dur-base) var(--ease-spring), box-shadow var(--dur-base) var(--ease-out), border-color var(--dur-fast) linear;
+}
+.particle.is-lepton { --c: var(--sm-lepton); }
+.particle.is-boson { --c: var(--sm-boson); }
+.particle.is-higgs { --c: var(--sm-higgs); }
+.particle-years { font-family: var(--tertiary-font); font-size: 0.62rem; color: rgba(208, 210, 211, 0.75); }
+.particle-count { position: absolute; top: 8px; right: 10px; font-family: var(--tertiary-font); font-size: 0.68rem; color: var(--c); }
+.particle-sym { align-self: center; font-family: var(--secondary-font); font-weight: 700; font-size: 1.9rem; color: var(--c); line-height: 1; }
+.particle-name { font-size: 0.68rem; line-height: 1.25; color: rgba(208, 210, 211, 0.9); }
+
+.particle:hover,
+.particle:focus-visible {
+    transform: translateY(-4px) scale(1.04);
+    border-color: var(--c);
+    box-shadow: 0 10px 26px -12px var(--c), 0 0 0 1px var(--c) inset;
+}
+.particle:focus-visible { outline: 2px solid var(--tertiary-color); outline-offset: 3px; }
+.particle:active { transform: scale(0.95); transition-duration: var(--dur-instant); }
+.particle[aria-pressed="true"] {
+    background: color-mix(in srgb, var(--c) 16%, rgba(10, 14, 24, 0.9));
+    border-color: var(--c);
+    box-shadow: 0 0 22px -4px var(--c);
+}
+
+.particles-hint { margin: 1rem 0 0; font-size: 0.85rem; color: rgba(208, 210, 211, 0.7); }
+
+/* Portfolio cards lit by a particle */
+.portfolio-item.is-dim { opacity: 0.35 !important; filter: saturate(0.4); }
+.portfolio-item.is-lit { border-color: rgba(234, 177, 128, 0.7); box-shadow: 0 0 0 1px rgba(234, 177, 128, 0.5), 0 18px 40px -18px rgba(234, 177, 128, 0.6); }
+
+@media (max-width: 700px) {
+    .particle-family { grid-template-columns: 1fr; gap: 8px; }
+    .particle-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
+    .particle { width: auto; height: auto; min-height: 92px; padding: 7px 8px; gap: 4px; }
+    .particle-sym { font-size: 1.6rem; }
+    .particle-years { font-size: 0.56rem; }
+    .particle-count { top: 7px; right: 8px; font-size: 0.6rem; }
+}
+
+/* ── Wave-function collapse (CV gate) ─────────────────────────────────── */
+
+.psi {
+    --u: 1;
+    display: inline-flex;
+    align-items: baseline;
+    gap: 12px;
+    margin-bottom: 18px;
+    font-family: var(--tertiary-font);
+}
+.psi-label { font-size: 0.85rem; color: rgba(174, 198, 228, 0.75); }
+.psi-value {
+    font-size: 1.6rem;
+    font-weight: 700;
+    letter-spacing: 0.06em;
+    color: var(--primary-color);
+    /* Uncertainty u (0…1): blur plus chromatic ghosts of other outcomes. */
+    filter: blur(calc(var(--u) * 3px));
+    text-shadow:
+        calc(var(--u) * -9px) 0 rgba(129, 232, 255, calc(var(--u) * 0.7)),
+        calc(var(--u) * 9px) 0 rgba(236, 99, 236, calc(var(--u) * 0.6)),
+        0 calc(var(--u) * 6px) rgba(234, 177, 128, calc(var(--u) * 0.5));
+}
+.psi.is-collapsed .psi-value {
+    color: var(--highlight-color);
+    animation: psi-collapse 520ms var(--ease-spring);
+}
+@keyframes psi-collapse {
+    0% { transform: scale(1.35); text-shadow: 0 0 24px rgba(234, 177, 128, 0.9); }
+    100% { transform: scale(1); text-shadow: 0 0 0 transparent; }
+}
+
+/* ── Reduced motion ───────────────────────────────────────────────────── */
+
+@media (prefers-reduced-motion: reduce) {
+    .orrery-sun { animation: none; }
+    .particle:hover, .particle:focus-visible, .particle:active { transform: none; }
+    .psi-value { filter: none; text-shadow: none; }
+    .psi.is-collapsed .psi-value { animation: none; }
+}

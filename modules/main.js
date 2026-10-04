@@ -4,6 +4,7 @@ import { initPortfolio } from './portfolio.js';
 import { initTimeline } from './timeline.js';
 import { getProjects } from './dataManager.js';
 import { initMotion } from './motion.js';
+import { initScience } from './science.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. Initialize generic UI scripts (scrolling, typing)
@@ -17,5 +18,6 @@ document.addEventListener("DOMContentLoaded", async () => {
     if (projects.length > 0) {
         initPortfolio(projects);
         initTimeline(projects);
+        initScience(projects);
     }
 });
