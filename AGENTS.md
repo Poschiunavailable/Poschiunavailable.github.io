@@ -278,9 +278,14 @@ For a before/after comparison, check the old commit out with
   Variants: `default`, `reduced-motion`, `no-webgl` (WebGL contexts return
   null), `no-js`. Output: `tests/out/index.html` (contact sheet) and
   `tests/out/report.json`.
-- The browser under test has no internet access: third-party requests are
-  answered from `tests/.cache/` (`lib/thirdparty.mjs`, filled once via curl).
-  `--offline` turns a cache miss into an error.
+- The browser under test has no internet access (DNS blocked at launch) and
+  any third-party request fails the walk — the site loads nothing from other
+  origins. `--route-thirdparty` instead answers them from `tests/.cache/`
+  (`lib/thirdparty.mjs`), for walking old checkouts that used CDNs; it is
+  opt-in because Playwright disables the HTTP cache in any routed context,
+  which turns cache hits into apparent repeat downloads.
+- `npm run perf` measures frame times: run it on an idle machine. Run next to
+  a walk it reported 40 janky frames; alone, 1.
 - `known-failures.json` lists real bugs that are already scheduled in
   `Docs/STATUS.md`. A failure that matches one is reported but doesn't fail the
   run; a full run flags entries that no longer match so they get removed.

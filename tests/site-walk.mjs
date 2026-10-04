@@ -14,6 +14,7 @@
 //   node site-walk.mjs --skip-external     don't check external links (offline work)
 //   node site-walk.mjs --root=../../old    walk another checkout (before/after comparisons)
 //   node site-walk.mjs --out=/tmp/walk-a    write results elsewhere (parallel runs)
+//   node site-walk.mjs --route-thirdparty   answer CDN requests from tests/.cache (old checkouts)
 //
 // Quality bars and what each check stands for: Docs/QUALITY.md.
 
@@ -98,6 +99,13 @@ const variants = SELF_TEST ? ['default']
     : args.variants ? String(args.variants).split(',') : ALL_VARIANTS;
 const CONCURRENCY = Number(args.concurrency || 2);
 const SKIP_EXTERNAL = SELF_TEST || !!args['skip-external'];
+// Third-party requests: by default the browser has no route to the internet
+// (DNS blocked at launch) and any third-party request fails the walk — the
+// site loads nothing from other origins. --route-thirdparty instead answers
+// them from tests/.cache (for walking old checkouts that used CDNs). Routing
+// is opt-in because Playwright turns the HTTP cache off in any context with a
+// route, which made cache hits look like repeat downloads.
+const ROUTE_THIRDPARTY = !!args['route-thirdparty'];
 
 // ── Self-test faults ─────────────────────────────────────────────────────────
 // Each fault must be reported under its code, or the self-test fails: a check
@@ -328,7 +336,7 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
         reducedMotion: variant === 'reduced-motion' ? 'reduce' : 'no-preference',
         javaScriptEnabled: variant !== 'no-js',
     });
-    await ctx.route(url => !url.href.startsWith(base), r => cache.handleRoute(r));
+    if (ROUTE_THIRDPARTY) await ctx.route(url => !url.href.startsWith(base), r => cache.handleRoute(r));
     await ctx.addInitScript(INIT_SCRIPT);
     if (variant === 'no-webgl') await ctx.addInitScript(NO_WEBGL_SCRIPT);
     const page = await ctx.newPage();
@@ -380,8 +388,11 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
         if (!/https?:\/\//.test(stack) || stack.includes(base)) F('page-error', e.message);
         else info.push(`${variant} ${vp} third-party page error: ${e.message}`);
     });
+    page.on('request', r => {
+        if (!ROUTE_THIRDPARTY && !r.url().startsWith(base) && /^https?:/.test(r.url())) F('thirdparty-request', `${r.url()} (the site must not load third-party resources)`);
+    });
     page.on('requestfailed', r => {
-        if (!r.url().startsWith(base)) return;   // third-party failures are reported by the cache
+        if (!r.url().startsWith(base)) return;   // third-party: reported above, or by the cache
         const err = r.failure()?.errorText || '';
         // Media elements abort their own range requests when paused or replaced.
         if (r.resourceType() === 'media' && /ERR_ABORTED/.test(err)) return;
@@ -748,7 +759,7 @@ async function walk404(browser, base, cache, vp) {
     const [w, h] = vp.split('x').map(Number);
     const phone = Math.min(w, h) <= 430;
     const ctx = await browser.newContext({ viewport: { width: w, height: h }, isMobile: phone, hasTouch: phone });
-    await ctx.route(url => !url.href.startsWith(base), r => cache.handleRoute(r));
+    if (ROUTE_THIRDPARTY) await ctx.route(url => !url.href.startsWith(base), r => cache.handleRoute(r));
     const page = await ctx.newPage();
     const F = (code, msg, shot) => fail('404', vp, code, msg, shot);
     const deepUrl = base + 'no/such/deep/page';
@@ -1131,7 +1142,8 @@ async function main() {
 
     const browser = await chromium.launch({
         executablePath: process.env.CHROMIUM_PATH || undefined,
-        args: ['--enable-unsafe-swiftshader'],   // software WebGL for the starfield in headless
+        args: ['--enable-unsafe-swiftshader',
+            ...(ROUTE_THIRDPARTY ? [] : ['--host-resolver-rules=MAP * ~NOTFOUND, EXCLUDE 127.0.0.1'])],   // software WebGL for the starfield in headless
     });
 
     const jobs = [];
@@ -1158,7 +1170,7 @@ async function main() {
     // Anchors resolve against the real DOM ids.
     if (variants.includes('default')) {
         const ctx = await browser.newContext();
-        await ctx.route(url => !url.href.startsWith(base), r => cache.handleRoute(r));
+        if (ROUTE_THIRDPARTY) await ctx.route(url => !url.href.startsWith(base), r => cache.handleRoute(r));
         const page = await ctx.newPage();
         await page.goto(base, { waitUntil: 'load' });
         await page.waitForSelector('#projectStage .project-slide', { timeout: 10000 }).catch(() => {});
