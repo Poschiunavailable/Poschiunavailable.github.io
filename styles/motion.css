@@ -1,0 +1,213 @@
+/* Interaction states and motion — principles and tokens: Docs/MOTION.md.
+   Every control answers hover, keyboard focus and press within a frame:
+   press squashes (--ease-press), release springs past rest (--ease-spring).
+   Position/scale/particles drop out under reduced motion (block at the end);
+   colour, outline and glow stay, so feedback never disappears. */
+
+/* ── Primary buttons ────────────────────────────────────────────────────────
+   One transform composed from variables, so lift (hover/focus), press and the
+   magnetic pull (modules/motion.js) never overwrite each other. */
+
+.cta-button {
+    --lift: 0px;
+    --press: 1;
+    --mx: 0px;
+    --my: 0px;
+    position: relative;
+    overflow: hidden;            /* clips the glint */
+    /* overflow:hidden moves an inline-block's baseline to its bottom edge,
+       which grew every section holding a button by ~8px; align explicitly. */
+    vertical-align: bottom;
+    isolation: isolate;
+    transform: translate(var(--mx), calc(var(--my) + var(--lift))) scale(var(--press));
+    transition:
+        transform var(--dur-base) var(--ease-spring),
+        box-shadow var(--dur-base) var(--ease-out),
+        background-color var(--dur-fast) linear;
+}
+
+.cta-button:hover,
+.cta-button:focus-visible,
+.cta-button:active {
+    /* The buttons are <a>s: the global a:hover colour (red) would otherwise
+       put red text on the peach button (~2:1). */
+    color: var(--secondary-background-color);
+}
+
+.cta-button:hover,
+.cta-button:focus-visible {
+    --lift: -3px;
+    background-color: #f3c39a;   /* lighter peach: dark text stays ~9.9:1 */
+    box-shadow:
+        0 12px 28px -10px rgba(234, 177, 128, 0.7),
+        0 0 0 1px rgba(255, 220, 186, 0.55) inset;
+}
+
+.cta-button:focus-visible {
+    outline: 2px solid var(--tertiary-color);
+    outline-offset: 3px;
+}
+
+.cta-button:active {
+    --press: 0.95;
+    --lift: 0px;
+    box-shadow: 0 4px 12px -6px rgba(234, 177, 128, 0.6);
+    transition-duration: var(--dur-instant);
+    transition-timing-function: var(--ease-press);
+}
+
+/* A star glint sweeps across once as the pointer arrives. */
+.cta-button::after {
+    content: "";
+    position: absolute;
+    inset: -2px;
+    z-index: -1;
+    background: linear-gradient(110deg, transparent 38%, rgba(255, 255, 255, 0.55) 50%, transparent 62%);
+    transform: translateX(-130%);
+    pointer-events: none;
+}
+.cta-button:hover::after,
+.cta-button:focus-visible::after {
+    transform: translateX(130%);
+    transition: transform var(--dur-slow) var(--ease-out);
+}
+
+/* ── Text links: the underline is drawn like a route line ────────────────── */
+
+.contact-secondary a,
+footer .social-links a,
+.slide-link,
+.cv-static-links a {
+    background-image: linear-gradient(currentColor, currentColor);
+    background-repeat: no-repeat;
+    background-position: 0 100%;
+    background-size: 0% 1px;
+    transition: background-size var(--dur-base) var(--ease-out), color var(--dur-fast) linear;
+}
+.contact-secondary a:hover,
+.contact-secondary a:focus-visible,
+footer .social-links a:hover,
+footer .social-links a:focus-visible,
+.cv-static-links a:hover,
+.cv-static-links a:focus-visible {
+    background-size: 100% 1px;
+}
+.contact-secondary a:focus-visible,
+footer .social-links a:focus-visible,
+.cv-static-links a:focus-visible {
+    outline: 2px solid var(--tertiary-color);
+    outline-offset: 3px;
+    border-radius: 2px;
+}
+.contact-secondary a:active,
+footer .social-links a:active,
+.cv-static-links a:active {
+    color: var(--tertiary-color);
+}
+
+/* ── Nav links and toggle ────────────────────────────────────────────────── */
+
+.nav-links a:focus-visible::before { transform: scaleX(1); }
+.nav-links a:active { color: var(--highlight-color); }
+.brand a { transition: color var(--dur-fast) linear; }
+.brand a:hover,
+.brand a:focus-visible { color: var(--highlight-color); }
+
+.nav-toggle {
+    transition: transform var(--dur-base) var(--ease-spring), border-color var(--dur-fast) linear, background-color var(--dur-fast) linear;
+}
+.nav-toggle:hover { border-color: rgba(234, 177, 128, 0.55); }
+.nav-toggle:active {
+    transform: scale(0.9);
+    transition-duration: var(--dur-instant);
+    transition-timing-function: var(--ease-press);
+}
+
+/* ── Portfolio cards ─────────────────────────────────────────────────────────
+   Desktop tilt is driven inline by portfolio.js; the card itself also lights
+   its edge on hover/focus, and this is the press on touch (and on desktop
+   once the tilt hands back). */
+
+.portfolio-item {
+    /* Cards are also .animate (scroll-in reveal): name its opacity/transform
+       here too, or this rule — same specificity, later file — drops them and
+       the cards pop in instead of fading. */
+    transition: opacity 1s ease-out, transform 1s ease-out, border-color var(--dur-fast) linear;
+}
+.portfolio-item:hover,
+.portfolio-item:focus-visible {
+    border-color: rgba(234, 177, 128, 0.45);
+}
+
+.portfolio-item:active {
+    transform: scale(0.985);
+    transition: transform var(--dur-instant) var(--ease-press);
+}
+
+/* ── Timeline controls ───────────────────────────────────────────────────── */
+
+#cvExit {
+    transition: opacity 0.3s ease, visibility 0.3s, background 0.2s ease, border-color 0.2s ease,
+        transform var(--dur-base) var(--ease-spring);
+}
+#cvExit:hover,
+#cvExit:focus-visible { transform: translateY(-1px); }
+#cvExit:active {
+    transform: scale(0.92);
+    transition-duration: 0.3s, 0.3s, 0.2s, 0.2s, var(--dur-instant);
+}
+
+.nav-dot { transition: background 0.2s ease, border-color 0.2s ease, transform var(--dur-base) var(--ease-spring); }
+.nav-dot:hover,
+.nav-dot:focus-visible { transform: scale(1.45); }
+.nav-dot:active {
+    transform: scale(0.8);
+    transition-duration: 0.2s, 0.2s, var(--dur-instant);
+}
+
+/* ── Star burst (modules/motion.js spawns these on press) ─────────────────── */
+
+#fxLayer {
+    position: fixed;
+    inset: 0;
+    z-index: 60;
+    pointer-events: none;
+    overflow: hidden;
+}
+
+.fx-star {
+    position: absolute;
+    width: 9px;
+    height: 9px;
+    margin: -4.5px 0 0 -4.5px;
+    background: var(--highlight-color);
+    clip-path: polygon(50% 0, 60% 40%, 100% 50%, 60% 60%, 50% 100%, 40% 60%, 0 50%, 40% 40%);
+    animation: fx-star-burst 560ms var(--ease-out) forwards;
+}
+.fx-star.is-white { background: #fff; }
+
+@keyframes fx-star-burst {
+    0%   { transform: translate(0, 0) scale(0.4) rotate(0deg); opacity: 1; }
+    60%  { opacity: 1; }
+    100% { transform: translate(var(--dx), var(--dy)) scale(var(--s, 1)) rotate(var(--rot)); opacity: 0; }
+}
+
+/* ── Reduced motion ──────────────────────────────────────────────────────────
+   Keep the feedback (colour, outline, glow), drop the movement. */
+
+@media (prefers-reduced-motion: reduce) {
+    .cta-button,
+    .cta-button:hover,
+    .cta-button:focus-visible,
+    .cta-button:active { transform: none; }
+    .cta-button::after { display: none; }
+    .nav-toggle:active,
+    .portfolio-item:active,
+    #cvExit:hover,
+    #cvExit:focus-visible,
+    #cvExit:active { transform: none; }
+    .nav-dot:hover,
+    .nav-dot:focus-visible,
+    .nav-dot:active { transform: none; }
+    #fxLayer { display: none; }
+}

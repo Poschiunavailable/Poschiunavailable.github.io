@@ -3,10 +3,12 @@ import { initScripts } from './scripts.js';
 import { initPortfolio } from './portfolio.js';
 import { initTimeline } from './timeline.js';
 import { getProjects } from './dataManager.js';
+import { initMotion } from './motion.js';
 
 document.addEventListener("DOMContentLoaded", async () => {
     // 1. Initialize generic UI scripts (scrolling, typing)
     initScripts();
+    initMotion();
 
     // 2. Fetch data once
     const projects = await getProjects();

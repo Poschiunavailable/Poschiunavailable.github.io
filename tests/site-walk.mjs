@@ -48,6 +48,25 @@ const AXE_PATH = path.join(HERE, 'node_modules', 'axe-core', 'axe.min.js');
 // Where the site is published. URLs on this origin are checked against the
 // local checkout: that is what is about to be deployed.
 const CANONICAL = 'https://poschiunavailable.github.io/';
+// Interaction states are checked at a desktop and a phone size, default variant.
+const STATE_VIEWPORTS = ['375x812', '1920x1080'];
+const PRESS = ['hover', 'focus-visible', 'active'];
+const PAGE_STATE_SPECS = [
+    { sel: '.hero .cta-button', states: PRESS },
+    { sel: '#cvEnter', states: PRESS },
+    { sel: '.contact-primary', states: PRESS },
+    { sel: '.contact-secondary a', states: PRESS },
+    { sel: 'footer .social-links a', states: PRESS },
+    { sel: '.brand a', states: ['hover', 'focus-visible'] },
+    { sel: '#portfolioGrid .portfolio-item', states: PRESS },
+];
+const DESKTOP_STATE_SPECS = [{ sel: '.nav-links a', states: PRESS }];
+const PHONE_STATE_SPECS = [{ sel: '#navToggle', states: ['focus-visible', 'active'] }];
+const TIMELINE_STATE_SPECS = [
+    { sel: '#cvExit', states: PRESS },
+    { sel: '#cvProjectNav .nav-dot', states: PRESS },
+    { sel: '.project-slide.is-near .slide-link', states: ['hover', 'focus-visible'] },
+];
 
 // Console messages that come from the browser, not the site. Each needs a reason.
 const BROWSER_NOISE = [
@@ -239,6 +258,62 @@ const collectRefs = () => {
         .forEach(m => add('src', m.getAttribute('content'), 'meta image'));
     return refs;
 };
+
+// ── Interaction states (QUALITY.md §4) ──────────────────────────────────────
+// Each control must look different when hovered, keyboard-focused and pressed.
+// States are forced through CDP; transitions are disabled while measuring so
+// the reading is the state itself, not the first frame of its transition.
+
+// WCAG contrast of two "rgb(a)(…)" strings, alpha ignored (opaque fills only).
+function contrastOf(fg, bg) {
+    const lum = s => {
+        const [r, g, b] = (s.match(/[\d.]+/g) || []).slice(0, 3).map(Number).map(v => {
+            v /= 255; return v <= 0.03928 ? v / 12.92 : ((v + 0.055) / 1.055) ** 2.4;
+        });
+        return 0.2126 * r + 0.7152 * g + 0.0722 * b;
+    };
+    const [a, b] = [lum(fg), lum(bg)].sort((x, y) => y - x);
+    return (a + 0.05) / (b + 0.05);
+}
+const opaque = s => /^rgb\(/.test(s) || (/^rgba\(/.test(s) && Number((s.match(/[\d.]+/g) || [])[3]) >= 0.95);
+
+const STATE_PROPS = ['transform', 'box-shadow', 'outline-style', 'outline-color', 'background-color', 'color',
+    'background-size', 'border-color', 'opacity', 'scale'];
+
+async function checkStates(page, cdp, specs, F) {
+    await cdp.send('DOM.enable');
+    await cdp.send('CSS.enable');
+    await page.addStyleTag({ content: '*, *::before, *::after { transition: none !important; }' }).then(h => h.evaluate(el => el.id = '__notransition'));
+    const { root } = await cdp.send('DOM.getDocument', { depth: -1 });
+    let checked = 0;
+    for (const { sel, states } of specs) {
+        const { nodeId } = await cdp.send('DOM.querySelector', { nodeId: root.nodeId, selector: sel });
+        if (!nodeId) { F('states', `${sel}: not found`); continue; }
+        const read = () => page.evaluate(({ sel, props }) => {
+            const cs = getComputedStyle(document.querySelector(sel));
+            return Object.fromEntries(props.map(p => [p, cs.getPropertyValue(p)]));
+        }, { sel, props: STATE_PROPS });
+        await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] });
+        // "Rest" must not be secretly focused (an earlier step may have left
+        // focus on this very control).
+        await page.evaluate(() => document.activeElement?.blur?.());
+        const rest = await read();
+        for (const st of states) {
+            await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [st] });
+            const now = await read();
+            checked++;
+            if (STATE_PROPS.every(p => now[p] === rest[p])) F('states', `${sel}: :${st} looks identical to rest`);
+            // Text must stay readable in every state (axe only checks rest).
+            if (opaque(now['background-color'])) {
+                const c = contrastOf(now.color, now['background-color']);
+                if (c < 4.5) F('states', `${sel}: :${st} text contrast ${c.toFixed(2)}:1 (${now.color} on ${now['background-color']})`);
+            }
+        }
+        await cdp.send('CSS.forcePseudoState', { nodeId, forcedPseudoClasses: [] });
+    }
+    await page.evaluate(() => document.getElementById('__notransition')?.remove());
+    return checked;
+}
 
 // ── Walk one viewport ────────────────────────────────────────────────────────
 
@@ -471,6 +546,14 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
     }
     cov.navChecked = true;
 
+    const checkStatesHere = variant === 'default' && STATE_VIEWPORTS.includes(vp);
+    const cdpStates = checkStatesHere ? await ctx.newCDPSession(page) : null;
+    if (checkStatesHere) {
+        const desktop = w > 900;
+        cov.states = await checkStates(page, cdpStates,
+            [...PAGE_STATE_SPECS, ...(desktop ? DESKTOP_STATE_SPECS : PHONE_STATE_SPECS)], F);
+    }
+
     // ── Timeline: enter, step every slide, exit ──
     const waitFocus = (idx, timeout = 6000) => page.waitForFunction(
         (idx) => { const s = window.__timelineState(); return s.settled && s.idx === idx ? s : false; },
@@ -570,6 +653,7 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
             if (i === 0 && !a11y.inside) F('a11y-focus', 'entering the timeline did not move focus into it');
             if (a11y.pageInert.length) F('a11y-inert', `slide ${i}: page parts still reachable behind the timeline: ${a11y.pageInert.join(', ')}`);
             if (i === 0 || i === 1) await checkTabStops(`slide ${i}`);
+            if (i === 0 && checkStatesHere) cov.states += await checkStates(page, cdpStates, TIMELINE_STATE_SPECS, F);
             await axe(`slide ${i}`, '#cvSection');
             cov.slides++;
             if (i < expect.slides - 1) await page.keyboard.press('ArrowDown');
@@ -646,6 +730,10 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
     if (variant === 'reduced-motion') {
         const seen = await page.evaluate(() => window.__walk.warpSeen);
         if (seen) F('reduced-motion', 'warp-jump transition ran under reduced motion');
+        if (await page.evaluate(() => !!document.getElementById('fxLayer'))) F('reduced-motion', 'star-burst particles spawned under reduced motion');
+    } else if (variant !== 'no-js') {
+        // The card presses above must have launched star bursts.
+        if (!(await page.evaluate(() => !!document.getElementById('fxLayer')))) F('motion', 'pressing a card spawned no star burst');
     }
 
     if (variant === 'default' && vp === viewports[0]) expect.refs = await page.evaluate(collectRefs);

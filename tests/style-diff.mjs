@@ -54,7 +54,7 @@ async function capture(root) {
         await ctx.route(u => !u.href.startsWith(base), r => cache.handleRoute(r));
         const page = await ctx.newPage();
         await page.goto(base, { waitUntil: 'load' });
-        await page.waitForSelector('#projectStage .project-slide');
+        await page.waitForSelector('#projectStage .project-slide', { state: 'attached' });
         await page.evaluate(() => document.fonts.ready);
         for (const st of STATES) {
             await page.evaluate(st => { document.body.className = st.join(' '); }, st);

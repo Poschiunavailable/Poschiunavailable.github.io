@@ -14,12 +14,29 @@ only merged into with Patrick's go-ahead.
 
 | | |
 |---|---|
-| **Unit** | — (Phase C continues) |
-| **Phase** | C |
-| **Goal** | Phase A and B are done. Next Phase C units, in order: hover/focus/pressed states everywhere (QUALITY §4 walk check); type and spacing scale as tokens; then art direction passes on cards and timeline slides in the star-chart voice. |
-| **Acceptance check** | — |
-| **Files** | — |
-| **Step reached** | Waiting on Patrick's phone re-test of C1. |
+| **Unit** | S1 — Science exploration (branch `explore/science`) |
+| **Phase** | C (exploration; Patrick asked 2026-10-04) |
+| **Goal** | Visual directions inspired by orbiting planets, atom models, wave-function collapse and the Standard Model, with animation — on a test branch, as with the heading styles. Decides how C3 (portfolio → CV transition) and C4/C5 look. |
+| **Acceptance check** | Branch pushed; each idea tied to "travel between projects" (MOTION.md rule); walked (no errors, reduced motion respected, phone perf probe passes); comparison screenshots/frames sent to Patrick. |
+| **Files** | on `explore/science` only |
+| **Step reached** | Not started. Then: C3 launch sequence, C4 parallax depth, C5 reveal choreography (Patrick's animation pass, 2026-10-04). |
+
+### C2 — Motion system and juicy controls (done 2026-10-04)
+
+`Docs/MOTION.md` (principles from *Juice it or lose it* / *The Art of
+Screenshake*, tokens, effect → meaning table), motion tokens in `base.css`,
+`styles/motion.css` (every control: hover lift + glow, keyboard focus ring,
+squash on press, spring on release; button glint; route-line underlines),
+`modules/motion.js` (magnetic primary buttons on fine pointers, star burst from
+the press point). Walk: interaction states forced through CDP on 10 control
+kinds at phone + desktop (61 state checks), with **text contrast in every
+state** — it found the primary buttons' hover text turning red on peach
+(1.76:1, pre-existing: global `a:hover`), now fixed; star burst present by
+default and absent under reduced motion. Caught on the way: `overflow:hidden`
+on the buttons moved their baseline and grew every section by ~8 px (fixed,
+style-diff shows 0 height changes); the cards' new transition rule had dropped
+their reveal fade (restored); style-diff waited for slides to be *visible*,
+which C1 made false (now waits for attached).
 
 ### B1 — Content without JavaScript (done 2026-10-03)
 
