@@ -10,6 +10,29 @@ only merged into with Patrick's go-ahead.
 
 ---
 
+## Handoff (2026-10-11) — where to pick up
+
+Intermediate state on `prototype` (684fc09), walk (quick) and self-test green.
+Done since C3: atom removed (D12); orrery auto-sizes for any project count
+(moons = work topics, terminators, launch swell); quantum-field canvas +
+Feynman lines on the particle chart; one line-graph system (`modules/graph.js`,
+`styles/graph.css`) used by the ψ gate, the time-machine HUD (one hill per
+chapter, cursor rides the curve) and per-tile sparklines; arrival choreography
+for section heads, cards and particle tiles (`styles/arrival.css`).
+
+Next, in order:
+1. Review the arrival choreography visually (filmstrip at 1440×900 and
+   375×812) and tune timing — not yet looked at by eye.
+2. Orrery "forming" arrival (planets expand out from the sun) — not built.
+3. Run `npm run perf` on an idle machine and Lighthouse; compare with the
+   last measurements below.
+4. Full walk (`npm test`, all 10 viewports) — only the quick walk ran.
+5. Send Patrick screenshots of the graph system and arrivals.
+Working mode Patrick asked for (2026-10-11): orchestrate cheaper Sonnet/Haiku
+subagents; the main session reviews and critiques. Design goal: playful but
+professional, one coherent vision, few element types, juicy transitions; the
+2D line graph may appear wherever it carries real data.
+
 ## Current unit
 
 | | |
