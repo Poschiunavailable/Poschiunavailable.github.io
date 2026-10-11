@@ -19,7 +19,7 @@ only merged into with Patrick's go-ahead.
 | **Goal** | Each science piece gains one richer layer without a measurable perf cost: a quantum-field lattice behind the particle chart (particles as ripples in their field), Feynman-style interaction lines between particles that share projects, an orrery that sizes itself for any number of projects (plus moons = work topics, day/night terminators), electron trails and a quantum jump on the atom. |
 | **Acceptance check** | Walk green (all variants); perf probe and page-scroll comparison at CPU ×4 no worse than before; orrery checked with 6 and 14 projects; reduced motion static; screenshots sent. |
 | **Files** | `modules/science.js`, `styles/science.css`, `tests/site-walk.mjs`, docs |
-| **Step reached** | Not started. **C3 (scroll gate) done** — see below. |
+| **Step reached** | Orrery scaling, quantum field, Feynman lines done; atom dropped (D12). **C3 (scroll gate) done** — see below. |
 
 ### C3 — Scroll gate and warp-out (done 2026-10-04)
 
@@ -450,3 +450,4 @@ Collected here; asked together rather than one by one.
 | D9 | 2026-10-03 | Heading style: **star chart** (exploration B), chosen by Patrick. Merged from `explore/star-chart`; `explore/flight-log` and `explore/terminal` stay on the remote as references until Patrick says to delete them. | Patrick's pick; it was also the recommendation — reads designed rather than templated, and the route-between-stars motif extends the warp jump. |
 | D10 | 2026-10-04 | **Science direction adopted** (atom, orrery, Standard Model chart, ψ collapse) — merged from `explore/science`. | Patrick's pick ("I really like the science approach, I would like to keep it"). |
 | D11 | 2026-10-04 | **Scrolling enters and leaves the timeline** again, through a telegraphed gate (C3). Supersedes the round-3 "explicit entry only" rule. | Patrick asked for it; the gate's charge, user-input-only trigger, direction and re-arm distance address what made the old observer hostile. |
+| D12 | 2026-10-11 | Atom around the hero portrait removed | Patrick didn't like it. |

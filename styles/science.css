@@ -1,5 +1,5 @@
-/* Science layer (STATUS D10): atom, orrery, Standard Model
-   particles, wave-function collapse. Behaviour: modules/science.js.
+/* Science layer (STATUS D10): orrery, Standard Model
+   particles, quantum field, wave-function collapse. Behaviour: modules/science.js.
    Family colours follow the conventional Standard Model chart (purple
    quarks, green leptons, red gauge bosons, yellow Higgs), tuned to the site's
    palette and checked for ≥4.5:1 text contrast on the dark fill. */
@@ -11,55 +11,15 @@
     --sm-higgs: #f2d16b;
 }
 
-/* ── Atom ──────────────────────────────────────────────────────────────── */
-
-/* The portrait is its own stacking context: far-side electrons (z 0) pass
-   behind the photo (z 1) but stay above the hero background; with a negative
-   z-index they vanished behind the hero altogether. */
-.hero .hero-image { position: relative; isolation: isolate; }
-.hero .hero-image img { position: relative; z-index: 1; }
-
-.atom {
-    position: absolute;
-    left: 50%;
-    top: 50%;
-    width: 0;
-    height: 0;
-    pointer-events: none;
-}
-
-.atom-ring {
-    position: absolute;
-    left: 0;
-    top: 0;
-    border: 1px solid rgba(129, 168, 209, 0.28);
-    border-radius: 50%;
-    transform: translate(-50%, -50%) rotate(var(--tilt));
-    transition: border-color var(--dur-base) var(--ease-out);
-}
-
-.atom-electron {
-    position: absolute;
-    left: -4px;
-    top: -4px;
-    width: 8px;
-    height: 8px;
-    border-radius: 50%;
-    background: #fff3e2;
-    box-shadow: 0 0 6px 2px rgba(234, 177, 128, 0.85), 0 0 16px 4px rgba(234, 177, 128, 0.35);
-}
-
-.hero-image.is-excited .atom-ring { border-color: rgba(234, 177, 128, 0.5); }
-.hero-image.is-excited img { box-shadow: 0 0 0 6px rgba(234, 177, 128, 0.12), 0 0 40px rgba(234, 177, 128, 0.35); }
-.hero-image img { transition: box-shadow var(--dur-base) var(--ease-out); }
-
 /* ── Orrery ────────────────────────────────────────────────────────────── */
 
 .orrery {
+    --planet: 60px;                          /* set by science.js from the ring spacing */
     position: relative;
     height: clamp(300px, 46vw, 460px);
     margin: 0 auto 2.5rem;
     max-width: 1100px;
+    overflow-x: clip;                        /* hidden labels of far-out planets must not widen the page */
 }
 
 .orrery-sun {
@@ -69,15 +29,19 @@
     width: 64px;
     height: 64px;
     margin: -32px 0 0 -32px;
-    border-radius: 50%;
     z-index: 2;
+    display: grid;
+    place-items: center;
+}
+.orrery-sun-core {
+    position: relative;
+    width: 100%;
+    height: 100%;
+    border-radius: 50%;
     display: grid;
     place-items: center;
     background: radial-gradient(circle at 40% 35%, #fff4dc, #f2b97c 45%, #c46a3c 100%);
     box-shadow: 0 0 30px 6px rgba(242, 185, 124, 0.45), 0 0 80px 20px rgba(242, 185, 124, 0.15);
-    animation: sun-pulse 4.5s ease-in-out infinite;
-}
-.orrery-sun span {
     font-family: var(--tertiary-font);
     font-size: 0.7rem;
     letter-spacing: 0.18em;
@@ -85,9 +49,34 @@
     color: #3a2412;
     font-weight: 700;
 }
-@keyframes sun-pulse {
-    50% { box-shadow: 0 0 36px 9px rgba(242, 185, 124, 0.55), 0 0 100px 28px rgba(242, 185, 124, 0.2); }
+/* Corona: slow-turning rays, a compositor-only rotation. */
+.orrery-corona {
+    position: absolute;
+    inset: -34px;
+    border-radius: 50%;
+    background: repeating-conic-gradient(from 0deg, rgba(255, 214, 160, 0.20) 0deg 3deg, transparent 3deg 15deg);
+    -webkit-mask-image: radial-gradient(closest-side, transparent 52%, #000 60%, transparent 100%);
+    mask-image: radial-gradient(closest-side, transparent 52%, #000 60%, transparent 100%);
+    animation: corona-turn 60s linear infinite;
+    pointer-events: none;
 }
+/* Pulse as an opacity change on a glow layer: animating box-shadow repainted
+   the sun every frame. */
+.orrery-sun::after {
+    content: "";
+    position: absolute;
+    inset: -40px;
+    border-radius: 50%;
+    background: radial-gradient(closest-side, rgba(242, 185, 124, 0.35), rgba(242, 185, 124, 0) 70%);
+    animation: sun-pulse 4.5s ease-in-out infinite;
+    pointer-events: none;
+    z-index: -1;
+}
+@keyframes sun-pulse { 50% { opacity: 0.45; } }
+/* Off screen, nothing in the orrery animates (science.js toggles is-idle). */
+.orrery.is-idle *,
+.orrery.is-idle .orrery-sun::after { animation-play-state: paused; }
+@keyframes corona-turn { to { transform: rotate(360deg); } }
 
 .orrery-ring {
     position: absolute;
@@ -97,53 +86,103 @@
     border: 1px dashed rgba(129, 168, 209, 0.22);
     border-radius: 50%;
     pointer-events: none;
+    transition: border-color var(--dur-fast) linear, opacity var(--dur-base) var(--ease-out);
+}
+.orrery.has-held .orrery-ring { opacity: 0.45; }
+.orrery.has-held .orrery-ring.is-held {
+    opacity: 1;
+    border-style: solid;
+    border-color: rgba(234, 177, 128, 0.55);
 }
 
 .orrery-planet {
     position: absolute;
     left: 0;
     top: 0;
-    width: 60px;
-    height: 60px;
+    width: var(--planet);
+    height: var(--planet);
     padding: 0;
-    border: 2px solid rgba(208, 210, 211, 0.35);
+    border: 0;
     border-radius: 50%;
-    background: #1c212e;
+    background: none;
     cursor: pointer;
     overflow: visible;
     filter: brightness(calc(1 - var(--dim, 0)));
-    transition: border-color var(--dur-fast) linear;
 }
-.orrery-planet img {
+.orrery-body {
+    position: absolute;
+    inset: 0;
+    border-radius: 50%;
+    overflow: hidden;
+    background: #1c212e;
+    border: 2px solid rgba(208, 210, 211, 0.35);
+    box-shadow: 0 0 14px rgba(129, 168, 209, 0.35);   /* atmosphere */
+    transition: border-color var(--dur-fast) linear, box-shadow var(--dur-base) var(--ease-out);
+}
+.orrery-body img {
     width: 100%;
     height: 100%;
-    border-radius: 50%;
     object-fit: cover;
     opacity: 0;
     transition: opacity var(--dur-base) var(--ease-out);
 }
-.orrery-planet img.is-ready { opacity: 1; }
-.orrery-planet::after {                     /* atmosphere */
-    content: "";
+.orrery-body img.is-ready { opacity: 1; }
+/* Terminator: lit limb towards the sun, night side away. science.js turns it. */
+.orrery-shade {
     position: absolute;
-    inset: -5px;
+    inset: 0;
     border-radius: 50%;
-    box-shadow: 0 0 14px rgba(129, 168, 209, 0.35);
+    background: linear-gradient(90deg, rgba(255, 226, 190, 0.3) 0%, rgba(255, 226, 190, 0) 30%, rgba(5, 8, 16, 0) 56%, rgba(5, 8, 16, 0.55) 92%);
     pointer-events: none;
+}
+
+/* Moons: one per work topic, on a CSS-only orbit (compositor rotation). */
+.orrery-moons {
+    position: absolute;
+    inset: -9px;
+    border-radius: 50%;
+    pointer-events: none;
+    animation: corona-turn var(--moon-period, 6s) linear infinite;
+}
+.orrery-moons i {
+    position: absolute;
+    left: 50%;
+    top: 50%;
+    width: 5px;
+    height: 5px;
+    margin: -2.5px;
+    border-radius: 50%;
+    background: #dfe8f5;
+    box-shadow: 0 0 5px rgba(174, 198, 228, 0.9);
+    transform: rotate(var(--a)) translateX(calc(var(--planet) / 2 + 7px));
+}
+
+.orrery-planet:hover .orrery-body,
+.orrery-planet:focus-visible .orrery-body,
+.orrery-planet.is-held .orrery-body {
+    border-color: var(--highlight-color);
+    box-shadow: 0 0 0 4px rgba(234, 177, 128, 0.16), 0 0 26px rgba(234, 177, 128, 0.5);
 }
 .orrery-planet:hover,
 .orrery-planet:focus-visible,
-.orrery-planet.is-held {
-    border-color: var(--highlight-color);
-    filter: none;
+.orrery-planet.is-held { filter: none; }
+.orrery-planet:focus-visible { outline: 2px solid var(--tertiary-color); outline-offset: 7px; }
+.orrery-planet:active .orrery-body { filter: brightness(1.25); }
+
+/* Launch: the chosen world swells towards you as the warp starts. */
+.orrery-planet.is-launching .orrery-body {
+    animation: planet-launch 620ms var(--ease-out) forwards;
 }
-.orrery-planet:focus-visible { outline: 2px solid var(--tertiary-color); outline-offset: 5px; }
-.orrery-planet:active { filter: brightness(1.25); }
+@keyframes planet-launch {
+    0%   { transform: scale(1); box-shadow: 0 0 0 0 rgba(234, 177, 128, 0.9); }
+    35%  { transform: scale(1.9); box-shadow: 0 0 0 14px rgba(234, 177, 128, 0); }
+    100% { transform: scale(2.6); opacity: 0; }
+}
 
 .orrery-label {
     position: absolute;
     left: 50%;
-    top: calc(100% + 8px);
+    top: calc(100% + 10px);
     transform: translate(-50%, 6px);
     display: grid;
     gap: 2px;
@@ -154,6 +193,7 @@
     border: 1px solid rgba(234, 177, 128, 0.35);
     opacity: 0;
     pointer-events: none;
+    z-index: 4;
     transition: opacity var(--dur-fast) linear, transform var(--dur-base) var(--ease-spring);
 }
 .orrery-label b { font-family: var(--secondary-font); font-size: 0.95rem; color: var(--primary-color); }
@@ -177,21 +217,73 @@
 
 @media (max-width: 600px) {
     .orrery { height: 250px; margin-bottom: 1.5rem; }
-    .orrery-planet { width: 44px; height: 44px; }
     .orrery-sun { width: 48px; height: 48px; margin: -24px 0 0 -24px; }
-    .orrery-sun span { font-size: 0.6rem; }
+    .orrery-sun-core { font-size: 0.6rem; }
+    .orrery-corona { inset: -24px; }
+    .orrery-moons i { width: 4px; height: 4px; margin: -2px; }
 }
 
 /* ── Particles (Standard Model chart) ─────────────────────────────────── */
 
-.particles { margin-top: 3rem; }
+.particles { position: relative; margin-top: 3rem; }
+/* The quantum field sits behind everything in the block (science.js initField). */
+.qfield {
+    position: absolute;
+    left: 0;
+    top: 0;
+    pointer-events: none;
+    z-index: 0;
+}
+.particles > .section-head,
+.particles > .particles-hint { position: relative; z-index: 1; }
 .particles .section-head { margin-bottom: 1.75rem; }
 .particles-title { font-size: clamp(1.6rem, 3.6vw, 2.3rem) !important; max-width: none !important; }
 
 .particle-chart {
+    position: relative;               /* offsetParent for the Feynman lines */
+    z-index: 1;
     display: grid;
-    gap: 14px;
+    gap: 22px;
+    width: fit-content;
+    max-width: 100%;
+    margin: 0 auto;
 }
+
+/* Feynman lines between particles that shared a project. */
+.feynman {
+    position: absolute;
+    left: 0;
+    top: 0;
+    overflow: visible;
+    pointer-events: none;
+    z-index: 0;
+}
+.feynman marker path { fill: var(--highlight-color); }
+.feyn-line {
+    fill: none;
+    stroke: var(--c);
+    stroke-width: 1.6;
+    stroke-linecap: round;
+    opacity: 0.85;
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: feyn-draw 460ms var(--ease-out) forwards;
+}
+.feyn-line.is-scalar {
+    stroke-dasharray: 0.022 0.016;
+    stroke-dashoffset: 0;
+    animation: feyn-fade 320ms ease-out both;
+}
+.feyn-vertex {
+    fill: var(--c);
+    filter: drop-shadow(0 0 6px var(--c));
+    transform-box: fill-box;
+    transform-origin: center;
+    animation: vertex-pop 520ms var(--ease-spring) both;
+}
+@keyframes feyn-draw { to { stroke-dashoffset: 0; } }
+@keyframes feyn-fade { from { opacity: 0; } }
+@keyframes vertex-pop { from { transform: scale(0); } }
 .particle-family {
     display: grid;
     grid-template-columns: 150px 1fr;
@@ -199,7 +291,14 @@
     align-items: center;
 }
 .particle-family-name {
-    margin: 0;
+    /* Above the Feynman lines, on a backing so a line never runs through text. */
+    position: relative;
+    z-index: 1;
+    justify-self: start;
+    padding: 2px 6px;
+    margin: 0 0 0 -6px;
+    border-radius: 6px;
+    background: rgba(37, 42, 59, 0.92);
     font-family: var(--tertiary-font);
     font-size: 0.72rem;
     letter-spacing: 0.16em;
@@ -213,11 +312,12 @@
 .particle-family.is-boson .particle-family-name { color: var(--sm-boson); }
 .particle-family.is-higgs .particle-family-name { color: var(--sm-higgs); }
 
-.particle-row { display: flex; flex-wrap: wrap; gap: 10px; }
+.particle-row { display: flex; flex-wrap: wrap; gap: 22px; }
 
 .particle {
     --c: var(--sm-quark);
     position: relative;
+    z-index: 1;
     width: 112px;
     height: 112px;
     padding: 8px 10px;
@@ -225,7 +325,8 @@
     grid-template-rows: auto 1fr auto;
     text-align: left;
     color: var(--primary-color);
-    background: rgba(10, 14, 24, 0.72);
+    /* Opaque: the Feynman lines run between tiles, not through them. */
+    background: #0d121e;
     border: 1px solid color-mix(in srgb, var(--c) 55%, transparent);
     border-radius: 12px;
     cursor: pointer;
@@ -249,18 +350,25 @@
 .particle:focus-visible { outline: 2px solid var(--tertiary-color); outline-offset: 3px; }
 .particle:active { transform: scale(0.95); transition-duration: var(--dur-instant); }
 .particle[aria-pressed="true"] {
-    background: color-mix(in srgb, var(--c) 16%, rgba(10, 14, 24, 0.9));
+    background: color-mix(in srgb, var(--c) 16%, #0d121e);
     border-color: var(--c);
     box-shadow: 0 0 22px -4px var(--c);
 }
 
-.particles-hint { margin: 1rem 0 0; font-size: 0.85rem; color: rgba(208, 210, 211, 0.7); }
+.particle.is-partner {
+    border-color: var(--c);
+    box-shadow: 0 0 18px -6px var(--c);
+}
+.particle.is-source { border-color: var(--c); }
+
+.particles-hint { margin: 1.25rem auto 0; text-align: center; max-width: 60ch; font-size: 0.85rem; line-height: 1.6; color: rgba(208, 210, 211, 0.75); }
 
 /* Portfolio cards lit by a particle */
 .portfolio-item.is-dim { opacity: 0.35 !important; filter: saturate(0.4); }
 .portfolio-item.is-lit { border-color: rgba(234, 177, 128, 0.7); box-shadow: 0 0 0 1px rgba(234, 177, 128, 0.5), 0 18px 40px -18px rgba(234, 177, 128, 0.6); }
 
 @media (max-width: 700px) {
+    .particle-chart { gap: 16px; width: auto; }
     .particle-family { grid-template-columns: 1fr; gap: 8px; }
     .particle-row { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 8px; }
     .particle { width: auto; height: auto; min-height: 92px; padding: 7px 8px; gap: 4px; }
@@ -330,8 +438,11 @@
 /* ── Reduced motion ───────────────────────────────────────────────────── */
 
 @media (prefers-reduced-motion: reduce) {
-    .orrery-sun { animation: none; }
+    .orrery-sun::after, .orrery-corona, .orrery-moons { animation: none; }
+    .orrery-planet.is-launching .orrery-body { animation: none; }
     .particle:hover, .particle:focus-visible, .particle:active { transform: none; }
+    .feyn-line, .feyn-line.is-scalar, .feyn-vertex { animation: none; stroke-dashoffset: 0; }
+    .feyn-line:not(.is-scalar) { stroke-dasharray: none; }
     .psi-value { filter: none; text-shadow: none; }
     .psi.is-collapsed .psi-value { animation: none; }
 }

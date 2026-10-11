@@ -123,6 +123,7 @@ const SELF_TEST_FAULTS = {
     'responsive':     ['/projects.json', s => { const d = JSON.parse(s); d[0].workTopics[0].image = 'assets/profile_picture.jpg'; return JSON.stringify(d); }, /profile_picture-480\.webp/],
     'static-drift':   ['/projects.json', s => s.replace(/"title":\s*"Cold Comfort"/, '"title": "Cold Comfort (renamed)"'), /out of date/],
     'slide-overflow': ['/styles/cvstyle.css', s => s + '\n.project-slide[data-idx="1"] .topic-desc { padding-bottom: 150vh; }\n', /^slide 1 /],
+    'orrery-warp':    ['/modules/science.js', s => s.replace("window.dispatchEvent(new CustomEvent('portfolio:selectProject', { detail: { id: p.id } }));\n        });\n        wrap.appendChild(btn);", "});\n        wrap.appendChild(btn);"), /orrery planet/],
     'gate-enter':     ['/modules/timeline.js', s => s.replace('installScrollGate();', ''), /scrolling down through the CV gate/],
 };
 function selfTestTransform(urlPath, buf) {
@@ -787,6 +788,68 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
         }
     }
 
+
+    // ── Science layer: orrery + particle chart (default variant only) ──
+    if (variant === 'default') {
+        const settledOut2 = () => page.waitForFunction(() => !/timeline-/.test(document.body.className), null, { timeout: 3000 }).catch(() => {});
+        await settledOut2();
+        await page.waitForTimeout(800);                       // the gate's cooldown after the last exit
+        const orrery = page.locator('.orrery');
+        await page.evaluate(() => document.getElementById('portfolio').scrollIntoView({ behavior: 'instant' }));
+        await orrery.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(300);
+        const geo = await page.evaluate(() => {
+            const o = document.querySelector('.orrery')?.getBoundingClientRect();
+            const planets = [...document.querySelectorAll('.orrery-planet')].map(b => {
+                const r = (b.querySelector('.orrery-body') || b).getBoundingClientRect();
+                return { label: b.getAttribute('aria-label') || '', l: r.left, t: r.top, r: r.right, b: r.bottom };
+            });
+            return { o: o && { l: o.left, t: o.top, r: o.right, b: o.bottom }, planets };
+        });
+        if (geo.planets.length !== expect.cards.length) F('orrery', `${geo.planets.length} orrery planets, expected ${expect.cards.length}`, await shoot('orrery'));
+        else if (geo.o) {
+            const out = geo.planets.filter(q => q.l < geo.o.l - 2 || q.t < geo.o.t - 2 || q.r > geo.o.r + 2 || q.b > geo.o.b + 2);
+            if (out.length) F('orrery', `${out.length} planet(s) outside the orrery box: ${out.map(q => q.label.split(',')[0]).join(', ')}`, await shoot('orrery'));
+            else { cov.orrery = geo.planets.length; await shoot('orrery'); }
+        }
+        // Planet 0 is the newest project, as science.js orders them.
+        const first = geo.planets[0] && expect.cards.find(c => geo.planets[0].label.startsWith(c.title + ','));
+        if (!first) F('orrery-warp', `the first orrery planet (${geo.planets[0]?.label}) matches no project`);
+        else if (first.targetIdx >= 0) {
+            const planet = page.locator('.orrery-planet').first();
+            // Planets orbit, so they are never "stable" for Playwright: the orrery was scrolled into view above, click without the stability wait.
+            const ok = await planet.click({ timeout: 8000, force: true }).then(() => true).catch(() => false);
+            if (!ok) F('orrery-warp', `orrery planet ${first.id}: click did not land`, await shoot('orrery-click'));
+            else if (!(await waitFocus(first.targetIdx))) F('orrery-warp', `orrery planet ${first.id}: expected slide ${first.targetIdx} (${expect.slideLabels[first.targetIdx]}), state ${JSON.stringify(await state())}`, await shoot('orrery-warp-failed'));
+            else cov.orreryWarp = true;
+            if ((await state()).immersive) await exitTimeline(`orrery planet ${first.id}`);
+            await settledOut2();
+        }
+        await page.waitForTimeout(900);                       // the sections fade back in after leaving the timeline
+
+        const tile = page.locator('.particle').first();
+        await page.evaluate(() => document.querySelector('.particles').scrollIntoView({ behavior: 'instant', block: 'center' }));
+        await tile.scrollIntoViewIfNeeded();
+        await page.waitForTimeout(300);
+        await tile.click({ timeout: 8000 }).catch(() => {});
+        const lit = await page.waitForFunction(() => document.querySelector('.particle')?.getAttribute('aria-pressed') === 'true'
+            && document.querySelectorAll('.feynman .feyn-line').length > 0
+            && document.querySelectorAll('#portfolioGrid .portfolio-item.is-lit').length > 0, null, { timeout: 3000 })
+            .then(() => true).catch(() => false);
+        if (!lit) {
+            const d = await page.evaluate(() => ({ pressed: document.querySelector('.particle')?.getAttribute('aria-pressed'), lines: document.querySelectorAll('.feynman .feyn-line').length, lit: document.querySelectorAll('#portfolioGrid .portfolio-item.is-lit').length }));
+            F('particles', `selecting the first particle: ${JSON.stringify(d)} (want pressed=true, ≥1 Feynman line, ≥1 lit card)`, await shoot('particles-failed'));
+        } else {
+            cov.particles = true;
+            await page.waitForTimeout(600);
+            await shoot('particles-lit');
+            await tile.click();
+            const cleared = await page.waitForFunction(() => !document.querySelector('.is-lit, .is-dim')
+                && document.querySelector('.particle').getAttribute('aria-pressed') === 'false', null, { timeout: 3000 }).then(() => true).catch(() => false);
+            if (!cleared) F('particles', 'clicking the selected particle again did not clear the lit/dim cards');
+        }
+    }
+
     if (variant === 'reduced-motion') {
         const seen = await page.evaluate(() => window.__walk.warpSeen);
         if (seen) F('reduced-motion', 'warp-jump transition ran under reduced motion');
@@ -1164,7 +1227,7 @@ async function main() {
         ? (p.timelineTarget.topic ? topicIdx[`${p.timelineTarget.project}/${p.timelineTarget.topic}`] : heroIdx[p.timelineTarget.project])
         : undefined) ?? -1;
     const expect = {
-        cards: projects.filter(p => p.showInPortfolio).map(p => ({ id: p.id, targetIdx: landing(p) })),
+        cards: projects.filter(p => p.showInPortfolio).map(p => ({ id: p.id, title: p.title, targetIdx: landing(p) })),
         slides: slideLabels.length,
         slideLabels,
         slideProject,

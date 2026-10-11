@@ -58,3 +58,6 @@ From game feel practice — Jonasson & Purho, *Juice it or lose it* (GDC Europe
 | Underline drawn as a route line | text links | The constellation route, drawn on demand |
 | Gate charge: ψ packet narrows, date sharpens, charge line fills | CV gate, while scrolling towards it | Anticipation before a launch — the time machine locking onto its departure date |
 | Warp out: stage falls away at lightspeed, page fades in as the field slows | leaving the timeline | The return trip; the same starfield carries you back |
+| Orrery planet launch: the planet swells towards you as the warp starts | orrery planets, on click | The chosen destination, approached |
+| Quantum field ripples: every tool is a ripple in its own field; the pointer leaves a wake | particle chart | Tools as excitations of a field |
+| Feynman lines: which tools travelled together | particle chart, on selecting a tool | Interactions between particles that shared a project |
