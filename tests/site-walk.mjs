@@ -619,6 +619,7 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
         const s = await state();
         F('timeline-enter', `"Enter the time machine" did not settle on slide 0 (state ${JSON.stringify(s)})`, await shoot('enter-failed'));
     } else {
+        const walkState = {};
         for (let i = 0; i < expect.slides; i++) {
             if (!(await waitFocus(i))) {
                 const s = await state();
@@ -640,6 +641,25 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
                     : is.kind === 'clipped' ? `hides ${is.px}px of text` : `under ${is.with}`}`, shot);
             }
             if (!hud) F('timeline-hud', `slide ${i}: time-machine year not shown`, shot);
+            // Career curve: present, the cursor only moves forward through time,
+            // and the bright "travelled" clip ends where the cursor is.
+            const cg = await page.evaluate(() => {
+                const svg = document.querySelector('#tmGraph svg');
+                const cur = svg?.querySelector('.tm-cursor');
+                const clip = svg?.querySelector('.tm-clip');
+                if (!svg || !cur || !clip) return null;
+                const vb = svg.viewBox.baseVal.width, px = svg.getBoundingClientRect().width;
+                return { x: +cur.dataset.x * px / vb, clip: +clip.getAttribute('width') * px / vb, px,
+                    h: svg.getBoundingClientRect().height, hidden: !!svg.closest('[aria-hidden=true]') };
+            });
+            if (!cg) F('timeline-hud', `slide ${i}: career curve missing from the HUD`, shot);
+            else {
+                if (cg.x < (walkState.cgX ?? -1) - 0.5) F('timeline-hud', `slide ${i}: career cursor moved back (${cg.x.toFixed(1)}px < ${walkState.cgX.toFixed(1)}px)`, shot);
+                if (Math.abs(cg.x - cg.clip) > 2) F('timeline-hud', `slide ${i}: travelled clip ${cg.clip.toFixed(1)}px does not match cursor ${cg.x.toFixed(1)}px`, shot);
+                if (!cg.hidden) F('timeline-hud', `slide ${i}: career curve is not aria-hidden`, shot);
+                if (cg.h > 41) F('timeline-hud', `slide ${i}: career curve ${cg.h.toFixed(0)}px tall (max 40)`, shot);
+                walkState.cgX = cg.x;
+            }
             // GPU footprint guard: only on-screen slides keep layers, and the
             // hero reel doesn't decode behind the timeline (Patrick's mobile lag).
             const gpu = await page.evaluate(() => ({
