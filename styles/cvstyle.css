@@ -444,20 +444,36 @@ body.timeline-immersive #timeMachine {
     letter-spacing: -0.02em;
 }
 
-#tmProgressTrack {
-    margin-top: 10px;
-    height: 2px;
-    background: rgba(129, 168, 209, 0.15);
-    border-radius: 1px;
-    overflow: hidden;
+/* Career curve: the ψ readout's language (science.css .psi-*) at HUD scale.
+   Dim = the whole career, amber = the road travelled, dot = now. */
+#tmGraph { margin-top: 10px; width: 132px; }
+.tm-graph-svg { display: block; width: 100%; height: auto; aspect-ratio: 120 / 36; overflow: visible; }
+.tm-fill { fill: rgba(129, 168, 209, 0.08); }
+.tm-line {
+    fill: none;
+    stroke: rgba(129, 168, 209, 0.45);
+    stroke-width: 1.2;
+    stroke-linejoin: round;
+    vector-effect: non-scaling-stroke;
 }
-
-#tmProgressFill {
-    height: 100%;
-    width: 0%;
-    background: linear-gradient(90deg, rgba(129,168,209,0.5), rgba(234,177,128,0.7));
-    border-radius: 1px;
-    transition: width 0.1s linear;
+.tm-fill.tm-on { fill: rgba(234, 177, 128, 0.2); }
+.tm-line.tm-on { stroke: var(--highlight-color); }
+.tm-axis { stroke: rgba(129, 168, 209, 0.35); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.tm-dot { fill: var(--highlight-color); filter: drop-shadow(0 0 3px rgba(234, 177, 128, 0.85)); }
+.tm-ring { fill: none; stroke: var(--highlight-color); stroke-width: 1; opacity: 0; vector-effect: non-scaling-stroke;
+    transform-box: fill-box; transform-origin: center; }
+.tm-ring.tm-arrive { animation: tm-arrive 640ms var(--ease-out); }
+@keyframes tm-arrive {
+    0%   { opacity: 0.9; transform: scale(1); }
+    100% { opacity: 0;   transform: scale(4.2); }
+}
+.tm-axis-labels {
+    display: flex;
+    justify-content: space-between;
+    margin-top: 3px;
+    font-size: 0.55rem;
+    letter-spacing: 0.1em;
+    color: rgba(174, 198, 228, 0.7);
 }
 
 #timeMachine::before {
@@ -833,7 +849,10 @@ body.timeline-immersive header {
     #tmLabel { display: none; }
     #tmYear { font-size: 1.25rem; }
     #tmMonth { font-size: 0.72rem; }
-    #tmProgressTrack { margin-top: 6px; }
+    /* Date and curve share one row so the HUD stays as tall as before. */
+    #timeMachine { display: flex; align-items: flex-end; gap: 12px; }
+    #tmGraph { margin-top: 0; width: 84px; }
+    .tm-axis-labels { display: none; }
     #timeMachine::before { inset: -8px -12px; }
 
     #cvExit {
@@ -873,9 +892,7 @@ body.timeline-immersive header {
         transition: none;
     }
 
-    #tmProgressFill {
-        transition: none;
-    }
+    .tm-ring { animation: none; }
 
     .nav-dot {
         transition: none;

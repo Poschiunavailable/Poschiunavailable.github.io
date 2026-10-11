@@ -71,7 +71,7 @@ export function initTimeline(projects) {
 
     const MONTHS = ['JAN','FEB','MAR','APR','MAY','JUN','JUL','AUG','SEP','OCT','NOV','DEC'];
 
-    // Overall span covered by the timeline, used to drive the progress bar.
+    // Overall span covered by the timeline, used by the HUD career curve.
     const msOf = (s, fallback) => {
         const [y, m] = String(s || '').split('-').map(Number);
         return y ? new Date(y, (m || 1) - 1, 1).getTime() : fallback;
@@ -114,7 +114,7 @@ export function initTimeline(projects) {
         stage:     document.getElementById('projectStage'),
         tmYear:    document.getElementById('tmYear'),
         tmMonth:   document.getElementById('tmMonth'),
-        tmFill:    document.getElementById('tmProgressFill'),
+        tmGraph:   document.getElementById('tmGraph'),
         navEl:     document.getElementById('cvProjectNav'),
         announce:  document.getElementById('cvAnnounce'),
         enterBtn:  document.getElementById('cvEnter'),
@@ -743,7 +743,106 @@ export function initTimeline(projects) {
         S.rafId = requestAnimationFrame(tick);
     }
 
+
+    // ── Career curve (HUD) ─────────────────────────────────────────────────────
+    // A small line graph in the ψ-readout's visual language: how many timeline
+    // projects were running over TIMELINE_START → TIMELINE_END, smoothed. The
+    // dim curve is the whole career; the bright part (a clip rect) is the road
+    // travelled; a dot rides the curve at the HUD date. Built once; render()
+    // only touches the DOM when the rounded cursor x changes.
+    const GRAPH = { W: 120, H: 36, PAD: 4, samples: 120, sigma: 2.6 };
+    const graphState = { x: -1, built: false, cursor: null, clipRect: null, ring: null, ys: [] };
+
+    function buildCareerGraph() {
+        const mount = els.tmGraph;
+        const span = TIMELINE_END - TIMELINE_START;
+        if (!mount || !(span > 0)) return;
+        const { W, H, PAD, samples, sigma } = GRAPH;
+
+        // Projects running at each sample. The span between the first start and
+        // today is shown as continuous activity (floor of 1): the HUD date moves
+        // through the timeline's slides, and the curve says "running", not
+        // "gap" - the career break stays off the page (AGENTS.md).
+        const raw = [];
+        for (let i = 0; i < samples; i++) {
+            const t = TIMELINE_START + span * (i / (samples - 1));
+            const n = timelineProjects.filter(p => msOf(p.startDate, Infinity) <= t && t <= endMsOf(p)).length;
+            raw.push(Math.max(1, n));
+        }
+        // Gaussian kernel, edges clamped.
+        const radius = Math.ceil(sigma * 3);
+        const kernel = [];
+        for (let k = -radius; k <= radius; k++) kernel.push(Math.exp(-(k * k) / (2 * sigma * sigma)));
+        const ksum = kernel.reduce((a, b) => a + b, 0);
+        const smooth = raw.map((_, i) => {
+            let acc = 0;
+            for (let k = -radius; k <= radius; k++) {
+                acc += raw[Math.max(0, Math.min(samples - 1, i + k))] * kernel[k + radius];
+            }
+            return acc / ksum;
+        });
+        const top = Math.max(...smooth) + 0.4;
+        const ys = smooth.map(v => H - PAD - (v / top) * (H - PAD * 2));
+        graphState.ys = ys;
+
+        const xAt = i => (i / (samples - 1)) * W;
+        const line = ys.map((y, i) => `${i ? 'L' : 'M'}${xAt(i).toFixed(2)} ${y.toFixed(2)}`).join('');
+        const fill = `${line}L${W} ${H - 0.5}L0 ${H - 0.5}Z`;
+        const id = 'tmClip';
+        const startYear = new Date(TIMELINE_START).getFullYear();
+
+        mount.innerHTML = `<svg class="tm-graph-svg" viewBox="0 0 ${W} ${H}" focusable="false">
+                <defs><clipPath id="${id}"><rect class="tm-clip" x="0" y="-6" width="0" height="${H + 12}"/></clipPath></defs>
+                <path class="tm-fill" d="${fill}"/><path class="tm-line" d="${line}"/>
+                <g clip-path="url(#${id})"><path class="tm-fill tm-on" d="${fill}"/><path class="tm-line tm-on" d="${line}"/></g>
+                <line class="tm-axis" x1="0" y1="${H - 0.5}" x2="${W}" y2="${H - 0.5}"/>
+                <g class="tm-cursor" data-x="0"><circle class="tm-ring" r="3" cx="0" cy="0"/><circle class="tm-dot" r="2.6" cx="0" cy="0"/></g>
+            </svg>
+            <div class="tm-axis-labels"><span>${startYear}</span><span>now</span></div>`;
+        graphState.cursor = mount.querySelector('.tm-cursor');
+        graphState.clipRect = mount.querySelector('.tm-clip');
+        graphState.ring = mount.querySelector('.tm-ring');
+        graphState.built = true;
+    }
+
+    function updateCareerGraph(ms) {
+        if (!graphState.built) return;
+        const span = TIMELINE_END - TIMELINE_START;
+        const f = Math.max(0, Math.min(1, (ms - TIMELINE_START) / span));
+        const x = Math.round(f * GRAPH.W * 10) / 10;       // only touch the DOM on change
+        if (x === graphState.x) return;
+        graphState.x = x;
+        const pos = f * (GRAPH.samples - 1);
+        const i = Math.min(GRAPH.samples - 2, Math.floor(pos));
+        const y = graphState.ys[i] + (graphState.ys[i + 1] - graphState.ys[i]) * (pos - i);
+        graphState.cursor.setAttribute('transform', `translate(${x} ${y.toFixed(2)})`);
+        graphState.cursor.setAttribute('data-x', x);
+        graphState.clipRect.setAttribute('width', x);
+    }
+
+    function pulseCareerCursor() {
+        const ring = graphState.ring;
+        if (!ring || REDUCED) return;
+        ring.classList.remove('tm-arrive');
+        void ring.getBoundingClientRect();                 // restart the animation
+        ring.classList.add('tm-arrive');
+    }
+
+    buildCareerGraph();
+
     // ── Render ─────────────────────────────────────────────────────────────────
+
+    const graphSpan = new Map();   // project -> [lo, hi] ms the curve cursor travels
+    let graphMs = 0;
+    {
+        let covered = -Infinity;
+        timelineProjects.forEach(p => {
+            const lo = Math.max(msOf(p.startDate, NOW_MS), covered);
+            const hi = Math.max(endMsOf(p), covered);
+            graphSpan.set(p, [lo, hi]);
+            covered = hi;
+        });
+    }
 
     function getDateForPos(pos) {
         const clamped = Math.max(0, Math.min(N - 1, pos));
@@ -761,6 +860,11 @@ export function initTimeline(projects) {
         // Ongoing roles (no endDate) interpolate up to today rather than
         // throwing on a split of undefined.
         const t1 = endMsOf(project);
+        // The curve's cursor must never run backwards, but overlapping projects
+        // make the date do so (a project that starts before the previous one
+        // ends). It travels the span clipped to what earlier projects covered.
+        const [lo, hi] = graphSpan.get(project);
+        graphMs = lo + (hi - lo) * blendedFrac;
         return new Date(t0 + (t1 - t0) * blendedFrac);
     }
 
@@ -771,15 +875,7 @@ export function initTimeline(projects) {
         const date = getDateForPos(disp);
         if (els.tmYear)  els.tmYear.textContent  = date.getFullYear();
         if (els.tmMonth) els.tmMonth.textContent = MONTHS[date.getMonth()];
-        if (els.tmFill) {
-            // Fill by elapsed time, not slide index — projects have unequal
-            // spans, and a bar under a date readout should track the date.
-            const span = TIMELINE_END - TIMELINE_START;
-            const pct = span > 0
-                ? ((date.getTime() - TIMELINE_START) / span) * 100
-                : (N > 1 ? (disp / (N - 1)) * 100 : 100);
-            els.tmFill.style.width = `${Math.max(0, Math.min(100, pct)).toFixed(1)}%`;
-        }
+        updateCareerGraph(graphMs);
 
         // Track which slide is currently focused (the closest integer) and
         // when we arrived at it — used for time-based bullet reveals below.
@@ -890,6 +986,7 @@ export function initTimeline(projects) {
         const currentProj = slideData[focusIdx].project;
         const newProjIdx  = timelineProjects.indexOf(currentProj);
         if (newProjIdx !== S.activeProjIdx) {
+            if (S.activeProjIdx !== -1) pulseCareerCursor();
             S.activeProjIdx = newProjIdx;
             S.dots.forEach((dot, i) => {
                 dot.classList.toggle('active', i === newProjIdx);
