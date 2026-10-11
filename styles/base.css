@@ -39,6 +39,16 @@
   --ease-out: cubic-bezier(0.22, 1, 0.36, 1);
   --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
   --ease-press: cubic-bezier(0.4, 0, 0.6, 1);
+  /* Arrival choreography (styles/arrival.css, Docs/MOTION.md "Arrival"). */
+  --stagger: 60ms;          /* cards, reading order */
+  --stagger-fine: 45ms;     /* particle tiles */
+  --stagger-orbit: 70ms;    /* orrery planets, inner to outer */
+  --dur-line: 280ms;        /* constellation line draws */
+  --dur-rise: 360ms;        /* title / label rise */
+  --dur-twinkle: 480ms;     /* star pops, then twinkles once */
+  --dur-form: 900ms;        /* orrery planets expand to their orbits */
+  --arrive-star: 220ms;     /* stars light while the line is finishing */
+  --arrive-title: 340ms;    /* title rises as the stars settle */
 
   --box-shadow: 0 4px 6px rgba(0,0,0,0.1);
   --text-shadow: 1px 1px 2px rgba(0,0,0,0.2);

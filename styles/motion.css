@@ -129,10 +129,9 @@ footer .social-links a:active,
    once the tilt hands back). */
 
 .portfolio-item {
-    /* Cards are also .animate (scroll-in reveal): name its opacity/transform
-       here too, or this rule — same specificity, later file — drops them and
-       the cards pop in instead of fading. */
-    transition: opacity 1s ease-out, transform 1s ease-out, border-color var(--dur-fast) linear;
+    /* Arrival is a one-shot animation (styles/arrival.css), so it never
+       fights the tilt's inline transform or this release transition. */
+    transition: transform var(--dur-base) var(--ease-spring), border-color var(--dur-fast) linear;
 }
 .portfolio-item:hover,
 .portfolio-item:focus-visible {

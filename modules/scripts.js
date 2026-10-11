@@ -5,6 +5,7 @@ export function initScripts() {
     setupNavToggle();
     setupHeroVideo();
     animateOnScroll();
+    arriveOnce(document.querySelectorAll('.section-head.arrive'));
     setupSmoothScrolling();
 }
 
@@ -147,3 +148,27 @@ function animateOnScroll() {
 // number — contact runs through LinkedIn, so the page exposes nothing for
 // address scrapers. If a form is ever wanted, GitHub Pages is static and would
 // need an external endpoint (Formspree / Getform / Netlify Forms).
+
+// ─── Arrival (Docs/MOTION.md "Arrival") ───────────────────────────────────────
+// One-shot: marks each element .arrived the first time it enters the viewport
+// (styles/arrival.css does the motion). `stagger` numbers elements revealed in
+// the same batch in reading order (--i). Reduced motion: arrived immediately.
+export function arriveOnce(elements, { stagger = false } = {}) {
+    const list = [...elements];
+    if (!list.length) return;
+    if (prefersReducedMotion() || !('IntersectionObserver' in window)) {
+        list.forEach(el => el.classList.add('arrived'));
+        return;
+    }
+    const io = new IntersectionObserver((entries) => {
+        let k = 0;
+        entries.filter(e => e.isIntersecting)
+            .sort((a, b) => (a.target.compareDocumentPosition(b.target) & 4 ? -1 : 1))
+            .forEach(e => {
+                if (stagger) e.target.style.setProperty('--i', Math.min(k++, 8));
+                e.target.classList.add('arrived');
+                io.unobserve(e.target);
+            });
+    }, REVEAL_OPTIONS);
+    list.forEach(el => io.observe(el));
+}

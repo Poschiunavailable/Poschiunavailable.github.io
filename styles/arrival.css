@@ -1,0 +1,54 @@
+/* Arrival choreography (Docs/MOTION.md "Arrival"). One-shot, opacity/transform
+   only. Elements marked .arrive are hidden until modules/scripts.js
+   arriveOnce() adds .arrived; hiding exists only with JS and only when motion
+   is allowed, so no-JS and reduced motion show everything immediately. */
+
+@media (prefers-reduced-motion: no-preference) {
+    /* Section head: the line draws the route, the stars light, the title appears. */
+    .js .section-head.arrive:not(.arrived)::before { transform: scaleY(0); }
+    .js .section-head.arrive:not(.arrived) .section-eyebrow::before,
+    .js .section-head.arrive:not(.arrived) .section-eyebrow::after { opacity: 0; }
+    .js .section-head.arrive:not(.arrived) .section-title { opacity: 0; }
+
+    .section-head.arrive.arrived::before {
+        transform-origin: 50% 0;
+        animation: arrive-line var(--dur-line) var(--ease-out) backwards;
+    }
+    .section-head.arrive.arrived .section-eyebrow::before,
+    .section-head.arrive.arrived .section-eyebrow::after {
+        animation: arrive-star var(--dur-twinkle) var(--ease-spring) var(--arrive-star) backwards;
+    }
+    .section-head.arrive.arrived .section-eyebrow::after { animation-delay: calc(var(--arrive-star) + var(--stagger-fine)); }
+    .section-head.arrive.arrived .section-title {
+        animation: arrive-rise var(--dur-rise) var(--ease-out) var(--arrive-title) backwards;
+    }
+
+    /* Portfolio cards: staggered in reading order. */
+    .js .portfolio-item.arrive:not(.arrived) { opacity: 0; }
+    .portfolio-item.arrive.arrived {
+        animation: arrive-card var(--dur-reveal) var(--ease-out) calc(var(--i, 0) * var(--stagger)) backwards;
+    }
+
+    /* Particle chart: family by family. */
+    .js .particle.arrive:not(.arrived),
+    .js .particle-family-name.arrive:not(.arrived) { opacity: 0; }
+    .particle.arrive.arrived {
+        animation: arrive-pop var(--dur-rise) var(--ease-spring) calc(var(--i, 0) * var(--stagger-fine)) backwards;
+    }
+    .particle-family-name.arrive.arrived {
+        animation: arrive-slide var(--dur-rise) var(--ease-out) calc(var(--i, 0) * var(--stagger-fine)) backwards;
+    }
+}
+
+@keyframes arrive-line { from { transform: scaleY(0); } }
+@keyframes arrive-star {
+    0%   { transform: scale(0); opacity: 0; }
+    45%  { transform: scale(1.15); opacity: 1; }
+    62%  { transform: scale(1); }
+    82%  { transform: scale(1.35); opacity: 1; }
+    100% { transform: scale(1); opacity: 0.9; }
+}
+@keyframes arrive-rise { from { opacity: 0; transform: translateY(12px); } }
+@keyframes arrive-card { from { opacity: 0; transform: translateY(28px) scale(0.97); } }
+@keyframes arrive-pop { from { opacity: 0; transform: scale(0.85); } }
+@keyframes arrive-slide { from { opacity: 0; transform: translateX(-8px); } }

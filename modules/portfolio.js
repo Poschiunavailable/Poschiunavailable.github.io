@@ -1,4 +1,4 @@
-import { prefersReducedMotion, REVEAL_OPTIONS } from './scripts.js';
+import { prefersReducedMotion, REVEAL_OPTIONS, arriveOnce } from './scripts.js';
 import { srcsetFor } from './images.js';
 
 // Card images are at most ~430px wide (measured 250–427px from 320 to 1920
@@ -74,22 +74,8 @@ function generatePortfolioItems(projects) {
 }
 
 function observeItems(elements) {
-    if (prefersReducedMotion()) {
-        elements.forEach(el => el.classList.add('visible'));
-        return;
-    }
-
-    const observer = new IntersectionObserver((entries) => {
-        entries.forEach(entry => {
-            entry.target.classList.toggle('visible', entry.isIntersecting);
-        });
-    }, REVEAL_OPTIONS);
-
-    elements.forEach(el => {
-        el.classList.add('animate');
-        el.style.transitionDelay = `${Math.random() * 0.25}s`;
-        observer.observe(el);
-    });
+    elements.forEach(el => el.classList.add('arrive'));
+    arriveOnce(elements, { stagger: true });
 }
 
 // ─── Click: Scroll to CV ──────────────────────────────────────────────────────

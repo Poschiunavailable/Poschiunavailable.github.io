@@ -7,7 +7,7 @@
 // Every number shown is derived from projects.json — nothing is invented.
 // Reduced motion: everything renders static; no animation loops start.
 
-import { prefersReducedMotion } from './scripts.js';
+import { prefersReducedMotion, arriveOnce } from './scripts.js';
 import { linePath, areaPath, plot, sampleCareer, armDraw, drawIn, onFirstReveal } from './graph.js';
 
 const REDUCED = () => prefersReducedMotion();
@@ -215,7 +215,7 @@ function initParticles(projects) {
         const items = PARTICLES.map((pt, i) => pt.family === f.key ? tiles[i] : '').join('');
         return `<div class="particle-family is-${f.key}"><p class="particle-family-name">${f.name}<small>${f.note}</small></p><div class="particle-row">${items}</div></div>`;
     }).join('');
-    block.innerHTML = `<div class="section-head"><p class="section-eyebrow" aria-hidden="true">Particles</p>
+    block.innerHTML = `<div class="section-head arrive"><p class="section-eyebrow" aria-hidden="true">Particles</p>
         <h3 class="section-title particles-title">The standard model of my stack</h3></div>
         <div class="particle-chart">${groups}<svg class="feynman" aria-hidden="true"><defs>
             <marker id="feynArrow" viewBox="0 0 10 10" refX="5" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse">
@@ -226,9 +226,27 @@ function initParticles(projects) {
     // Sparklines plot themselves in, tile by tile, the first time the chart is seen.
     const sparks = [...block.querySelectorAll('.particle-spark .graph-line, .particle-spark .graph-fill')];
     armDraw(...sparks);
+    // Tiles pop in family by family; each sparkline draws after its tile lands.
+    const popTiles = [...block.querySelectorAll('.particle')];
+    popTiles.forEach(t => t.classList.add('arrive'));
+    block.querySelectorAll('.particle-family-name').forEach(n => n.classList.add('arrive'));
     onFirstReveal(block.querySelector('.particle-chart'), () => {
-        block.querySelectorAll('.particle').forEach((t, i) => t.querySelectorAll('.graph-line, .graph-fill').forEach(n => drawIn(n, i * 40)));
+        const step = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--stagger-fine')) || 45;
+        let i = 0;
+        block.querySelectorAll('.particle-family').forEach(fam => {
+            const label = fam.querySelector('.particle-family-name');
+            label.style.setProperty('--i', i);
+            label.classList.add('arrived');
+            fam.querySelectorAll('.particle').forEach(t => {
+                t.style.setProperty('--i', i);
+                t.classList.add('arrived');
+                t.querySelectorAll('.graph-line, .graph-fill').forEach(n => drawIn(n, i * step + 220));
+                i++;
+            });
+        });
     }, 0.15);
+    if (REDUCED()) block.querySelectorAll('.arrive').forEach(n => n.classList.add('arrived'));
+    arriveOnce(block.querySelectorAll('.section-head.arrive'));
     const field = initField(block);
     const feynman = initFeynman(block, field);
 

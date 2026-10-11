@@ -63,3 +63,23 @@ From game feel practice — Jonasson & Purho, *Juice it or lose it* (GDC Europe
 | Orrery planet launch: the planet swells towards you as the warp starts | orrery planets, on click | The chosen destination, approached |
 | Quantum field ripples: every tool is a ripple in its own field; the pointer leaves a wake | particle chart | Tools as excitations of a field |
 | Feynman lines: which tools travelled together | particle chart, on selecting a tool | Interactions between particles that shared a project |
+
+## Arrival
+
+Every section arrives with one choreography (`styles/arrival.css`; trigger
+`arriveOnce()` in `modules/scripts.js`; tokens `--stagger*`, `--dur-line`,
+`--dur-rise`, `--dur-twinkle`, `--arrive-*` in `base.css`). One-shot per
+element, opacity/transform only, no permanent `will-change`.
+
+| Beat | Timing | Meaning |
+|---|---|---|
+| Constellation line draws down (scaleY from the top) | 0-280 ms | The route is plotted |
+| Eyebrow stars pop (0 -> 1.15 -> 1) and twinkle once | 220-700 ms, second star +45 ms | The stars on the route light |
+| Title rises 12 px and fades in | 340-700 ms | The destination appears |
+| Portfolio cards rise + fade | 60 ms apart in reading order | Arrivals along the route |
+| Particle tiles pop (0.85 -> 1, spring), family labels slide 8 px | 45 ms apart, family by family; sparkline draws after its tile | The field resolves into particles |
+
+Reduced motion and no-JS: `.arrive` hiding only exists under `.js` and
+`prefers-reduced-motion: no-preference`; JS marks everything `.arrived` at once.
+The walk (`reveal`) fails if a head title, card or tile stays faded.
+Not yet done: the orrery "forming" (planets expanding from the sun).

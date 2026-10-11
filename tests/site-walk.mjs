@@ -515,6 +515,15 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
             for (let e = el; e; e = e.parentElement) op *= parseFloat(getComputedStyle(e).opacity);
             return op < 0.99;
         }).map(el => el.id ? '#' + el.id : `${el.tagName.toLowerCase()}.${String(el.className).trim().split(/\s+/).join('.')}`));
+        // Arrival choreography must have finished: nothing on screen left faded.
+        if (variant === 'default') {
+            await page.waitForTimeout(1200);
+            const faded = await page.evaluate(() => [...document.querySelectorAll('.section-title, .portfolio-item, .particle')].filter(el => {
+                const r = el.getBoundingClientRect();
+                return Math.min(r.bottom, innerHeight * 0.9) - Math.max(r.top, 0) > 40 && parseFloat(getComputedStyle(el).opacity) < 0.99;
+            }).map(el => `${el.tagName.toLowerCase()}.${String(el.className).trim().split(/\s+/)[0]}`));
+            if (faded.length) F('reveal', `#${id}: arrival left faded: ${[...new Set(faded)].slice(0, 4).join(', ')}`);
+        }
         const shotRel = await shoot(`section-${id}`);
         if (hidden.length) F('reveal', `#${id}: on screen but not revealed: ${[...new Set(hidden)].slice(0, 4).join(', ')}`, shotRel);
         cov.sections++;
