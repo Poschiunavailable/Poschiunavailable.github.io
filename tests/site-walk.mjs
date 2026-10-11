@@ -649,7 +649,12 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
                 const clip = svg?.querySelector('.tm-clip');
                 if (!svg || !cur || !clip) return null;
                 const vb = svg.viewBox.baseVal.width, px = svg.getBoundingClientRect().width;
-                return { x: +cur.dataset.x * px / vb, clip: +clip.getAttribute('width') * px / vb, px,
+                // Hills: contiguous runs above the half-way height of the dim curve.
+                const ys = (svg.querySelector('path.tm-line:not(.tm-on)')?.getAttribute('d') || '').match(/[ML][\d.]+ ([\d.]+)/g)?.map(m => +m.split(' ')[1]) || [];
+                const top = Math.min(...ys), bot = Math.max(...ys), mid = (top + bot) / 2;
+                let hills = 0, up = false;
+                for (const y of ys) { const hi = y < mid; if (hi && !up) hills++; up = hi; }
+                return { hills, x: +cur.dataset.x * px / vb, clip: +clip.getAttribute('width') * px / vb, px,
                     h: svg.getBoundingClientRect().height, hidden: !!svg.closest('[aria-hidden=true]') };
             });
             if (!cg) F('timeline-hud', `slide ${i}: career curve missing from the HUD`, shot);
@@ -659,6 +664,10 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
                 if (!cg.hidden) F('timeline-hud', `slide ${i}: career curve is not aria-hidden`, shot);
                 if (cg.h > 41) F('timeline-hud', `slide ${i}: career curve ${cg.h.toFixed(0)}px tall (max 40)`, shot);
                 walkState.cgX = cg.x;
+                if (variant === 'default' && !walkState.hillsChecked) {
+                    walkState.hillsChecked = true;
+                    if (cg.hills < 2) F('timeline-hud', `career curve has ${cg.hills} hill(s), want one per chapter (>= 2 distinct local maxima)`, shot);
+                }
             }
             // GPU footprint guard: only on-screen slides keep layers, and the
             // hero reel doesn't decode behind the timeline (Patrick's mobile lag).
@@ -847,6 +856,10 @@ async function walkViewport(browser, base, cache, variant, vp, expect) {
         }
         await page.waitForTimeout(900);                       // the sections fade back in after leaving the timeline
 
+        const sparks = await page.evaluate(() => [...document.querySelectorAll('.particle')].map(t => ({
+            n: t.querySelector('.particle-name')?.textContent, d: t.querySelector('.particle-spark .graph-line')?.getAttribute('d') || '' })));
+        if (!sparks.length || sparks.some(s => s.d.length < 10 || /NaN/.test(s.d)))
+            F('particles', `sparklines missing or empty on: ${sparks.filter(s => s.d.length < 10 || /NaN/.test(s.d)).map(s => s.n).join(', ') || 'no tiles'}`, await shoot('particles-nospark'));
         const tile = page.locator('.particle').first();
         await page.evaluate(() => document.querySelector('.particles').scrollIntoView({ behavior: 'instant', block: 'center' }));
         await tile.scrollIntoViewIfNeeded();

@@ -1,0 +1,37 @@
+/* Shared line-graph classes (modules/graph.js). One look for the ψ readout,
+   the time-machine HUD curve and the particle sparklines: highlight-colour
+   stroke, faint blue fill, a pale axis, mono labels. Per-graph files only set
+   size and any state-driven opacity. */
+
+.graph-line {
+    fill: none;
+    stroke: var(--highlight-color);
+    stroke-width: 1.4;
+    stroke-linejoin: round;
+    stroke-linecap: round;
+}
+.graph-fill { fill: rgba(129, 168, 209, 0.10); stroke: none; }
+.graph-axis { stroke: rgba(129, 168, 209, 0.35); stroke-width: 1; vector-effect: non-scaling-stroke; }
+.graph-label {
+    font-family: var(--tertiary-font);
+    font-size: 0.6rem;
+    letter-spacing: 0.1em;
+    color: rgba(174, 198, 228, 0.7);
+}
+.graph-cursor { fill: var(--highlight-color); filter: drop-shadow(0 0 3px rgba(234, 177, 128, 0.85)); }
+
+/* Draw-in: pathLength="1" makes one dash the whole line (as .feyn-line). */
+.graph-armed { stroke-dasharray: 1; stroke-dashoffset: 1; }
+.graph-armed.graph-fill, .graph-fill.graph-armed { opacity: 0; }
+.graph-draw {
+    stroke-dasharray: 1;
+    stroke-dashoffset: 1;
+    animation: graph-draw 900ms var(--ease-out) both;
+}
+.graph-fill.graph-draw { stroke-dasharray: none; stroke-dashoffset: 0; animation: graph-fade 900ms ease-out both; }
+@keyframes graph-draw { to { stroke-dashoffset: 0; } }
+@keyframes graph-fade { from { opacity: 0; } }
+
+@media (prefers-reduced-motion: reduce) {
+    .graph-armed, .graph-draw { animation: none; stroke-dasharray: none; stroke-dashoffset: 0; opacity: 1; }
+}

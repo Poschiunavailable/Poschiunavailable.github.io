@@ -56,7 +56,8 @@ From game feel practice — Jonasson & Purho, *Juice it or lose it* (GDC Europe
 | Star burst from the press point | primary buttons, cards | "Launch" — a press sets travel in motion |
 | Magnetic pull towards the pointer (desktop) | primary buttons | Gravity of a destination |
 | Underline drawn as a route line | text links | The constellation route, drawn on demand |
-| Career curve in the time-machine HUD: the cursor glides along it as you travel, the bright segment is the road travelled, a ring pulses when you arrive at a new project | CV timeline HUD | Where in a career you are, as a position on a line (the ψ curve's language) |
+| Career curve in the time-machine HUD: one hill per chapter (not a project count); the cursor glides along it as you travel, the bright segment is the road travelled, a ring pulses when you arrive at a new project | CV timeline HUD | Where in a career you are, as a position on a line (the ψ curve's language) |
+| Graph draw-in: ψ curve, HUD career curve and particle sparklines draw themselves in once on first reveal (tiles staggered 40 ms); static under reduced motion | ψ readout, HUD, particle tiles | The route being plotted (`modules/graph.js`, `.graph-*`) |
 | Gate charge: ψ packet narrows, date sharpens, charge line fills | CV gate, while scrolling towards it | Anticipation before a launch — the time machine locking onto its departure date |
 | Warp out: stage falls away at lightspeed, page fades in as the field slows | leaving the timeline | The return trip; the same starfield carries you back |
 | Orrery planet launch: the planet swells towards you as the warp starts | orrery planets, on click | The chosen destination, approached |

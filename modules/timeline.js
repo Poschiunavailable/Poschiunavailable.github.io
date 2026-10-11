@@ -6,6 +6,7 @@
 
 import { prefersReducedMotion } from './scripts.js';
 import { srcsetFor } from './images.js';
+import { linePath, areaPath, plot, sampleCareer, armDraw, drawIn } from './graph.js';
 
 export function initTimeline(projects) {
     // Chronological order matters: this is a "time machine" with a monotonic
@@ -411,6 +412,7 @@ export function initTimeline(projects) {
         S.returnFocus = document.activeElement !== document.body ? document.activeElement : null;
         S.focusSlideIdx = -1;   // re-announce and un-inert on the next render
         document.body.classList.add('timeline-immersive');
+        drawCareerGraph();
         document.documentElement.style.overflow = 'hidden';
         document.body.style.overflow = 'hidden';
 
@@ -745,64 +747,53 @@ export function initTimeline(projects) {
 
 
     // ── Career curve (HUD) ─────────────────────────────────────────────────────
-    // A small line graph in the ψ-readout's visual language: how many timeline
-    // projects were running over TIMELINE_START → TIMELINE_END, smoothed. The
-    // dim curve is the whole career; the bright part (a clip rect) is the road
+    // A small line graph in the shared graph language (modules/graph.js, the same
+    // as the ψ readout): one smooth hill per timeline chapter over
+    // TIMELINE_START → TIMELINE_END, joined with MAX over a low floor, so each
+    // chapter is its own hill and the gaps between are simply troughs. The dim
+    // curve is the whole career; the bright part (a clip rect) is the road
     // travelled; a dot rides the curve at the HUD date. Built once; render()
-    // only touches the DOM when the rounded cursor x changes.
-    const GRAPH = { W: 120, H: 36, PAD: 4, samples: 120, sigma: 2.6 };
-    const graphState = { x: -1, built: false, cursor: null, clipRect: null, ring: null, ys: [] };
+    // only touches the DOM when the rounded cursor x changes. The curve draws
+    // itself in the first time the timeline is entered.
+    const GRAPH = { W: 120, H: 36, PAD: 4, samples: 120 };
+    const graphState = { x: -1, built: false, cursor: null, clipRect: null, ring: null, ys: [], paths: [], drawn: false };
 
     function buildCareerGraph() {
         const mount = els.tmGraph;
         const span = TIMELINE_END - TIMELINE_START;
         if (!mount || !(span > 0)) return;
-        const { W, H, PAD, samples, sigma } = GRAPH;
+        const { W, H, PAD, samples } = GRAPH;
 
-        // Projects running at each sample. The span between the first start and
-        // today is shown as continuous activity (floor of 1): the HUD date moves
-        // through the timeline's slides, and the curve says "running", not
-        // "gap" - the career break stays off the page (AGENTS.md).
-        const raw = [];
-        for (let i = 0; i < samples; i++) {
-            const t = TIMELINE_START + span * (i / (samples - 1));
-            const n = timelineProjects.filter(p => msOf(p.startDate, Infinity) <= t && t <= endMsOf(p)).length;
-            raw.push(Math.max(1, n));
-        }
-        // Gaussian kernel, edges clamped.
-        const radius = Math.ceil(sigma * 3);
-        const kernel = [];
-        for (let k = -radius; k <= radius; k++) kernel.push(Math.exp(-(k * k) / (2 * sigma * sigma)));
-        const ksum = kernel.reduce((a, b) => a + b, 0);
-        const smooth = raw.map((_, i) => {
-            let acc = 0;
-            for (let k = -radius; k <= radius; k++) {
-                acc += raw[Math.max(0, Math.min(samples - 1, i + k))] * kernel[k + radius];
-            }
-            return acc / ksum;
-        });
-        const top = Math.max(...smooth) + 0.4;
-        const ys = smooth.map(v => H - PAD - (v / top) * (H - PAD * 2));
-        graphState.ys = ys;
+        const spans = timelineProjects.map(p => [msOf(p.startDate, TIMELINE_START), endMsOf(p)]);
+        const pts = plot(sampleCareer(spans, TIMELINE_START, TIMELINE_END, samples), W, H, PAD);
+        graphState.ys = pts.map(p => p[1]);
 
-        const xAt = i => (i / (samples - 1)) * W;
-        const line = ys.map((y, i) => `${i ? 'L' : 'M'}${xAt(i).toFixed(2)} ${y.toFixed(2)}`).join('');
-        const fill = `${line}L${W} ${H - 0.5}L0 ${H - 0.5}Z`;
+        const line = linePath(pts);
+        const fill = areaPath(pts, H - 0.5);
         const id = 'tmClip';
         const startYear = new Date(TIMELINE_START).getFullYear();
 
         mount.innerHTML = `<svg class="tm-graph-svg" viewBox="0 0 ${W} ${H}" focusable="false">
                 <defs><clipPath id="${id}"><rect class="tm-clip" x="0" y="-6" width="0" height="${H + 12}"/></clipPath></defs>
-                <path class="tm-fill" d="${fill}"/><path class="tm-line" d="${line}"/>
-                <g clip-path="url(#${id})"><path class="tm-fill tm-on" d="${fill}"/><path class="tm-line tm-on" d="${line}"/></g>
-                <line class="tm-axis" x1="0" y1="${H - 0.5}" x2="${W}" y2="${H - 0.5}"/>
-                <g class="tm-cursor" data-x="0"><circle class="tm-ring" r="3" cx="0" cy="0"/><circle class="tm-dot" r="2.6" cx="0" cy="0"/></g>
+                <path class="graph-fill tm-fill" d="${fill}"/><path class="graph-line tm-line" d="${line}"/>
+                <g clip-path="url(#${id})"><path class="graph-fill tm-fill tm-on" d="${fill}"/><path class="graph-line tm-line tm-on" d="${line}"/></g>
+                <line class="graph-axis" x1="0" y1="${H - 0.5}" x2="${W}" y2="${H - 0.5}"/>
+                <g class="tm-cursor" data-x="0"><circle class="tm-ring" r="3" cx="0" cy="0"/><circle class="graph-cursor tm-dot" r="2.6" cx="0" cy="0"/></g>
             </svg>
-            <div class="tm-axis-labels"><span>${startYear}</span><span>now</span></div>`;
+            <div class="tm-axis-labels graph-label"><span>${startYear}</span><span>now</span></div>`;
         graphState.cursor = mount.querySelector('.tm-cursor');
         graphState.clipRect = mount.querySelector('.tm-clip');
         graphState.ring = mount.querySelector('.tm-ring');
+        graphState.paths = [...mount.querySelectorAll('.graph-line, .graph-fill')];
+        armDraw(...graphState.paths);
         graphState.built = true;
+    }
+
+    // Called on the first entry into the timeline: the route gets plotted.
+    function drawCareerGraph() {
+        if (graphState.drawn) return;
+        graphState.drawn = true;
+        graphState.paths.forEach(p => drawIn(p, 150));
     }
 
     function updateCareerGraph(ms) {

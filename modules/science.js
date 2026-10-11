@@ -8,10 +8,14 @@
 // Reduced motion: everything renders static; no animation loops start.
 
 import { prefersReducedMotion } from './scripts.js';
+import { linePath, areaPath, plot, sampleCareer, armDraw, drawIn, onFirstReveal } from './graph.js';
 
 const REDUCED = () => prefersReducedMotion();
 const NOW = new Date();
 const yearOf = s => Number(String(s || '').slice(0, 4)) || null;
+const monthMs = str => { const [y, m] = String(str || '').split('-').map(Number); return y ? new Date(y, (m || 1) - 1, 1).getTime() : NOW.getTime(); };
+// A project's [start, end] in ms; ongoing = now.
+const spanOf = p => [monthMs(p.startDate), p.endDate ? monthMs(p.endDate) : NOW.getTime()];
 const sorted = projects => [...projects].sort((a, b) => String(a.startDate).localeCompare(String(b.startDate)));
 
 export function initScience(projects) {
@@ -180,6 +184,15 @@ const PARTICLES = [
 function initParticles(projects) {
     const host = document.querySelector('#about .container');
     if (!host) return;
+    // Sparklines share the ψ curve's career axis: first start year → end of this year.
+    const first = sorted(projects.filter(p => p.showInTimeline))[0] || sorted(projects)[0];
+    const axis0 = new Date(yearOf(first?.startDate) || 2015, 0, 1).getTime(), axis1 = new Date(NOW.getFullYear() + 1, 0, 1).getTime();
+    const SW = 92, SH = 12;
+    const sparkFor = used => {
+        const pts = plot(sampleCareer(used.map(spanOf), axis0, axis1, 48), SW, SH, 1.5);
+        return `<svg class="particle-spark" viewBox="0 0 ${SW} ${SH}" preserveAspectRatio="none" aria-hidden="true" focusable="false">
+            <path class="graph-fill" d="${areaPath(pts, SH)}"/><path class="graph-line" d="${linePath(pts)}"/></svg>`;
+    };
     const block = document.createElement('div');
     block.className = 'particles';
     const tiles = PARTICLES.map(pt => {
@@ -194,6 +207,7 @@ function initParticles(projects) {
                     <span class="particle-years">${from}–${to}</span>
                     <span class="particle-count">×${used.length}</span>
                     <span class="particle-sym">${pt.sym}</span>
+                    ${sparkFor(used)}
                     <span class="particle-name">${pt.name}</span>
                 </button>`;
     });
@@ -209,6 +223,12 @@ function initParticles(projects) {
         <p class="particles-hint">Every tool is a ripple in its own field. Pick one to light up its projects —
             the lines show what it was used together with.</p>`;
     host.appendChild(block);
+    // Sparklines plot themselves in, tile by tile, the first time the chart is seen.
+    const sparks = [...block.querySelectorAll('.particle-spark .graph-line, .particle-spark .graph-fill')];
+    armDraw(...sparks);
+    onFirstReveal(block.querySelector('.particle-chart'), () => {
+        block.querySelectorAll('.particle').forEach((t, i) => t.querySelectorAll('.graph-line, .graph-fill').forEach(n => drawIn(n, i * 40)));
+    }, 0.15);
     const field = initField(block);
     const feynman = initFeynman(block, field);
 
@@ -475,10 +495,10 @@ function initCollapse(projects) {
     readout.setAttribute('aria-hidden', 'true');
     const W = 240, H = 44;
     readout.innerHTML = `<svg class="psi-density" viewBox="0 0 ${W} ${H}" width="${W}" height="${H}">
-            <path class="psi-fill" d=""/><path class="psi-line" d=""/>
-            <line class="psi-axis" x1="0" y1="${H - 0.5}" x2="${W}" y2="${H - 0.5}"/>
+            <path class="graph-fill psi-fill" d=""/><path class="graph-line psi-line" d=""/>
+            <line class="graph-axis" x1="0" y1="${H - 0.5}" x2="${W}" y2="${H - 0.5}"/>
         </svg>
-        <div class="psi-axis-labels"><span>${y0}</span><span>now</span></div>
+        <div class="psi-axis-labels graph-label"><span>${y0}</span><span>now</span></div>
         <div class="psi-row"><span class="psi-label">ψ(t)</span><span class="psi-value"><span class="psi-month">${MONTHS[fm - 1]}</span> <span class="psi-year">${fy}</span></span></div>`;
     intro.prepend(readout);
     const fill = readout.querySelector('.psi-fill'), line = readout.querySelector('.psi-line');
@@ -494,17 +514,20 @@ function initCollapse(projects) {
         // u; interference fringes ripple through the packet while uncertain.
         const mu = target + (0.5 - target) * u;
         const sigma = 0.012 + u * 0.32;
-        let top = '', pts = [];
+        const pts = [];
         for (let i = 0; i <= POINTS; i++) {
             const x = i / POINTS;
             const g = Math.exp(-((x - mu) ** 2) / (2 * sigma * sigma));
             const fringe = 1 - u * 0.55 * (0.5 + 0.5 * Math.cos(x * 38 - phase));
             pts.push([x * W, H - 2 - g * fringe * (H - 6)]);
         }
-        top = pts.map(([x, y], i) => `${i ? 'L' : 'M'}${x.toFixed(1)} ${y.toFixed(1)}`).join('');
-        line.setAttribute('d', top);
-        fill.setAttribute('d', `${top}L${W} ${H}L0 ${H}Z`);
+        line.setAttribute('d', linePath(pts));
+        fill.setAttribute('d', areaPath(pts, H));
     };
+
+    // The curve plots itself in the first time the readout scrolls into view.
+    armDraw(line, fill);
+    onFirstReveal(readout, () => { drawIn(line); drawIn(fill); });
 
     let u = 1, collapsed = false;
     const settle = () => {

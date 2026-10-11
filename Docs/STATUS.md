@@ -20,6 +20,7 @@ only merged into with Patrick's go-ahead.
 | **Acceptance check** | Walk green (all variants); perf probe and page-scroll comparison at CPU ×4 no worse than before; orrery checked with 6 and 14 projects; reduced motion static; screenshots sent. |
 | **Files** | `modules/science.js`, `styles/science.css`, `tests/site-walk.mjs`, docs |
 | **Step reached** | Orrery scaling, quantum field, Feynman lines done; atom dropped (D12). **C3 (scroll gate) done** — see below. |
+| **Line-graph system** | `modules/graph.js`; ψ, HUD (one hill per chapter), particle sparklines. |
 
 ### C3 — Scroll gate and warp-out (done 2026-10-04)
 

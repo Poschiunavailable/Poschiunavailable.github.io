@@ -449,17 +449,9 @@ body.timeline-immersive #timeMachine {
 #tmGraph { margin-top: 10px; width: 132px; }
 .tm-graph-svg { display: block; width: 100%; height: auto; aspect-ratio: 120 / 36; overflow: visible; }
 .tm-fill { fill: rgba(129, 168, 209, 0.08); }
-.tm-line {
-    fill: none;
-    stroke: rgba(129, 168, 209, 0.45);
-    stroke-width: 1.2;
-    stroke-linejoin: round;
-    vector-effect: non-scaling-stroke;
-}
+.tm-line { stroke: rgba(129, 168, 209, 0.45); stroke-width: 1.4; }
 .tm-fill.tm-on { fill: rgba(234, 177, 128, 0.2); }
 .tm-line.tm-on { stroke: var(--highlight-color); }
-.tm-axis { stroke: rgba(129, 168, 209, 0.35); stroke-width: 1; vector-effect: non-scaling-stroke; }
-.tm-dot { fill: var(--highlight-color); filter: drop-shadow(0 0 3px rgba(234, 177, 128, 0.85)); }
 .tm-ring { fill: none; stroke: var(--highlight-color); stroke-width: 1; opacity: 0; vector-effect: non-scaling-stroke;
     transform-box: fill-box; transform-origin: center; }
 .tm-ring.tm-arrive { animation: tm-arrive 640ms var(--ease-out); }
@@ -472,8 +464,6 @@ body.timeline-immersive #timeMachine {
     justify-content: space-between;
     margin-top: 3px;
     font-size: 0.55rem;
-    letter-spacing: 0.1em;
-    color: rgba(174, 198, 228, 0.7);
 }
 
 #timeMachine::before {

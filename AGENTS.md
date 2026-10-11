@@ -63,6 +63,7 @@ These are deliberate decisions, not oversights. Don't "fix" them:
 | `background.js` | Three.js starfield background (`#canvas-container`), independent of the rest — reacts to mouse/gyro tilt and scroll position, and listens for `timeline:warpSpeed` (dispatched by `timeline.js` on entering/exiting immersive mode) to trigger a hyperspace streak effect. |
 | `science.js` | The science layer (decisions D10, D12): the orrery (portfolio projects as planets, newest innermost; sizes itself for any number of projects; moons = work topics; click = warp jump), the Standard Model chart of the stack (from `projects.json` tags) with a quantum-field canvas behind it (every tool a ripple; it sleeps when calm) and Feynman lines (tools that shared a project), and the ψ readout on the CV gate. No electron orbits — the atom was dropped. Every loop runs only while on screen and integrates its phase per frame. |
 | `motion.js` | Magnetic primary buttons and the star burst on press (Docs/MOTION.md). |
+| `graph.js` | Shared line-graph helpers: `linePath`/`areaPath`/`plot`, `sampleCareer(spans, start, end, n)` (one hump per span, MAX over a floor), `armDraw`/`drawIn` (one-time stroke draw-in, no-op under reduced motion), `onFirstReveal`. Used by the ψ readout, the HUD career curve and the particle sparklines. Classes `.graph-line/-fill/-axis/-label/-cursor` live in `styles/graph.css`. |
 | `images.js` | `srcsetFor(path)`: the responsive-variant naming convention shared by cards and topic slides. |
 | `vendor/` | Third-party code, vendored and pinned: `three-0.151.3.module.min.js` (mapped to `"three"` by the import map in `index.html`) + its MIT licence. Provenance and why it isn't upgraded: `Docs/HISTORY.md` "three.js". The site loads nothing from third-party origins. |
 
@@ -74,7 +75,7 @@ readout in science.js). No shared state module, no framework store.
 ## Styles (`styles/`)
 
 Loaded individually via `<link>` in `index.html`, in this order:
-`fonts.css` (self-hosted `@font-face` + metric-matched fallbacks), `base.css` (resets + CSS custom properties / theme colors), `styles.css`,
+`fonts.css` (self-hosted `@font-face` + metric-matched fallbacks), `base.css` (resets + CSS custom properties / theme colors), `graph.css` (shared line-graph classes, `.graph-*`), `styles.css`,
 `animation.css`, `navbar.css`, `hero.css`, `about.css`, `portfolio.css`,
 `cvstyle.css` (large — styles the timeline/slide system), `contact.css`,
 `headings.css` (section heads and hero role: the "star chart" style — Lora
